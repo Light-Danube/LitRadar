@@ -9,3 +9,4 @@ data/*.sqlite3-wal
 .vscode/
 .idea/
 .DS_Store
+venv/
