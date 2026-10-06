@@ -26,3 +26,11 @@ def test_list_help_has_filters(capsys):
     assert "--status" in output
     assert "--query" in output
     assert "--min-score" in output
+
+
+def test_root_help_mentions_offline_and_bibtex(capsys):
+    from cli import build_parser
+    build_parser().print_help()
+    output = capsys.readouterr().out
+    assert "export-bibtex" in output
+    assert "download" in output

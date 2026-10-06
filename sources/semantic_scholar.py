@@ -11,7 +11,7 @@ BASE_URL = "https://api.semanticscholar.org/graph/v1/paper/search"
 
 
 def search(query: str, *, limit: int = 25) -> list[Paper]:
-    fields = "title,abstract,authors,year,venue,url,externalIds,citationCount,publicationDate"
+    fields = "title,abstract,authors,year,venue,url,externalIds,citationCount,publicationDate,openAccessPdf"
     params = urllib.parse.urlencode({"query": query, "limit": limit, "fields": fields})
     request = urllib.request.Request(f"{BASE_URL}?{params}", headers={"User-Agent": "LitRadar/0.3"})
     api_key = os.getenv("SEMANTIC_SCHOLAR_API_KEY")
@@ -24,6 +24,7 @@ def search(query: str, *, limit: int = 25) -> list[Paper]:
     for item in payload.get("data", []):
         external_ids = item.get("externalIds") or {}
         doi = external_ids.get("DOI")
+        open_access_pdf = item.get("openAccessPdf") or {}
         papers.append(
             Paper(
                 source="semantic_scholar",
@@ -33,6 +34,7 @@ def search(query: str, *, limit: int = 25) -> list[Paper]:
                 published_at=parse_iso_date(item.get("publicationDate")),
                 doi=doi,
                 url=item.get("url"),
+                pdf_url=open_access_pdf.get("url"),
                 venue=item.get("venue"),
                 citation_count=int(item.get("citationCount") or 0),
                 external_id=item.get("paperId"),

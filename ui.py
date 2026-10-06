@@ -4,6 +4,7 @@ import json
 from pathlib import Path
 
 from storage.sqlite import PaperStore, STATUSES
+from offline import is_available_offline, offline_pdf_path
 
 from textual.app import App, ComposeResult
 from textual.containers import Horizontal, Vertical
@@ -93,7 +94,8 @@ class LitRadarApp(App[None]):
             f"Source: {row['source']}\n"
             f"Published: {row['published_at'] or 'n/a'}\n"
             f"Venue: {row['venue'] or 'n/a'}\n"
-            f"Tags: {tags}\n\n"
+            f"Tags: {tags}\n"
+            f"Offline PDF: {offline_pdf_path(row) if is_available_offline(row) else 'not saved'}\n\n"
             f"{row['abstract'] or '(no abstract)'}"
         )
         self.query_one("#details_title", Static).update(row["title"])
@@ -141,9 +143,13 @@ class LitRadarApp(App[None]):
         row = self.store.get(paper_id)
         if row is None:
             return
-        url = row["url"] or row["pdf_url"]
+        local_pdf = offline_pdf_path(row)
+        import webbrowser
+        if local_pdf.exists():
+            webbrowser.open(local_pdf.as_uri())
+            return
+        url = row["pdf_url"] or row["url"]
         if url:
-            import webbrowser
             webbrowser.open(url)
 
     def action_focus_search(self) -> None:

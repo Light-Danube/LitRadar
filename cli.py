@@ -9,6 +9,8 @@ from pathlib import Path
 
 from ranking.keywords import KeywordProfile
 from ranking.scoring import Score, rank_papers, score_papers_semantic
+from bibliography import export_rows
+from offline import DEFAULT_OFFLINE_DIR, is_available_offline, offline_pdf_path, save_paper_offline
 from sources.base import Paper
 from storage.sqlite import PaperStore, STATUSES
 
@@ -126,7 +128,8 @@ def _print_rows(rows) -> None:
         semantic = "n/a" if row["semantic_score"] is None else f"{row['semantic_score']:.3f}"
         tags = json.loads(row["tags_json"] or "[]")
         tag_text = f" | tags={','.join(tags)}" if tags else ""
-        print(f"{index:>2}. [{row['relevance_score']:>5.3f}] {row['title']}")
+        offline_marker = " | offline" if is_available_offline(row) else ""
+        print(f"{index:>2}. [{row['relevance_score']:>5.3f}] {row['title']}{offline_marker}")
         print(
             f"    id={row['id']} | {row['status']} | {row['source']} | {row['published_at'] or 'date n/a'} "
             f"| keyword={row['keyword_score']:.3f} | semantic={semantic} | citations={row['citation_count']}"
@@ -190,6 +193,7 @@ def cmd_show(args: argparse.Namespace) -> int:
     print(f"Venue: {row['venue'] or 'n/a'}")
     print(f"DOI: {row['doi'] or 'n/a'}")
     print(f"URL: {row['url'] or 'n/a'}")
+    print(f"Offline PDF: {offline_pdf_path(row) if is_available_offline(row) else 'not saved'}")
     print(f"Relevance score: {row['relevance_score']:.3f}")
     print(f"Keyword score: {row['keyword_score']:.3f}")
     semantic = row["semantic_score"]
@@ -279,6 +283,56 @@ def cmd_note(args: argparse.Namespace) -> int:
     return 0
 
 
+
+def cmd_export_bibtex(args: argparse.Namespace) -> int:
+    store = PaperStore(args.db)
+    try:
+        if args.paper_ids:
+            rows = []
+            for paper_id in args.paper_ids:
+                row = store.get(paper_id)
+                if row is None:
+                    print(f"Paper not found: {paper_id}", file=sys.stderr)
+                    return 1
+                rows.append(row)
+        else:
+            rows = store.list_papers(limit=100000, status=args.status, sort="relevance_score")
+        count = export_rows(rows, args.output)
+    finally:
+        store.close()
+    print(f"Exported {count} BibTeX entr{'y' if count == 1 else 'ies'} to {args.output}")
+    return 0
+
+
+def cmd_download(args: argparse.Namespace) -> int:
+    store = PaperStore(args.db)
+    if args.paper_ids:
+        rows = []
+        for paper_id in args.paper_ids:
+            row = store.get(paper_id)
+            if row is None:
+                print(f"Paper not found: {paper_id}", file=sys.stderr)
+                store.close()
+                return 1
+            rows.append(row)
+    else:
+        rows = store.list_papers(limit=args.limit, status=args.status, sort="relevance_score")
+
+    saved = 0
+    pdfs = 0
+    for row in rows:
+        result = save_paper_offline(row, args.output_dir)
+        saved += 1
+        if result["has_pdf"]:
+            pdfs += 1
+            detail = f"PDF saved ({result['bytes']} bytes)" if result["downloaded"] else "PDF already present"
+        else:
+            detail = "metadata + abstract saved; no PDF available"
+        print(f"id={row['id']} | {detail} | {result['directory']}")
+    store.close()
+    print(f"Offline save complete: {saved} paper(s), {pdfs} with PDF.")
+    return 0
+
 def cmd_open(args: argparse.Namespace) -> int:
     store = PaperStore(args.db)
     row = store.get(args.paper_id)
@@ -286,12 +340,17 @@ def cmd_open(args: argparse.Namespace) -> int:
     if row is None:
         print(f"Paper not found: {args.paper_id}", file=sys.stderr)
         return 1
-    url = row["url"] or row["pdf_url"]
+    local_pdf = offline_pdf_path(row)
+    if local_pdf.exists():
+        webbrowser.open(local_pdf.as_uri())
+        print(f"Opened offline PDF: {local_pdf}")
+        return 0
+    url = row["pdf_url"] or row["url"]
     if not url:
         print("Paper has no URL/PDF URL.", file=sys.stderr)
         return 1
     webbrowser.open(url)
-    print(f"Opened: {url}")
+    print(f"Opened online: {url}")
     return 0
 
 
@@ -325,9 +384,13 @@ def cmd_review(args: argparse.Namespace) -> int:
             reason = input("Dismiss reason (optional): ").strip() or None
             store.set_status(row["id"], "dismissed", dismiss_reason=reason)
         elif choice == "o":
-            url = row["url"] or row["pdf_url"]
-            if url:
-                webbrowser.open(url)
+            local_pdf = offline_pdf_path(row)
+            if local_pdf.exists():
+                webbrowser.open(local_pdf.as_uri())
+            else:
+                url = row["pdf_url"] or row["url"]
+                if url:
+                    webbrowser.open(url)
         print()
     store.close()
     return 0
@@ -425,6 +488,10 @@ Examples:
   python cli.py restore 42
   python cli.py review --status new
   python cli.py ui
+  python cli.py export-bibtex 42 --output paper.bib
+  python cli.py export-bibtex --status read --output read.bib
+  python cli.py download 42
+  python cli.py download --status to-read --limit 10
 
 Most commands have their own help page, e.g.:
   python cli.py list --help
@@ -501,6 +568,19 @@ Most commands have their own help page, e.g.:
     p_note.add_argument("paper_id", type=int)
     p_note.add_argument("text", help="replacement note text")
     p_note.set_defaults(func=cmd_note)
+
+    p_bib = sub.add_parser("export-bibtex", help="export one or more papers or a status view to a .bib file")
+    p_bib.add_argument("paper_ids", nargs="*", type=int, help="paper IDs; omit to export a filtered library view")
+    p_bib.add_argument("--status", choices=["all", *STATUSES], default="all", help="status filter when no paper IDs are given")
+    p_bib.add_argument("--output", default="litradar.bib", help="output .bib file")
+    p_bib.set_defaults(func=cmd_export_bibtex)
+
+    p_download = sub.add_parser("download", help="save metadata, abstract, and available PDF for offline use")
+    p_download.add_argument("paper_ids", nargs="*", type=int, help="paper IDs; omit to download a filtered library view")
+    p_download.add_argument("--status", choices=["all", "new", "to-read", "read", "archived"], default="to-read", help="status filter when no IDs are given")
+    p_download.add_argument("--limit", type=int, default=10, help="maximum papers to save in bulk mode")
+    p_download.add_argument("--output-dir", default=str(DEFAULT_OFFLINE_DIR), help="directory for offline paper folders")
+    p_download.set_defaults(func=cmd_download)
 
     p_open = sub.add_parser("open", help="open a paper URL in the default browser")
     p_open.add_argument("paper_id", type=int)

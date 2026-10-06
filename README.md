@@ -372,7 +372,7 @@ IDE metadata
 4. Select the LitRadar folder. If GitHub Desktop says it is not a repository, choose **Create a Repository** from the same screen.
 5. Set the repository name, e.g. `LitRadar`.
 6. Review the initial changed files. Confirm that `data/litradar.sqlite3`, `.env`, and `.venv` are ignored.
-7. Enter an initial commit message such as `Initial LitRadar v0.4.0` and click **Commit to main**.
+7. Enter an initial commit message such as `Initial LitRadar v0.4.1` and click **Commit to main**.
 8. Click **Publish repository** in GitHub Desktop and choose the GitHub account/visibility you want.
 
 ### After publication
@@ -421,3 +421,74 @@ pytest -q
 The UI dependency is optional. Tests that require Textual are skipped when Textual is not installed.
 
 The core test suite covers storage, migration, ranking, CLI behavior, semantic ranking, and LLM assessment parsing/storage.
+
+## v0.4.1 — Offline & bibliography convenience
+
+The current patch adds two small workflows without changing the existing library model:
+
+```powershell
+# Export one paper
+python cli.py export-bibtex 42 --output paper.bib
+
+# Export everything you marked as read
+python cli.py export-bibtex --status read --output read.bib
+
+# Save one paper for offline reading
+python cli.py download 42
+
+# Save up to 10 papers from your reading queue
+python cli.py download --status to-read --limit 10
+```
+
+An offline paper is stored under `data/offline/<id>-<title>/` with:
+
+- `paper.pdf` when an open PDF URL is available
+- `metadata.json`
+- `abstract.txt`
+- `citation.bib`
+
+`python cli.py open 42` prefers the local PDF when it exists and otherwise opens the online PDF/landing page.
+
+### Upgrade from v0.4.0
+
+Do not replace your database. Keep your existing `data/litradar.sqlite3`, `research_profile.json`, and `.venv`. Replace/update the source files, then run:
+
+```powershell
+python -m pip install -r requirements.txt
+python -m pip install -r requirements-dev.txt
+python cli.py init
+pytest -q
+```
+
+The offline directory and SQLite database are intentionally ignored by Git, so your local library and downloaded PDFs do not become repository content.
+
+### GitHub Desktop update flow
+
+When the project is connected to GitHub, future versions should be updated with **Pull origin** in GitHub Desktop rather than replacing the whole folder. The working data (`data/litradar.sqlite3`, `data/offline/`) stays local. Before a major upgrade, commit your own changes and run the test suite after pulling.
+
+### Direction toward v0.5
+
+The current workflow statuses and notes provide the first feedback signals for future personalized ranking. The planned v0.5 direction is to learn from actions such as `to-read`, `read`, and `dismissed` rather than to reset or rebuild the database.
+
+### Quick offline workflow
+
+A practical workflow is:
+
+```powershell
+# 1. Search and collect literature
+python cli.py search "adaptive context emotion sarcasm"
+
+# 2. Put promising papers in your reading queue
+python cli.py review --status new
+
+# 3. Save selected papers locally before traveling / losing Internet
+python cli.py download --status to-read --limit 10
+
+# 4. Read them with your normal PDF reader
+python cli.py open 42
+
+# 5. Later, export the papers you actually read for LaTeX / Overleaf
+python cli.py export-bibtex --status read --output read.bib
+```
+
+The offline bundle intentionally contains both the paper (when an open PDF is available) and the associated text/metadata. If a source does not expose a PDF, LitRadar still saves the metadata, abstract, notes, and citation locally so the record is not lost.
