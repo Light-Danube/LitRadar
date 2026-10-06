@@ -10,3 +10,4 @@ data/*.sqlite3-wal
 .idea/
 .DS_Store
 venv/
+venv/Lib/
