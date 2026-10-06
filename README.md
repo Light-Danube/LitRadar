@@ -372,7 +372,7 @@ IDE metadata
 4. Select the LitRadar folder. If GitHub Desktop says it is not a repository, choose **Create a Repository** from the same screen.
 5. Set the repository name, e.g. `LitRadar`.
 6. Review the initial changed files. Confirm that `data/litradar.sqlite3`, `.env`, and `.venv` are ignored.
-7. Enter an initial commit message such as `Initial LitRadar v0.4.1` and click **Commit to main**.
+7. Enter an initial commit message such as `Initial LitRadar v0.4.2` and click **Commit to main**.
 8. Click **Publish repository** in GitHub Desktop and choose the GitHub account/visibility you want.
 
 ### After publication
@@ -422,7 +422,7 @@ The UI dependency is optional. Tests that require Textual are skipped when Textu
 
 The core test suite covers storage, migration, ranking, CLI behavior, semantic ranking, and LLM assessment parsing/storage.
 
-## v0.4.1 — Offline & bibliography convenience
+## v0.4.2 — Offline & bibliography convenience
 
 The current patch adds two small workflows without changing the existing library model:
 
@@ -449,7 +449,7 @@ An offline paper is stored under `data/offline/<id>-<title>/` with:
 
 `python cli.py open 42` prefers the local PDF when it exists and otherwise opens the online PDF/landing page.
 
-### Upgrade from v0.4.0
+### Upgrade from v0.4.1
 
 Do not replace your database. Keep your existing `data/litradar.sqlite3`, `research_profile.json`, and `.venv`. Replace/update the source files, then run:
 
@@ -492,3 +492,16 @@ python cli.py export-bibtex --status read --output read.bib
 ```
 
 The offline bundle intentionally contains both the paper (when an open PDF is available) and the associated text/metadata. If a source does not expose a PDF, LitRadar still saves the metadata, abstract, notes, and citation locally so the record is not lost.
+
+
+## v0.4.2 — CI reliability and scaling groundwork
+
+This release adds `pyproject.toml` with `pythonpath = ["."]`, so repository-local imports work reliably under pytest in CI and from different working directories. It also batches SQLite ingestion in one transaction, adds lookup indexes for normalized title and DOI, and runs embedding inference in bounded batches.
+
+For development, prefer:
+
+```bash
+python -m pytest -q
+```
+
+The local database and offline files remain ignored by Git.

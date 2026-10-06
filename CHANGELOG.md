@@ -1,3 +1,20 @@
+# LitRadar 0.4.2
+
+## CI reliability and scaling groundwork
+
+- Added `pyproject.toml` with pytest repository-root path configuration, fixing CI import failures such as `ModuleNotFoundError: No module named 'cli'`.
+- Added explicit indexes for normalized title and case-insensitive DOI lookups.
+- Added transactional `PaperStore.upsert_papers()` and switched bulk ingestion to one transaction instead of one commit per paper.
+- Added configurable embedding inference batch size (default 32).
+- Added regression tests for project import configuration and batch storage/indexes.
+
+## Technical debt noted for future versions
+
+- Library text search uses `%LIKE%` over title/abstract/venue; SQLite FTS5 is the likely next step for large libraries.
+- Tags are stored as JSON and filtered with `LIKE`; a normalized many-to-many tag table is preferable at larger scale.
+- Source requests are currently sequential; concurrency should be introduced carefully because API rate limits differ by source.
+- Full-library semantic rescoring will eventually require chunked/streaming ranking rather than holding every embedding in memory.
+- Large BibTeX export currently materializes a large row set; streaming export can follow when needed.
 # Changelog
 
 ## v0.4.1 — Offline & Bibliography Convenience Patch

@@ -80,15 +80,17 @@ def cmd_search(args: argparse.Namespace) -> int:
             print(f"{source}: ERROR: {exc}", file=sys.stderr)
 
     ranked = _rank(all_papers, profile, semantic=args.semantic)
-    for paper, score in ranked:
-        store.upsert_paper(
+    store.upsert_papers(
+        (
             paper,
-            relevance_score=score.total,
-            keyword_score=score.keyword_score,
-            semantic_score=score.semantic_score,
-            scoring_version=score.scoring_version,
-            matched_groups=score.group_hits,
+            score.total,
+            score.group_hits,
+            score.keyword_score,
+            score.semantic_score,
+            score.scoring_version,
         )
+        for paper, score in ranked
+    )
 
     for index, (paper, score) in enumerate(ranked[: args.limit], start=1):
         _print_scored(index, paper, score)
@@ -415,15 +417,17 @@ def cmd_ingest_fixture(args: argparse.Namespace) -> int:
     papers = [Paper(**item) for item in data]
     ranked = _rank(papers, profile, semantic=args.semantic)
     store = PaperStore(args.db)
-    for paper, score in ranked:
-        store.upsert_paper(
+    store.upsert_papers(
+        (
             paper,
-            relevance_score=score.total,
-            keyword_score=score.keyword_score,
-            semantic_score=score.semantic_score,
-            scoring_version=score.scoring_version,
-            matched_groups=score.group_hits,
+            score.total,
+            score.group_hits,
+            score.keyword_score,
+            score.semantic_score,
+            score.scoring_version,
         )
+        for paper, score in ranked
+    )
     print(f"Ingested {len(papers)} fixture papers using {ranked[0][1].scoring_version if ranked else 'no scoring'}.")
     store.close()
     return 0

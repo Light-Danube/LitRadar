@@ -92,12 +92,14 @@ class PaperStore:
         self.conn.execute("CREATE INDEX IF NOT EXISTS idx_papers_semantic ON papers(semantic_score DESC)")
         self.conn.execute("CREATE INDEX IF NOT EXISTS idx_papers_status ON papers(status)")
         self.conn.execute("CREATE INDEX IF NOT EXISTS idx_papers_doi ON papers(doi)")
+        self.conn.execute("CREATE INDEX IF NOT EXISTS idx_papers_doi_lower ON papers(lower(doi))")
+        self.conn.execute("CREATE INDEX IF NOT EXISTS idx_papers_title_normalized ON papers(title_normalized)")
         self.conn.commit()
 
     def close(self) -> None:
         self.conn.close()
 
-    def upsert_paper(
+    def _upsert_paper_no_commit(
         self,
         paper: Paper,
         *,
@@ -151,7 +153,6 @@ class PaperStore:
                 """,
                 payload + (now, existing[0]),
             )
-            self.conn.commit()
             return int(existing[0])
 
         cursor = self.conn.execute(
@@ -165,8 +166,49 @@ class PaperStore:
             """,
             payload + (now, now),
         )
-        self.conn.commit()
         return int(cursor.lastrowid)
+
+    def upsert_paper(
+        self,
+        paper: Paper,
+        *,
+        relevance_score: float,
+        matched_groups: dict[str, list[str]],
+        keyword_score: float | None = None,
+        semantic_score: float | None = None,
+        scoring_version: str = "keyword-v0.1",
+    ) -> int:
+        with self.conn:
+            return self._upsert_paper_no_commit(
+                paper,
+                relevance_score=relevance_score,
+                matched_groups=matched_groups,
+                keyword_score=keyword_score,
+                semantic_score=semantic_score,
+                scoring_version=scoring_version,
+            )
+
+    def upsert_papers(self, rows: Iterable[tuple[Paper, float, dict[str, list[str]], float | None, float | None, str]]) -> list[int]:
+        """Upsert many scored papers in one SQLite transaction.
+
+        Each tuple is (paper, relevance_score, matched_groups, keyword_score,
+        semantic_score, scoring_version). This avoids one commit per paper during
+        source ingestion and becomes important as the library grows.
+        """
+        ids: list[int] = []
+        with self.conn:
+            for paper, relevance_score, matched_groups, keyword_score, semantic_score, scoring_version in rows:
+                ids.append(
+                    self._upsert_paper_no_commit(
+                        paper,
+                        relevance_score=relevance_score,
+                        matched_groups=matched_groups,
+                        keyword_score=keyword_score,
+                        semantic_score=semantic_score,
+                        scoring_version=scoring_version,
+                    )
+                )
+        return ids
 
     def set_llm_assessment(self, paper_id: int, assessment: dict[str, Any]) -> None:
         self.conn.execute(

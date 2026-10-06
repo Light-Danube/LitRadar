@@ -23,6 +23,7 @@ class SentenceTransformerEmbedder:
     """
 
     model_name: str = "all-MiniLM-L6-v2"
+    batch_size: int = 32
     _model: object | None = None
 
     def _load(self) -> object:
@@ -39,7 +40,15 @@ class SentenceTransformerEmbedder:
 
     def encode(self, texts: Sequence[str]) -> np.ndarray:
         model = self._load()
-        embeddings = model.encode(list(texts), normalize_embeddings=True)
+        text_list = list(texts)
+        if not text_list:
+            return np.empty((0, 0), dtype=np.float32)
+        embeddings = model.encode(
+            text_list,
+            batch_size=max(1, int(self.batch_size)),
+            normalize_embeddings=True,
+            show_progress_bar=False,
+        )
         return np.asarray(embeddings, dtype=np.float32)
 
 
