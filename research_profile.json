@@ -1,0 +1,92 @@
+{
+  "name": "Affective and pragmatic analysis of online discussions",
+  "description": "Research on adaptive context modeling for affective and pragmatic understanding of online discussions, especially whether different emotion, sarcasm, sentiment, or figurative-language tasks require different parts of a conversation tree.",
+  "ranking": {
+    "keyword_weight": 0.35,
+    "semantic_weight": 0.65,
+    "embedding_model": "all-MiniLM-L6-v2"
+  },
+  "groups": [
+    {
+      "name": "adaptive_context",
+      "weight": 5,
+      "terms": [
+        "adaptive context",
+        "context selection",
+        "relevant context",
+        "context filtering",
+        "context retrieval",
+        "task-dependent context",
+        "task adaptive context",
+        "context modeling",
+        "context relevance"
+      ]
+    },
+    {
+      "name": "emotion",
+      "weight": 4,
+      "terms": [
+        "emotion recognition",
+        "emotion classification",
+        "emotion analysis",
+        "affective computing",
+        "affective language",
+        "emotion recognition in conversation"
+      ]
+    },
+    {
+      "name": "sarcasm",
+      "weight": 4,
+      "terms": [
+        "sarcasm detection",
+        "sarcasm recognition",
+        "irony detection",
+        "sarcastic language",
+        "contextual sarcasm"
+      ]
+    },
+    {
+      "name": "sentiment",
+      "weight": 2,
+      "terms": [
+        "sentiment analysis",
+        "sentiment classification",
+        "sentiment recognition"
+      ]
+    },
+    {
+      "name": "online_conversation",
+      "weight": 2,
+      "terms": [
+        "online conversation",
+        "conversational context",
+        "conversation understanding",
+        "discussion thread",
+        "social media",
+        "Reddit"
+      ]
+    },
+    {
+      "name": "pragmatics",
+      "weight": 3,
+      "terms": [
+        "pragmatic inference",
+        "pragmatics",
+        "figurative language",
+        "contextual meaning"
+      ]
+    },
+    {
+      "name": "methods",
+      "weight": 1,
+      "terms": [
+        "transformer",
+        "BERT",
+        "large language model",
+        "LLM",
+        "multi-task learning",
+        "retrieval"
+      ]
+    }
+  ]
+}

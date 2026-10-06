@@ -1,0 +1,535 @@
+from __future__ import annotations
+
+import argparse
+import json
+import sys
+import textwrap
+import webbrowser
+from pathlib import Path
+
+from ranking.keywords import KeywordProfile
+from ranking.scoring import Score, rank_papers, score_papers_semantic
+from sources.base import Paper
+from storage.sqlite import PaperStore, STATUSES
+
+ROOT = Path(__file__).resolve().parent
+DEFAULT_DB = ROOT / "data" / "litradar.sqlite3"
+DEFAULT_PROFILE = ROOT / "research_profile.json"
+VERSION = (ROOT / "VERSION").read_text(encoding="utf-8").strip()
+
+SORT_CHOICES = ["relevance_score", "recent", "newest_added", "title", "score"]
+
+
+def _load_profile(path: str | None) -> KeywordProfile:
+    return KeywordProfile.from_json(path or DEFAULT_PROFILE)
+
+
+def _search_source(name: str, query: str, limit: int) -> list[Paper]:
+    if name == "openalex":
+        from sources.openalex import search
+        return search(query, per_page=limit)
+    if name == "semantic_scholar":
+        from sources.semantic_scholar import search
+        return search(query, limit=limit)
+    if name == "arxiv":
+        from sources.arxiv import search
+        return search(query, max_results=limit)
+    raise ValueError(name)
+
+
+def _make_embedder(profile: KeywordProfile):
+    from ranking.embeddings import SentenceTransformerEmbedder
+    return SentenceTransformerEmbedder(profile.embedding_model)
+
+
+def _rank(papers: list[Paper], profile: KeywordProfile, *, semantic: bool):
+    if not semantic:
+        return rank_papers(papers, profile)
+    try:
+        embedder = _make_embedder(profile)
+        return score_papers_semantic(papers, profile, embedder)
+    except Exception as exc:
+        print(f"semantic scoring unavailable: {exc}", file=sys.stderr)
+        print("falling back to keyword scoring", file=sys.stderr)
+        return rank_papers(papers, profile)
+
+
+def cmd_init(args: argparse.Namespace) -> int:
+    store = PaperStore(args.db)
+    stats = store.stats()
+    store.close()
+    print(f"Initialized database: {args.db}")
+    print(f"Papers stored: {stats['all']}")
+    return 0
+
+
+def cmd_search(args: argparse.Namespace) -> int:
+    profile = _load_profile(args.profile)
+    query = args.query or "adaptive context emotion sarcasm online conversation"
+    store = PaperStore(args.db)
+    all_papers: list[Paper] = []
+
+    for source in args.sources:
+        try:
+            papers = _search_source(source, query, args.per_source)
+            print(f"{source}: fetched {len(papers)} papers", file=sys.stderr)
+            all_papers.extend(papers)
+        except Exception as exc:
+            print(f"{source}: ERROR: {exc}", file=sys.stderr)
+
+    ranked = _rank(all_papers, profile, semantic=args.semantic)
+    for paper, score in ranked:
+        store.upsert_paper(
+            paper,
+            relevance_score=score.total,
+            keyword_score=score.keyword_score,
+            semantic_score=score.semantic_score,
+            scoring_version=score.scoring_version,
+            matched_groups=score.group_hits,
+        )
+
+    for index, (paper, score) in enumerate(ranked[: args.limit], start=1):
+        _print_scored(index, paper, score)
+    store.close()
+    return 0 if ranked else 1
+
+
+def _print_scored(index: int, paper: Paper, score: Score) -> None:
+    semantic = "n/a" if score.semantic_score is None else f"{score.semantic_score:.3f}"
+    print(f"{index:>2}. [{score.total:>5.3f}] {paper.title}")
+    print(
+        f"    {paper.source} | {paper.published_at or 'date n/a'} "
+        f"| keyword={score.keyword_score:.3f} | semantic={semantic} | citations={paper.citation_count}"
+    )
+    hits = ", ".join(score.group_hits)
+    if hits:
+        print(f"    matched: {hits}")
+    if paper.url:
+        print(f"    {paper.url}")
+
+
+def _format_llm(row) -> str:
+    if not row["llm_assessment_json"]:
+        return ""
+    try:
+        llm = json.loads(row["llm_assessment_json"])
+    except json.JSONDecodeError:
+        return ""
+    return f" | LLM relevance={llm.get('relevance', 0):.2f} overlap={llm.get('overlap_level', 'n/a')}"
+
+
+def _print_rows(rows) -> None:
+    if not rows:
+        print("No papers matched the current view.")
+        return
+    for index, row in enumerate(rows, start=1):
+        semantic = "n/a" if row["semantic_score"] is None else f"{row['semantic_score']:.3f}"
+        tags = json.loads(row["tags_json"] or "[]")
+        tag_text = f" | tags={','.join(tags)}" if tags else ""
+        print(f"{index:>2}. [{row['relevance_score']:>5.3f}] {row['title']}")
+        print(
+            f"    id={row['id']} | {row['status']} | {row['source']} | {row['published_at'] or 'date n/a'} "
+            f"| keyword={row['keyword_score']:.3f} | semantic={semantic} | citations={row['citation_count']}"
+            f"{tag_text}{_format_llm(row)}"
+        )
+        if row["url"]:
+            print(f"    {row['url']}")
+
+
+def cmd_list(args: argparse.Namespace) -> int:
+    store = PaperStore(args.db)
+    rows = store.list_papers(
+        limit=args.limit,
+        status=args.status,
+        query=args.query,
+        tag=args.tag,
+        min_score=args.min_score,
+        sort=args.sort,
+    )
+    _print_rows(rows)
+    store.close()
+    return 0
+
+
+def cmd_top(args: argparse.Namespace) -> int:
+    store = PaperStore(args.db)
+    _print_rows(store.top(args.limit, sort=args.sort))
+    store.close()
+    return 0
+
+
+def cmd_recent(args: argparse.Namespace) -> int:
+    store = PaperStore(args.db)
+    _print_rows(store.recent(args.limit))
+    store.close()
+    return 0
+
+
+def cmd_stats(args: argparse.Namespace) -> int:
+    store = PaperStore(args.db)
+    stats = store.stats()
+    store.close()
+    for status in ["all", *STATUSES]:
+        print(f"{status:>10}: {stats[status]}")
+    return 0
+
+
+def cmd_show(args: argparse.Namespace) -> int:
+    store = PaperStore(args.db)
+    row = store.get(args.paper_id)
+    store.close()
+    if row is None:
+        print("Paper not found.", file=sys.stderr)
+        return 1
+    print(f"ID: {row['id']}")
+    print(f"Title: {row['title']}")
+    print(f"Status: {row['status']}")
+    print(f"Source: {row['source']}")
+    print(f"Published: {row['published_at'] or 'n/a'}")
+    print(f"Authors: {', '.join(json.loads(row['authors_json'] or '[]'))}")
+    print(f"Venue: {row['venue'] or 'n/a'}")
+    print(f"DOI: {row['doi'] or 'n/a'}")
+    print(f"URL: {row['url'] or 'n/a'}")
+    print(f"Relevance score: {row['relevance_score']:.3f}")
+    print(f"Keyword score: {row['keyword_score']:.3f}")
+    semantic = row["semantic_score"]
+    print(f"Semantic score: {'n/a' if semantic is None else f'{semantic:.3f}'}")
+    print(f"Scoring version: {row['scoring_version']}")
+    print(f"Tags: {', '.join(json.loads(row['tags_json'] or '[]')) or 'none'}")
+    if row["dismiss_reason"]:
+        print(f"Dismiss reason: {row['dismiss_reason']}")
+    if row["notes"]:
+        print("\nNotes:\n")
+        print(row["notes"])
+    if row["llm_assessment_json"]:
+        print("\nLLM assessment (experimental/advisory):\n")
+        print(json.dumps(json.loads(row["llm_assessment_json"]), ensure_ascii=False, indent=2))
+    print("\nAbstract:\n")
+    print(row["abstract"] or "(no abstract)")
+    return 0
+
+
+def cmd_set_status(args: argparse.Namespace) -> int:
+    store = PaperStore(args.db)
+    try:
+        store.set_status(args.paper_id, args.status)
+    except KeyError:
+        print(f"Paper not found: {args.paper_id}", file=sys.stderr)
+        store.close()
+        return 1
+    finally:
+        store.close()
+    print(f"Paper {args.paper_id} → {args.status}")
+    return 0
+
+
+def cmd_dismiss(args: argparse.Namespace) -> int:
+    store = PaperStore(args.db)
+    try:
+        store.set_status(args.paper_id, "dismissed", dismiss_reason=args.reason)
+    except KeyError:
+        print(f"Paper not found: {args.paper_id}", file=sys.stderr)
+        store.close()
+        return 1
+    finally:
+        store.close()
+    print(f"Dismissed paper {args.paper_id}" + (f" ({args.reason})" if args.reason else "") + ".")
+    return 0
+
+
+def cmd_restore(args: argparse.Namespace) -> int:
+    store = PaperStore(args.db)
+    try:
+        store.set_status(args.paper_id, args.status)
+    except KeyError:
+        print(f"Paper not found: {args.paper_id}", file=sys.stderr)
+        store.close()
+        return 1
+    finally:
+        store.close()
+    print(f"Restored paper {args.paper_id} → {args.status}")
+    return 0
+
+
+def cmd_tags(args: argparse.Namespace) -> int:
+    store = PaperStore(args.db)
+    try:
+        store.add_tags(args.paper_id, args.tags)
+    except KeyError:
+        print(f"Paper not found: {args.paper_id}", file=sys.stderr)
+        store.close()
+        return 1
+    finally:
+        store.close()
+    print(f"Updated tags for paper {args.paper_id}.")
+    return 0
+
+
+def cmd_note(args: argparse.Namespace) -> int:
+    store = PaperStore(args.db)
+    try:
+        store.set_notes(args.paper_id, args.text)
+    except KeyError:
+        print(f"Paper not found: {args.paper_id}", file=sys.stderr)
+        store.close()
+        return 1
+    finally:
+        store.close()
+    print(f"Updated notes for paper {args.paper_id}.")
+    return 0
+
+
+def cmd_open(args: argparse.Namespace) -> int:
+    store = PaperStore(args.db)
+    row = store.get(args.paper_id)
+    store.close()
+    if row is None:
+        print(f"Paper not found: {args.paper_id}", file=sys.stderr)
+        return 1
+    url = row["url"] or row["pdf_url"]
+    if not url:
+        print("Paper has no URL/PDF URL.", file=sys.stderr)
+        return 1
+    webbrowser.open(url)
+    print(f"Opened: {url}")
+    return 0
+
+
+def cmd_review(args: argparse.Namespace) -> int:
+    store = PaperStore(args.db)
+    rows = store.list_papers(limit=args.limit, status=args.status, sort="relevance_score")
+    if not rows:
+        print("No papers to review.")
+        store.close()
+        return 0
+
+    print("Quick Review — keys: t=to-read, r=read, d=dismiss, s=skip, o=open, q=quit")
+    for index, row in enumerate(rows, start=1):
+        print("\n" + "=" * 78)
+        print(f"{index}/{len(rows)}  [{row['relevance_score']:.3f}] {row['title']}")
+        print(f"{row['source']} | {row['published_at'] or 'date n/a'} | status={row['status']}")
+        print(textwrap.fill(row["abstract"] or "(no abstract)", width=78))
+        print(f"URL: {row['url'] or 'n/a'}")
+        while True:
+            choice = input("Action [t/r/d/s/o/q]: ").strip().lower()
+            if choice in {"t", "r", "d", "s", "o", "q"}:
+                break
+            print("Use t, r, d, s, o or q.")
+        if choice == "q":
+            break
+        if choice == "t":
+            store.set_status(row["id"], "to-read")
+        elif choice == "r":
+            store.set_status(row["id"], "read")
+        elif choice == "d":
+            reason = input("Dismiss reason (optional): ").strip() or None
+            store.set_status(row["id"], "dismissed", dismiss_reason=reason)
+        elif choice == "o":
+            url = row["url"] or row["pdf_url"]
+            if url:
+                webbrowser.open(url)
+        print()
+    store.close()
+    return 0
+
+
+def cmd_ui(args: argparse.Namespace) -> int:
+    try:
+        from ui import LitRadarApp
+    except ImportError as exc:
+        print("The Textual UI is not installed.", file=sys.stderr)
+        print("Install it with: python -m pip install -r requirements-ui.txt", file=sys.stderr)
+        print(f"Details: {exc}", file=sys.stderr)
+        return 2
+    app = LitRadarApp(db_path=args.db)
+    app.run()
+    return 0
+
+
+def cmd_ingest_fixture(args: argparse.Namespace) -> int:
+    profile = _load_profile(args.profile)
+    data = json.loads(Path(args.file).read_text(encoding="utf-8"))
+    papers = [Paper(**item) for item in data]
+    ranked = _rank(papers, profile, semantic=args.semantic)
+    store = PaperStore(args.db)
+    for paper, score in ranked:
+        store.upsert_paper(
+            paper,
+            relevance_score=score.total,
+            keyword_score=score.keyword_score,
+            semantic_score=score.semantic_score,
+            scoring_version=score.scoring_version,
+            matched_groups=score.group_hits,
+        )
+    print(f"Ingested {len(papers)} fixture papers using {ranked[0][1].scoring_version if ranked else 'no scoring'}.")
+    store.close()
+    return 0
+
+
+def cmd_assess(args: argparse.Namespace) -> int:
+    from llm.assessment import assess_paper
+    from llm.providers import make_provider
+
+    profile = _load_profile(args.profile)
+    provider = make_provider(args.provider, args.model)
+    store = PaperStore(args.db)
+    rows = store.list_papers(limit=args.limit, status=args.status, sort="relevance_score")
+    assessed = 0
+    for row in rows:
+        paper = Paper(
+            source=row["source"],
+            title=row["title"],
+            abstract=row["abstract"],
+            authors=json.loads(row["authors_json"]),
+            published_at=row["published_at"],
+            updated_at=row["updated_at"],
+            doi=row["doi"],
+            url=row["url"],
+            pdf_url=row["pdf_url"],
+            venue=row["venue"],
+            citation_count=row["citation_count"],
+            external_id=row["external_id"],
+            raw=json.loads(row["raw_json"]),
+        )
+        try:
+            score = Score(
+                total=row["relevance_score"],
+                keyword_score=row["keyword_score"],
+                semantic_score=row["semantic_score"],
+                group_hits=json.loads(row["matched_groups_json"]),
+                scoring_version=row["scoring_version"],
+            )
+            assessment = assess_paper(provider, paper, score, profile)
+            store.set_llm_assessment(row["id"], assessment.as_dict())
+            assessed += 1
+            print(
+                f"[{assessment.overlap_level}] relevance={assessment.relevance:.2f} "
+                f"overlap={assessment.potential_overlap:.2f} | {paper.title}"
+            )
+        except Exception as exc:
+            print(f"id={row['id']} ERROR: {exc}", file=sys.stderr)
+    store.close()
+    return 0 if assessed else 1
+
+
+def build_parser() -> argparse.ArgumentParser:
+    epilog = """
+Examples:
+  python cli.py init
+  python cli.py search "adaptive context emotion sarcasm"
+  python cli.py list --status new --sort recent
+  python cli.py list --query "context selection" --min-score 0.80
+  python cli.py show 42
+  python cli.py set-status 42 to-read
+  python cli.py dismiss 42 --reason irrelevant
+  python cli.py restore 42
+  python cli.py review --status new
+  python cli.py ui
+
+Most commands have their own help page, e.g.:
+  python cli.py list --help
+  python cli.py search --help
+  python cli.py ui --help
+"""
+    parser = argparse.ArgumentParser(
+        description=f"LitRadar {VERSION} — personal literature radar and research inbox",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog=textwrap.dedent(epilog),
+    )
+    parser.add_argument("--version", action="version", version=f"LitRadar {VERSION}")
+    parser.add_argument("--db", default=str(DEFAULT_DB), help="SQLite database path")
+    sub = parser.add_subparsers(dest="command", required=True, metavar="COMMAND")
+
+    p_init = sub.add_parser("init", help="initialize or migrate the database")
+    p_init.set_defaults(func=cmd_init)
+
+    p_search = sub.add_parser("search", help="search sources, score papers, and store results")
+    p_search.add_argument("query", nargs="?", help="search query")
+    p_search.add_argument("--profile", default=str(DEFAULT_PROFILE), help="research profile JSON")
+    p_search.add_argument("--sources", nargs="+", default=["openalex", "semantic_scholar", "arxiv"], choices=["openalex", "semantic_scholar", "arxiv"])
+    p_search.add_argument("--per-source", type=int, default=20, help="papers requested from each source")
+    p_search.add_argument("--limit", type=int, default=15, help="number of fetched papers to print")
+    p_search.add_argument("--semantic", action=argparse.BooleanOptionalAction, default=True, help="use sentence-transformer semantic scoring")
+    p_search.set_defaults(func=cmd_search)
+
+    p_list = sub.add_parser("list", help="browse papers stored in SQLite")
+    p_list.add_argument("--limit", type=int, default=50, help="maximum number of papers to show")
+    p_list.add_argument("--status", choices=["all", *STATUSES], default="all", help="filter by workflow status")
+    p_list.add_argument("--query", help="search title, abstract, or venue")
+    p_list.add_argument("--tag", help="filter by tag")
+    p_list.add_argument("--min-score", type=float, help="minimum relevance score")
+    p_list.add_argument("--sort", choices=SORT_CHOICES, default="relevance_score")
+    p_list.set_defaults(func=cmd_list)
+
+    p_top = sub.add_parser("top", help="show stored papers ranked by score")
+    p_top.add_argument("limit", type=int, nargs="?", default=10)
+    p_top.add_argument("--sort", choices=SORT_CHOICES, default="relevance_score")
+    p_top.set_defaults(func=cmd_top)
+
+    p_recent = sub.add_parser("recent", help="show the most recently published stored papers")
+    p_recent.add_argument("limit", type=int, nargs="?", default=10)
+    p_recent.set_defaults(func=cmd_recent)
+
+    p_stats = sub.add_parser("stats", help="show library counts by workflow status")
+    p_stats.set_defaults(func=cmd_stats)
+
+    p_show = sub.add_parser("show", help="show one stored paper in detail")
+    p_show.add_argument("paper_id", type=int)
+    p_show.set_defaults(func=cmd_show)
+
+    p_status = sub.add_parser("set-status", help="change a paper's workflow status")
+    p_status.add_argument("paper_id", type=int)
+    p_status.add_argument("status", choices=STATUSES)
+    p_status.set_defaults(func=cmd_set_status)
+
+    p_dismiss = sub.add_parser("dismiss", help="hide a paper from normal views without deleting it")
+    p_dismiss.add_argument("paper_id", type=int)
+    p_dismiss.add_argument("--reason", choices=["irrelevant", "duplicate", "too broad", "wrong domain", "already known", "other"])
+    p_dismiss.set_defaults(func=cmd_dismiss)
+
+    p_restore = sub.add_parser("restore", help="restore a dismissed/archived paper")
+    p_restore.add_argument("paper_id", type=int)
+    p_restore.add_argument("--status", choices=["new", "to-read"], default="new")
+    p_restore.set_defaults(func=cmd_restore)
+
+    p_tags = sub.add_parser("tags", help="add one or more tags to a paper")
+    p_tags.add_argument("paper_id", type=int)
+    p_tags.add_argument("tags", nargs="+", help="tags to add")
+    p_tags.set_defaults(func=cmd_tags)
+
+    p_note = sub.add_parser("note", help="set a free-text note on a paper")
+    p_note.add_argument("paper_id", type=int)
+    p_note.add_argument("text", help="replacement note text")
+    p_note.set_defaults(func=cmd_note)
+
+    p_open = sub.add_parser("open", help="open a paper URL in the default browser")
+    p_open.add_argument("paper_id", type=int)
+    p_open.set_defaults(func=cmd_open)
+
+    p_review = sub.add_parser("review", help="quickly triage papers in the terminal")
+    p_review.add_argument("--limit", type=int, default=20)
+    p_review.add_argument("--status", choices=["new", "to-read", "all"], default="new")
+    p_review.set_defaults(func=cmd_review)
+
+    p_ui = sub.add_parser("ui", help="launch the optional Textual terminal UI")
+    p_ui.set_defaults(func=cmd_ui)
+
+    p_fixture = sub.add_parser("ingest-fixture", help="ingest local JSON fixture papers")
+    p_fixture.add_argument("file")
+    p_fixture.add_argument("--profile", default=str(DEFAULT_PROFILE))
+    p_fixture.add_argument("--semantic", action=argparse.BooleanOptionalAction, default=True)
+    p_fixture.set_defaults(func=cmd_ingest_fixture)
+
+    p_assess = sub.add_parser("assess", help="[experimental] run LLM triage on stored papers")
+    p_assess.add_argument("--profile", default=str(DEFAULT_PROFILE))
+    p_assess.add_argument("--provider", choices=["openai", "anthropic", "ollama"], default="ollama")
+    p_assess.add_argument("--model", default=None)
+    p_assess.add_argument("--limit", type=int, default=5)
+    p_assess.add_argument("--status", choices=["all", *STATUSES], default="all", help="only assess papers in this status")
+    p_assess.set_defaults(func=cmd_assess)
+    return parser
+
+
+if __name__ == "__main__":
+    args = build_parser().parse_args()
+    raise SystemExit(args.func(args))

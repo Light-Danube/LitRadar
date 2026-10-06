@@ -1,0 +1,3 @@
+# LitRadar v0.2-v0.3 core semantic ranking
+numpy>=1.26,<3
+sentence-transformers>=3.0,<6

@@ -1,0 +1,47 @@
+[
+  {
+    "source": "fixture",
+    "title": "Adaptive Context Selection for Sarcasm and Emotion in Online Conversations",
+    "abstract": "We study relevant context selection for sarcasm detection and emotion recognition in Reddit discussion threads.",
+    "authors": ["Example Author"],
+    "published_at": "2026-09-30",
+    "updated_at": null,
+    "doi": "10.0000/example.1",
+    "url": "https://example.org/paper1",
+    "pdf_url": null,
+    "venue": "Example Conference",
+    "citation_count": 1,
+    "external_id": "fixture-1",
+    "raw": {}
+  },
+  {
+    "source": "fixture",
+    "title": "Efficient Context Retrieval for Conversational Language Models",
+    "abstract": "We retrieve relevant context for dialogue understanding using transformer representations.",
+    "authors": ["Example Researcher"],
+    "published_at": "2026-09-20",
+    "updated_at": null,
+    "doi": "10.0000/example.2",
+    "url": "https://example.org/paper2",
+    "pdf_url": null,
+    "venue": "Example Workshop",
+    "citation_count": 4,
+    "external_id": "fixture-2",
+    "raw": {}
+  },
+  {
+    "source": "fixture",
+    "title": "Robust Image Classification with Synthetic Data",
+    "abstract": "We study computer vision robustness and image classification.",
+    "authors": ["Example Vision Team"],
+    "published_at": "2026-08-01",
+    "updated_at": null,
+    "doi": "10.0000/example.3",
+    "url": "https://example.org/paper3",
+    "pdf_url": null,
+    "venue": "Example Journal",
+    "citation_count": 10,
+    "external_id": "fixture-3",
+    "raw": {}
+  }
+]

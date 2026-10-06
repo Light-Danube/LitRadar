@@ -1,0 +1,3 @@
+# Optional LitRadar v0.3 providers
+openai>=1.50,<3
+anthropic>=0.40,<1

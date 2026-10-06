@@ -1,0 +1,41 @@
+Screen {
+    layout: vertical;
+}
+
+#toolbar {
+    height: 3;
+    padding: 0 1;
+}
+
+#search {
+    width: 1fr;
+}
+
+#status {
+    width: 22;
+    margin-left: 1;
+}
+
+#main {
+    height: 1fr;
+}
+
+#papers {
+    width: 2fr;
+}
+
+#details {
+    width: 1fr;
+    border: solid $primary;
+    padding: 1 2;
+    overflow-y: auto;
+}
+
+#details_title {
+    text-style: bold;
+    margin-bottom: 1;
+}
+
+#details_body {
+    overflow-y: auto;
+}
