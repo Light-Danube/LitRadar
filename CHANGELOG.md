@@ -1,3 +1,10 @@
+## 0.4.4 — UI test lifecycle fix
+
+- Fixed Textual UI test to run through `App.run_test()` and the real compose/mount lifecycle.
+- Added `pytest-asyncio` to development dependencies.
+- Updated GitHub Actions UI job to install the complete development test environment.
+- Removed the invalid direct `list(app.compose())` test pattern that raises `NoActiveAppError` on current Textual releases.
+
 # Changelog
 
 ## 0.4.3 — 2026-10-07
