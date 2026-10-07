@@ -1,4 +1,4 @@
-# LitRadar v0.4
+# LitRadar v0.4.3
 
 A small personal literature radar and research inbox for tracking papers relevant to a configurable research profile.
 
@@ -8,6 +8,7 @@ The project evolves in place so the SQLite library survives upgrades:
 - **v0.2** — semantic relevance with sentence-transformer embeddings.
 - **v0.3** — optional LLM triage for relevance and *potential overlap*.
 - **v0.4** — user-friendly research inbox: browsing, filtering, workflow status, dismiss/restore, notes/tags, quick review, and optional Textual TUI.
+- **v0.4.3** — TUI usability patch: built-in help, sorting controls, tag editor, offline hotkey, and expanded sorting options.
 
 The goal is not to let an LLM decide what is novel. The goal is to reduce literature-search friction and keep a manageable, persistent reading queue.
 
@@ -205,6 +206,8 @@ Add tags and notes:
 
 ```bash
 python cli.py tags 42 context-selection sarcasm
+python cli.py tags 42 --remove broad-topic
+python cli.py tags 42 --set "context-selection,sarcasm,important"
 python cli.py note 42 "Useful baseline, but their context selector is not task-specific."
 ```
 
@@ -247,7 +250,7 @@ Launch:
 python cli.py ui
 ```
 
-The UI provides a searchable table, status filtering, a details pane, and keyboard actions for the basic workflow.
+The UI provides a searchable table, status filtering, sorting, a details pane, tag editing, offline saving, and keyboard actions for the basic workflow. Offline PDF saving runs in a background Textual worker so a slow network does not block the main UI loop.
 
 Keys:
 
@@ -258,11 +261,19 @@ T      to-read
 R      read
 D      dismiss
 U      restore to new
-O      open URL
+G      edit tags
+L      save current paper offline
+O      open local PDF or URL
 /      focus search
 F      focus status filter
+S      focus sort
+?      show keyboard help
 Q      quit
 ```
+
+The sort menu supports relevance, publication date (newest/oldest), date added, title, and citation count. The existing status filter remains available alongside search.
+
+Tag editing uses a single comma-separated editor, so tags can be added, removed, or reordered without repeated CLI commands. Existing tags are shown in the dialog as suggestions.
 
 Textual is deliberately optional so the core CLI remains usable on a minimal Python installation.
 
@@ -311,6 +322,21 @@ The profile contains:
 - weighted keyword groups;
 - keyword/semantic score weights;
 - the embedding model name.
+
+## v0.4.3 usability patch
+
+v0.4.3 keeps the existing SQLite schema compatible. No database reset is required. New sort options and tag editing operate on the existing `papers` table.
+
+Additional v0.4.3 behavior:
+
+- `?` opens TUI keyboard help.
+- `S` focuses the sort selector.
+- `G` opens the tag editor.
+- `L` saves the selected paper for offline use. The blocking download runs in a Textual worker thread.
+- Sorting includes relevance, publication date newest/oldest, date added, title A–Z, and citation count.
+
+
+The optional TUI now exposes its keyboard controls directly with `?`, includes a sort selector, a tag editor, and `L` for offline saving of the selected paper.
 
 ## Database, migration, and upgrades
 

@@ -12,7 +12,12 @@ Screen {
 }
 
 #status {
-    width: 22;
+    width: 20;
+    margin-left: 1;
+}
+
+#sort {
+    width: 20;
     margin-left: 1;
 }
 
@@ -38,4 +43,43 @@ Screen {
 
 #details_body {
     overflow-y: auto;
+}
+
+HelpScreen,
+TagScreen {
+    align: center middle;
+    background: $background 80%;
+}
+
+#help_body,
+#tag_dialog {
+    width: 72;
+    height: auto;
+    max-height: 90%;
+    padding: 1 2;
+    border: solid $primary;
+    background: $panel;
+}
+
+#tag_title {
+    text-style: bold;
+    margin-bottom: 1;
+}
+
+#tag_existing {
+    color: $text-muted;
+    margin-bottom: 1;
+}
+
+#tag_input {
+    width: 1fr;
+}
+
+#tag_buttons {
+    height: 3;
+    margin-top: 1;
+}
+
+#tag_cancel {
+    margin-left: 1;
 }

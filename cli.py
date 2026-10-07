@@ -12,14 +12,12 @@ from ranking.scoring import Score, rank_papers, score_papers_semantic
 from bibliography import export_rows
 from offline import DEFAULT_OFFLINE_DIR, is_available_offline, offline_pdf_path, save_paper_offline
 from sources.base import Paper
-from storage.sqlite import PaperStore, STATUSES
+from storage.sqlite import PaperStore, SORT_CHOICES, STATUSES
 
 ROOT = Path(__file__).resolve().parent
 DEFAULT_DB = ROOT / "data" / "litradar.sqlite3"
 DEFAULT_PROFILE = ROOT / "research_profile.json"
 VERSION = (ROOT / "VERSION").read_text(encoding="utf-8").strip()
-
-SORT_CHOICES = ["relevance_score", "recent", "newest_added", "title", "score"]
 
 
 def _load_profile(path: str | None) -> KeywordProfile:
@@ -260,15 +258,26 @@ def cmd_restore(args: argparse.Namespace) -> int:
 def cmd_tags(args: argparse.Namespace) -> int:
     store = PaperStore(args.db)
     try:
-        store.add_tags(args.paper_id, args.tags)
+        if args.set_tags is not None:
+            tags = [part.strip() for part in args.set_tags.split(",") if part.strip()]
+            store.set_tags(args.paper_id, tags)
+            print(f"Set tags for paper {args.paper_id}: {', '.join(tags) or 'none'}")
+            return 0
+        if args.remove:
+            store.remove_tags(args.paper_id, args.remove)
+            print(f"Removed tags from paper {args.paper_id}.")
+            return 0
+        if args.tags:
+            store.add_tags(args.paper_id, args.tags)
+            print(f"Updated tags for paper {args.paper_id}.")
+            return 0
+        print("No tag changes requested. Use positional tags, --remove, or --set.", file=sys.stderr)
+        return 2
     except KeyError:
         print(f"Paper not found: {args.paper_id}", file=sys.stderr)
-        store.close()
         return 1
     finally:
         store.close()
-    print(f"Updated tags for paper {args.paper_id}.")
-    return 0
 
 
 def cmd_note(args: argparse.Namespace) -> int:
@@ -563,9 +572,11 @@ Most commands have their own help page, e.g.:
     p_restore.add_argument("--status", choices=["new", "to-read"], default="new")
     p_restore.set_defaults(func=cmd_restore)
 
-    p_tags = sub.add_parser("tags", help="add one or more tags to a paper")
+    p_tags = sub.add_parser("tags", help="add, remove, or replace tags on a paper")
     p_tags.add_argument("paper_id", type=int)
-    p_tags.add_argument("tags", nargs="+", help="tags to add")
+    p_tags.add_argument("tags", nargs="*", help="tags to add")
+    p_tags.add_argument("--remove", nargs="+", help="tags to remove")
+    p_tags.add_argument("--set", dest="set_tags", help="replace all tags; comma-separated")
     p_tags.set_defaults(func=cmd_tags)
 
     p_note = sub.add_parser("note", help="set a free-text note on a paper")

@@ -34,3 +34,22 @@ def test_root_help_mentions_offline_and_bibtex(capsys):
     output = capsys.readouterr().out
     assert "export-bibtex" in output
     assert "download" in output
+
+
+def test_sort_and_tag_help_expose_v043_features(capsys):
+    parser = build_parser()
+    try:
+        parser.parse_args(["list", "--help"])
+    except SystemExit as exc:
+        assert exc.code == 0
+    output = capsys.readouterr().out
+    assert "published_oldest" in output
+    assert "citations" in output
+
+    try:
+        parser.parse_args(["tags", "--help"])
+    except SystemExit as exc:
+        assert exc.code == 0
+    output = capsys.readouterr().out
+    assert "--remove" in output
+    assert "--set" in output

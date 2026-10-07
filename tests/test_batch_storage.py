@@ -33,4 +33,6 @@ def test_indexes_exist_for_title_and_doi_lookup(tmp_path: Path):
     names = {row[1] for row in store.conn.execute("PRAGMA index_list(papers)")}
     store.close()
     assert "idx_papers_title_normalized" in names
+    assert "idx_papers_title_lower" in names
+    assert "idx_papers_citations" in names
     assert "idx_papers_doi_lower" in names

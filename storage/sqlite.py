@@ -44,6 +44,15 @@ CREATE TABLE IF NOT EXISTS papers (
 """
 
 STATUSES = ("new", "to-read", "read", "archived", "dismissed")
+SORT_CHOICES = (
+    "relevance_score",
+    "recent",
+    "published_oldest",
+    "newest_added",
+    "title",
+    "score",
+    "citations",
+)
 
 
 def _now() -> str:
@@ -83,10 +92,8 @@ class PaperStore:
 
         now = _now()
         self.conn.execute("UPDATE papers SET created_at=? WHERE created_at=''", (now,))
-        self.conn.execute("UPDATE papers SET last_seen_at=created_at WHERE last_seen_at=''",)
-        self.conn.execute(
-            "UPDATE papers SET status='new' WHERE status IS NULL OR status=''"
-        )
+        self.conn.execute("UPDATE papers SET last_seen_at=created_at WHERE last_seen_at=''")
+        self.conn.execute("UPDATE papers SET status='new' WHERE status IS NULL OR status=''")
         self.conn.execute("CREATE INDEX IF NOT EXISTS idx_papers_score ON papers(relevance_score DESC)")
         self.conn.execute("CREATE INDEX IF NOT EXISTS idx_papers_date ON papers(published_at DESC)")
         self.conn.execute("CREATE INDEX IF NOT EXISTS idx_papers_semantic ON papers(semantic_score DESC)")
@@ -94,6 +101,8 @@ class PaperStore:
         self.conn.execute("CREATE INDEX IF NOT EXISTS idx_papers_doi ON papers(doi)")
         self.conn.execute("CREATE INDEX IF NOT EXISTS idx_papers_doi_lower ON papers(lower(doi))")
         self.conn.execute("CREATE INDEX IF NOT EXISTS idx_papers_title_normalized ON papers(title_normalized)")
+        self.conn.execute("CREATE INDEX IF NOT EXISTS idx_papers_title_lower ON papers(lower(title))")
+        self.conn.execute("CREATE INDEX IF NOT EXISTS idx_papers_citations ON papers(citation_count DESC)")
         self.conn.commit()
 
     def close(self) -> None:
@@ -189,12 +198,7 @@ class PaperStore:
             )
 
     def upsert_papers(self, rows: Iterable[tuple[Paper, float, dict[str, list[str]], float | None, float | None, str]]) -> list[int]:
-        """Upsert many scored papers in one SQLite transaction.
-
-        Each tuple is (paper, relevance_score, matched_groups, keyword_score,
-        semantic_score, scoring_version). This avoids one commit per paper during
-        source ingestion and becomes important as the library grows.
-        """
+        """Upsert many scored papers in one SQLite transaction."""
         ids: list[int] = []
         with self.conn:
             for paper, relevance_score, matched_groups, keyword_score, semantic_score, scoring_version in rows:
@@ -231,11 +235,13 @@ class PaperStore:
         sort: str = "relevance_score",
     ) -> list[sqlite3.Row]:
         order_map = {
-            "relevance_score": "relevance_score DESC, citation_count DESC, published_at DESC",
-            "recent": "published_at DESC, relevance_score DESC",
-            "newest_added": "created_at DESC",
-            "title": "lower(title) ASC",
-            "score": "relevance_score DESC",
+            "relevance_score": "relevance_score DESC, citation_count DESC, published_at DESC, id DESC",
+            "recent": "published_at DESC, relevance_score DESC, id DESC",
+            "published_oldest": "published_at ASC, relevance_score DESC, id ASC",
+            "newest_added": "created_at DESC, id DESC",
+            "title": "lower(title) ASC, id ASC",
+            "score": "relevance_score DESC, citation_count DESC, published_at DESC, id DESC",
+            "citations": "citation_count DESC, relevance_score DESC, published_at DESC, id DESC",
         }
         order = order_map.get(sort)
         if order is None:
@@ -307,16 +313,40 @@ class PaperStore:
         )
         self.conn.commit()
 
+    def _normalized_tags(self, tags: Iterable[str]) -> list[str]:
+        values = {str(tag).strip() for tag in tags if str(tag).strip()}
+        return sorted(values, key=str.casefold)
+
     def add_tags(self, paper_id: int, tags: Iterable[str]) -> None:
         row = self.get(paper_id)
         if row is None:
             raise KeyError(paper_id)
         current = json.loads(row["tags_json"] or "[]")
-        normalized = {str(tag).strip() for tag in current if str(tag).strip()}
-        normalized.update(str(tag).strip() for tag in tags if str(tag).strip())
-        value = sorted(normalized, key=str.casefold)
-        self.conn.execute("UPDATE papers SET tags_json=? WHERE id=?", (json.dumps(value, ensure_ascii=False), paper_id))
+        self.set_tags(paper_id, [*current, *tags])
+
+    def remove_tags(self, paper_id: int, tags: Iterable[str]) -> None:
+        row = self.get(paper_id)
+        if row is None:
+            raise KeyError(paper_id)
+        remove = {str(tag).strip().casefold() for tag in tags if str(tag).strip()}
+        current = json.loads(row["tags_json"] or "[]")
+        self.set_tags(paper_id, [tag for tag in current if str(tag).casefold() not in remove])
+
+    def set_tags(self, paper_id: int, tags: Iterable[str]) -> None:
+        if self.get(paper_id) is None:
+            raise KeyError(paper_id)
+        value = self._normalized_tags(tags)
+        self.conn.execute(
+            "UPDATE papers SET tags_json=? WHERE id=?",
+            (json.dumps(value, ensure_ascii=False), paper_id),
+        )
         self.conn.commit()
+
+    def all_tags(self) -> list[str]:
+        tags: set[str] = set()
+        for row in self.conn.execute("SELECT tags_json FROM papers"):
+            tags.update(json.loads(row[0] or "[]"))
+        return sorted(tags, key=str.casefold)
 
     def set_notes(self, paper_id: int, notes: str) -> None:
         if self.get(paper_id) is None:
