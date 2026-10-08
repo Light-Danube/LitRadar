@@ -11,7 +11,7 @@ BASE_URL = "https://api.semanticscholar.org/graph/v1/paper/search"
 
 
 def search(query: str, *, limit: int = 25) -> list[Paper]:
-    fields = "title,abstract,authors,year,venue,url,externalIds,citationCount,publicationDate,openAccessPdf"
+    fields = "title,abstract,authors,year,venue,url,externalIds,citationCount,publicationDate,openAccessPdf,fieldsOfStudy"
     params = urllib.parse.urlencode({"query": query, "limit": limit, "fields": fields})
     request = urllib.request.Request(f"{BASE_URL}?{params}", headers={"User-Agent": "LitRadar/0.3"})
     api_key = os.getenv("SEMANTIC_SCHOLAR_API_KEY")
@@ -25,6 +25,10 @@ def search(query: str, *, limit: int = 25) -> list[Paper]:
         external_ids = item.get("externalIds") or {}
         doi = external_ids.get("DOI")
         open_access_pdf = item.get("openAccessPdf") or {}
+        source_tags = [str(value).strip() for value in (item.get("fieldsOfStudy") or []) if str(value).strip()]
+        identifiers = {"semantic_scholar_id": str(item.get("paperId"))} if item.get("paperId") else {}
+        if external_ids.get("ArXiv"):
+            identifiers["arxiv_id"] = str(external_ids["ArXiv"])
         papers.append(
             Paper(
                 source="semantic_scholar",
@@ -39,6 +43,8 @@ def search(query: str, *, limit: int = 25) -> list[Paper]:
                 citation_count=int(item.get("citationCount") or 0),
                 external_id=item.get("paperId"),
                 raw=item,
+                source_tags=sorted(set(source_tags), key=str.casefold),
+                identifiers=identifiers,
             )
         )
     return papers

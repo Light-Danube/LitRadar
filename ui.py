@@ -118,6 +118,7 @@ class LitRadarApp(App[None]):
         Binding("/", "focus_search", "Search"),
         Binding("f", "focus_status", "Filter"),
         Binding("s", "focus_sort", "Sort"),
+        Binding("k", "focus_tag", "Tag"),
     ]
 
     def __init__(self, db_path: str | Path) -> None:
@@ -142,6 +143,8 @@ class LitRadarApp(App[None]):
                 id="sort",
                 allow_blank=False,
             )
+            yield Select([], value="__all_tags__", id="tag", allow_blank=False)
+            yield Static("Papers: 0", id="library_count")
         with Horizontal(id="main"):
             yield DataTable(id="papers", cursor_type="row", zebra_stripes=True)
             with Vertical(id="details"):
@@ -152,6 +155,7 @@ class LitRadarApp(App[None]):
     def on_mount(self) -> None:
         table = self.query_one("#papers", DataTable)
         table.add_columns("ID", "Score", "Status", "Year", "Title")
+        self._refresh_tag_options()
         self.refresh_rows()
 
     def on_unmount(self) -> None:
@@ -167,7 +171,12 @@ class LitRadarApp(App[None]):
         query = self.query_one("#search", Input).value.strip() or None
         status = str(self.query_one("#status", Select).value or "all")
         sort = str(self.query_one("#sort", Select).value or "relevance_score")
-        self.current_rows = self.store.list_papers(limit=200, status=status, query=query, sort=sort)
+        tag_value = str(self.query_one("#tag", Select).value or "__all_tags__")
+        tag = None if tag_value == "__all_tags__" else tag_value
+        library_total = self.store.total_count()
+        view_total = self.store.total_count(status=status, query=query, tag=tag)
+        self.query_one("#library_count", Static).update(f"Library: {library_total} | View: {view_total}")
+        self.current_rows = self.store.list_papers(limit=200, status=status, query=query, tag=tag, sort=sort)
         table = self.query_one("#papers", DataTable)
         table.clear(columns=False)
         for row in self.current_rows:
@@ -185,13 +194,16 @@ class LitRadarApp(App[None]):
         if row is None:
             return
         tags = ", ".join(json.loads(row["tags_json"] or "[]")) or "—"
+        source_tags = ", ".join(json.loads(row["source_tags_json"] or "[]")) or "—"
         body = (
             f"Status: {row['status']}\n"
             f"Score: {row['relevance_score']:.3f}\n"
             f"Source: {row['source']}\n"
             f"Published: {row['published_at'] or 'n/a'}\n"
             f"Venue: {row['venue'] or 'n/a'}\n"
+            f"Citations: {row['citation_count']}\n"
             f"Tags: {tags}\n"
+            f"Source tags: {source_tags}\n"
             f"Offline PDF: {offline_pdf_path(row) if is_available_offline(row) else 'not saved'}\n\n"
             f"{row['abstract'] or '(no abstract)'}"
         )
@@ -206,7 +218,7 @@ class LitRadarApp(App[None]):
             self.refresh_rows()
 
     def on_select_changed(self, event: Select.Changed) -> None:
-        if event.select.id in {"status", "sort"}:
+        if event.select.id in {"status", "sort", "tag"}:
             self.refresh_rows()
 
     def action_help(self) -> None:
@@ -287,3 +299,14 @@ class LitRadarApp(App[None]):
 
     def action_focus_sort(self) -> None:
         self.query_one("#sort", Select).focus()
+
+    def action_focus_tag(self) -> None:
+        self.query_one("#tag", Select).focus()
+
+    def _refresh_tag_options(self) -> None:
+        tag_select = self.query_one("#tag", Select)
+        current = str(tag_select.value or "__all_tags__")
+        options = [("All tags", "__all_tags__")] + [(tag, tag) for tag in self.store.all_tags()]
+        tag_select.set_options(options)
+        if current in {value for _, value in options}:
+            tag_select.value = current

@@ -4,7 +4,7 @@ import urllib.parse
 import urllib.request
 import xml.etree.ElementTree as ET
 
-from .base import Paper, parse_iso_date
+from .base import Paper, extract_arxiv_id, parse_iso_date
 
 BASE_URL = "https://export.arxiv.org/api/query"
 ATOM = "http://www.w3.org/2005/Atom"
@@ -36,6 +36,7 @@ def search(query: str, *, max_results: int = 25) -> list[Paper]:
         entry_id = (entry.findtext(f"{{{ATOM}}}id") or "").strip()
         url = entry_id
         pdf_url = None
+        categories = [c.attrib.get("term", "").strip() for c in entry.findall("{http://arxiv.org/schemas/atom}category")]
         for link in entry.findall(f"{{{ATOM}}}link"):
             if link.attrib.get("type") == "application/pdf":
                 pdf_url = link.attrib.get("href")
@@ -52,6 +53,8 @@ def search(query: str, *, max_results: int = 25) -> list[Paper]:
                 pdf_url=pdf_url,
                 external_id=entry_id,
                 raw={"id": entry_id},
+                source_tags=sorted({c for c in categories if c}, key=str.casefold),
+                identifiers={"arxiv_id": extract_arxiv_id(entry_id)} if extract_arxiv_id(entry_id) else {},
             )
         )
     return papers

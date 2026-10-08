@@ -28,6 +28,14 @@ def search(query: str, *, per_page: int = 25) -> list[Paper]:
         source = primary_location.get("source") or {}
         best_oa = item.get("best_oa_location") or {}
         doi = item.get("doi") or item.get("ids", {}).get("doi")
+        source_tags = []
+        for keyword in item.get("keywords") or []:
+            if isinstance(keyword, dict):
+                value = keyword.get("display_name") or keyword.get("keyword")
+            else:
+                value = keyword
+            if value:
+                source_tags.append(str(value).strip())
         papers.append(
             Paper(
                 source="openalex",
@@ -42,6 +50,8 @@ def search(query: str, *, per_page: int = 25) -> list[Paper]:
                 citation_count=int(item.get("cited_by_count") or 0),
                 external_id=item.get("id"),
                 raw=item,
+                source_tags=sorted(set(source_tags), key=str.casefold),
+                identifiers={"openalex_id": str(item.get("id"))} if item.get("id") else {},
             )
         )
     return papers

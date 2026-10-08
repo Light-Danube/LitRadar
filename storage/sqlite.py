@@ -1,12 +1,14 @@
 from __future__ import annotations
 
+import hashlib
 import json
+import re
 import sqlite3
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Iterable
 
-from sources.base import Paper
+from sources.base import Paper, extract_arxiv_id, normalize_title
 
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS papers (
@@ -15,11 +17,14 @@ CREATE TABLE IF NOT EXISTS papers (
     external_id TEXT,
     title TEXT NOT NULL,
     title_normalized TEXT NOT NULL,
+    title_hash TEXT NOT NULL DEFAULT '',
     abstract TEXT NOT NULL DEFAULT '',
     authors_json TEXT NOT NULL DEFAULT '[]',
     published_at TEXT,
     updated_at TEXT,
     doi TEXT,
+    doi_normalized TEXT,
+    arxiv_id TEXT,
     url TEXT,
     pdf_url TEXT,
     venue TEXT,
@@ -30,6 +35,8 @@ CREATE TABLE IF NOT EXISTS papers (
     scoring_version TEXT NOT NULL DEFAULT 'keyword-v0.1',
     matched_groups_json TEXT NOT NULL DEFAULT '{}',
     raw_json TEXT NOT NULL DEFAULT '{}',
+    source_refs_json TEXT NOT NULL DEFAULT '{}',
+    source_tags_json TEXT NOT NULL DEFAULT '[]',
     llm_assessment_json TEXT,
     status TEXT NOT NULL DEFAULT 'new',
     tags_json TEXT NOT NULL DEFAULT '[]',
@@ -59,6 +66,18 @@ def _now() -> str:
     return datetime.now(timezone.utc).isoformat(timespec="seconds")
 
 
+def _clean_doi(value: str | None) -> str | None:
+    if not value:
+        return None
+    value = str(value).strip()
+    value = re.sub(r"^https?://doi.org/", "", value, flags=re.IGNORECASE)
+    return value.casefold() or None
+
+
+def _title_hash(title_normalized: str) -> str:
+    return hashlib.sha256(title_normalized.encode("utf-8")).hexdigest()
+
+
 class PaperStore:
     def __init__(self, path: str | Path) -> None:
         self.path = Path(path)
@@ -72,6 +91,11 @@ class PaperStore:
     def _migrate(self) -> None:
         columns = {row[1] for row in self.conn.execute("PRAGMA table_info(papers)")}
         migrations = {
+            "title_hash": "ALTER TABLE papers ADD COLUMN title_hash TEXT NOT NULL DEFAULT ''",
+            "doi_normalized": "ALTER TABLE papers ADD COLUMN doi_normalized TEXT",
+            "arxiv_id": "ALTER TABLE papers ADD COLUMN arxiv_id TEXT",
+            "source_refs_json": "ALTER TABLE papers ADD COLUMN source_refs_json TEXT NOT NULL DEFAULT '{}'",
+            "source_tags_json": "ALTER TABLE papers ADD COLUMN source_tags_json TEXT NOT NULL DEFAULT '[]'",
             "keyword_score": "ALTER TABLE papers ADD COLUMN keyword_score REAL NOT NULL DEFAULT 0",
             "semantic_score": "ALTER TABLE papers ADD COLUMN semantic_score REAL",
             "scoring_version": "ALTER TABLE papers ADD COLUMN scoring_version TEXT NOT NULL DEFAULT 'keyword-v0.1'",
@@ -94,19 +118,131 @@ class PaperStore:
         self.conn.execute("UPDATE papers SET created_at=? WHERE created_at=''", (now,))
         self.conn.execute("UPDATE papers SET last_seen_at=created_at WHERE last_seen_at=''")
         self.conn.execute("UPDATE papers SET status='new' WHERE status IS NULL OR status=''")
+
+        # Backfill stable dedup identifiers for legacy records.
+        rows = self.conn.execute(
+            "SELECT id, title, title_normalized, title_hash, doi, doi_normalized, source, external_id, arxiv_id, source_refs_json, url, pdf_url FROM papers"
+        ).fetchall()
+        for row in rows:
+            updates: dict[str, Any] = {}
+            normalized_title = normalize_title(str(row["title"] or ""))
+            if normalized_title and normalized_title != str(row["title_normalized"] or ""):
+                updates["title_normalized"] = normalized_title
+            if normalized_title and (not row["title_hash"] or row["title_normalized"] != normalized_title):
+                updates["title_hash"] = _title_hash(normalized_title)
+            if not row["doi_normalized"] and row["doi"]:
+                updates["doi_normalized"] = _clean_doi(row["doi"])
+            arxiv_id = row["arxiv_id"]
+            if not arxiv_id and str(row["source"] or "") == "arxiv":
+                arxiv_id = extract_arxiv_id(row["external_id"])
+            if not arxiv_id:
+                try:
+                    parsed_refs = json.loads(row["source_refs_json"] or "{}")
+                    for ref in parsed_refs.values() if isinstance(parsed_refs, dict) else []:
+                        candidate = ref.get("arxiv_id") if isinstance(ref, dict) else None
+                        if candidate:
+                            arxiv_id = str(candidate)
+                            break
+                except json.JSONDecodeError:
+                    pass
+            if arxiv_id and not row["arxiv_id"]:
+                updates["arxiv_id"] = arxiv_id
+            if not row["source_refs_json"] or row["source_refs_json"] == "{}":
+                refs = {
+                    str(row["source"]): {
+                        "source": row["source"],
+                        "external_id": row["external_id"],
+                        "url": row["url"],
+                        "pdf_url": row["pdf_url"],
+                        **({"arxiv_id": arxiv_id} if arxiv_id else {}),
+                    }
+                }
+                updates["source_refs_json"] = json.dumps(refs, ensure_ascii=False)
+            if updates:
+                assignments = ", ".join(f"{key}=?" for key in updates)
+                self.conn.execute(
+                    f"UPDATE papers SET {assignments} WHERE id=?",
+                    (*updates.values(), row["id"]),
+                )
+
         self.conn.execute("CREATE INDEX IF NOT EXISTS idx_papers_score ON papers(relevance_score DESC)")
         self.conn.execute("CREATE INDEX IF NOT EXISTS idx_papers_date ON papers(published_at DESC)")
         self.conn.execute("CREATE INDEX IF NOT EXISTS idx_papers_semantic ON papers(semantic_score DESC)")
         self.conn.execute("CREATE INDEX IF NOT EXISTS idx_papers_status ON papers(status)")
         self.conn.execute("CREATE INDEX IF NOT EXISTS idx_papers_doi ON papers(doi)")
+        self.conn.execute("CREATE INDEX IF NOT EXISTS idx_papers_doi_normalized ON papers(doi_normalized)")
         self.conn.execute("CREATE INDEX IF NOT EXISTS idx_papers_doi_lower ON papers(lower(doi))")
+        self.conn.execute("CREATE INDEX IF NOT EXISTS idx_papers_arxiv_id ON papers(arxiv_id)")
         self.conn.execute("CREATE INDEX IF NOT EXISTS idx_papers_title_normalized ON papers(title_normalized)")
+        self.conn.execute("CREATE INDEX IF NOT EXISTS idx_papers_title_hash ON papers(title_hash)")
         self.conn.execute("CREATE INDEX IF NOT EXISTS idx_papers_title_lower ON papers(lower(title))")
         self.conn.execute("CREATE INDEX IF NOT EXISTS idx_papers_citations ON papers(citation_count DESC)")
         self.conn.commit()
 
     def close(self) -> None:
         self.conn.close()
+
+    @staticmethod
+    def _paper_source_refs(paper: Paper) -> dict[str, dict[str, Any]]:
+        refs: dict[str, Any] = {
+            "source": paper.source,
+            "external_id": paper.external_id,
+            "url": paper.url,
+            "pdf_url": paper.pdf_url,
+        }
+        refs.update(paper.identifiers)
+        return {paper.source: refs}
+
+    @staticmethod
+    def _merge_json_mapping(existing_json: str | None, incoming: dict[str, Any]) -> dict[str, Any]:
+        try:
+            current = json.loads(existing_json or "{}")
+            if not isinstance(current, dict):
+                current = {}
+        except json.JSONDecodeError:
+            current = {}
+        for key, value in incoming.items():
+            current[key] = value
+        return current
+
+    @staticmethod
+    def _merge_tags(existing_json: str | None, source_tags: list[str]) -> list[str]:
+        try:
+            existing = json.loads(existing_json or "[]")
+        except json.JSONDecodeError:
+            existing = []
+        return sorted(
+            {str(t).strip() for t in [*existing, *source_tags] if str(t).strip()},
+            key=str.casefold,
+        )
+
+    def _find_duplicate(self, paper: Paper) -> sqlite3.Row | None:
+        doi = _clean_doi(paper.doi)
+        if doi:
+            row = self.conn.execute(
+                "SELECT * FROM papers WHERE doi_normalized=? ORDER BY id LIMIT 1", (doi,)
+            ).fetchone()
+            if row:
+                return row
+
+        arxiv_id = paper.identifiers.get("arxiv_id")
+        if not arxiv_id and paper.source == "arxiv":
+            arxiv_id = extract_arxiv_id(paper.external_id)
+        if arxiv_id:
+            row = self.conn.execute(
+                "SELECT * FROM papers WHERE lower(arxiv_id)=lower(?) ORDER BY id LIMIT 1", (arxiv_id,)
+            ).fetchone()
+            if row:
+                return row
+
+        title_hash = paper.title_hash
+        if title_hash:
+            row = self.conn.execute(
+                "SELECT * FROM papers WHERE title_hash=? ORDER BY id LIMIT 1", (title_hash,)
+            ).fetchone()
+            if row:
+                return row
+        return None
 
     def _upsert_paper_no_commit(
         self,
@@ -119,61 +255,110 @@ class PaperStore:
         scoring_version: str = "keyword-v0.1",
     ) -> int:
         now = _now()
-        payload = (
-            paper.source,
-            paper.external_id,
-            paper.title,
-            paper.title_normalized,
-            paper.abstract,
-            json.dumps(paper.authors, ensure_ascii=False),
-            paper.published_at,
-            paper.updated_at,
-            paper.doi,
-            paper.url,
-            paper.pdf_url,
-            paper.venue,
-            paper.citation_count,
-            relevance_score,
-            keyword_score if keyword_score is not None else relevance_score,
-            semantic_score,
-            scoring_version,
-            json.dumps(matched_groups, ensure_ascii=False),
-            json.dumps(paper.raw, ensure_ascii=False, default=str),
-        )
-        existing = None
-        if paper.doi:
-            existing = self.conn.execute(
-                "SELECT id FROM papers WHERE lower(doi)=lower(?)", (paper.doi,)
-            ).fetchone()
-        if existing is None:
-            existing = self.conn.execute(
-                "SELECT id FROM papers WHERE title_normalized=?", (paper.title_normalized,)
-            ).fetchone()
+        existing = self._find_duplicate(paper)
+        doi_normalized = _clean_doi(paper.doi)
+        arxiv_id = paper.identifiers.get("arxiv_id")
+        if not arxiv_id and paper.source == "arxiv":
+            arxiv_id = extract_arxiv_id(paper.external_id)
+        source_refs = self._paper_source_refs(paper)
 
         if existing:
+            merged_refs = self._merge_json_mapping(existing["source_refs_json"], source_refs)
+            merged_source_tags = self._merge_tags(existing["source_tags_json"], paper.source_tags)
+
+            # Prefer non-empty/new metadata, but never clobber good existing values with blanks.
+            authors = paper.authors or json.loads(existing["authors_json"] or "[]")
+            abstract = paper.abstract or existing["abstract"] or ""
+            published_at = paper.published_at or existing["published_at"]
+            updated_at = paper.updated_at or existing["updated_at"]
+            venue = paper.venue or existing["venue"]
+            url = paper.url or existing["url"]
+            pdf_url = paper.pdf_url or existing["pdf_url"]
+            doi = paper.doi or existing["doi"]
+            source_external_id = existing["external_id"] or paper.external_id
+            source_name = existing["source"] or paper.source
+
             self.conn.execute(
                 """
                 UPDATE papers SET
-                  source=?, external_id=?, title=?, title_normalized=?, abstract=?,
-                  authors_json=?, published_at=?, updated_at=?, doi=?, url=?, pdf_url=?,
-                  venue=?, citation_count=?, relevance_score=?, keyword_score=?, semantic_score=?,
-                  scoring_version=?, matched_groups_json=?, raw_json=?, last_seen_at=?
+                  source=?, external_id=?, title=?, title_normalized=?, title_hash=?, abstract=?,
+                  authors_json=?, published_at=?, updated_at=?, doi=?, doi_normalized=?, arxiv_id=?,
+                  url=?, pdf_url=?, venue=?, citation_count=MAX(citation_count, ?),
+                  relevance_score=?, keyword_score=?, semantic_score=?, scoring_version=?,
+                  matched_groups_json=?, raw_json=?, source_refs_json=?, source_tags_json=?,
+                  last_seen_at=?
                 WHERE id=?
                 """,
-                payload + (now, existing[0]),
+                (
+                    source_name,
+                    source_external_id,
+                    paper.title or existing["title"],
+                    paper.title_normalized or existing["title_normalized"],
+                    paper.title_hash or existing["title_hash"],
+                    abstract,
+                    json.dumps(authors, ensure_ascii=False),
+                    published_at,
+                    updated_at,
+                    doi,
+                    doi_normalized or existing["doi_normalized"],
+                    arxiv_id or existing["arxiv_id"],
+                    url,
+                    pdf_url,
+                    venue,
+                    int(paper.citation_count or 0),
+                    relevance_score,
+                    keyword_score if keyword_score is not None else relevance_score,
+                    semantic_score,
+                    scoring_version,
+                    json.dumps(matched_groups, ensure_ascii=False),
+                    json.dumps(paper.raw, ensure_ascii=False, default=str),
+                    json.dumps(merged_refs, ensure_ascii=False),
+                    json.dumps(merged_source_tags, ensure_ascii=False),
+                    now,
+                    existing["id"],
+                ),
             )
-            return int(existing[0])
+            return int(existing["id"])
 
+        source_tags = sorted(set(paper.source_tags), key=str.casefold)
         cursor = self.conn.execute(
             """
             INSERT INTO papers (
-              source, external_id, title, title_normalized, abstract, authors_json,
-              published_at, updated_at, doi, url, pdf_url, venue, citation_count,
-              relevance_score, keyword_score, semantic_score, scoring_version,
-              matched_groups_json, raw_json, created_at, last_seen_at, status
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'new')
+              source, external_id, title, title_normalized, title_hash, abstract, authors_json,
+              published_at, updated_at, doi, doi_normalized, arxiv_id, url, pdf_url, venue,
+              citation_count, relevance_score, keyword_score, semantic_score, scoring_version,
+              matched_groups_json, raw_json, source_refs_json, source_tags_json,
+              created_at, last_seen_at, status
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'new')
             """,
-            payload + (now, now),
+            (
+                paper.source,
+                paper.external_id,
+                paper.title,
+                paper.title_normalized,
+                paper.title_hash,
+                paper.abstract,
+                json.dumps(paper.authors, ensure_ascii=False),
+                paper.published_at,
+                paper.updated_at,
+                paper.doi,
+                doi_normalized,
+                arxiv_id,
+                paper.url,
+                paper.pdf_url,
+                paper.venue,
+                int(paper.citation_count or 0),
+                relevance_score,
+                keyword_score if keyword_score is not None else relevance_score,
+                semantic_score,
+                scoring_version,
+                json.dumps(matched_groups, ensure_ascii=False),
+                json.dumps(paper.raw, ensure_ascii=False, default=str),
+                json.dumps(source_refs, ensure_ascii=False),
+                json.dumps(source_tags, ensure_ascii=False),
+                now,
+                now,
+            ),
         )
         return int(cursor.lastrowid)
 
@@ -198,7 +383,6 @@ class PaperStore:
             )
 
     def upsert_papers(self, rows: Iterable[tuple[Paper, float, dict[str, list[str]], float | None, float | None, str]]) -> list[int]:
-        """Upsert many scored papers in one SQLite transaction."""
         ids: list[int] = []
         with self.conn:
             for paper, relevance_score, matched_groups, keyword_score, semantic_score, scoring_version in rows:
@@ -259,8 +443,9 @@ class PaperStore:
             pattern = f"%{query}%"
             params.extend([pattern, pattern, pattern])
         if tag:
-            where.append("lower(tags_json) LIKE lower(?)")
-            params.append(f'%"{tag.casefold()}"%')
+            where.append("(lower(tags_json) LIKE lower(?) OR lower(source_tags_json) LIKE lower(?))")
+            tag_pattern = f'%"{tag.casefold()}"%'
+            params.extend([tag_pattern, tag_pattern])
         if min_score is not None:
             where.append("relevance_score>=?")
             params.append(float(min_score))
@@ -271,6 +456,37 @@ class PaperStore:
         sql += f" ORDER BY {order} LIMIT ?"
         params.append(max(1, int(limit)))
         return list(self.conn.execute(sql, params))
+
+    def total_count(
+        self,
+        *,
+        status: str | None = None,
+        query: str | None = None,
+        tag: str | None = None,
+        min_score: float | None = None,
+    ) -> int:
+        where: list[str] = []
+        params: list[Any] = []
+        if status and status != "all":
+            if status not in STATUSES:
+                raise ValueError(f"Unsupported status: {status}")
+            where.append("status=?")
+            params.append(status)
+        if query:
+            pattern = f"%{query}%"
+            where.append("(lower(title) LIKE lower(?) OR lower(abstract) LIKE lower(?) OR lower(venue) LIKE lower(?))")
+            params.extend([pattern, pattern, pattern])
+        if tag:
+            pattern = f'%"{tag.casefold()}%"%'
+            where.append("(lower(tags_json) LIKE lower(?) OR lower(source_tags_json) LIKE lower(?))")
+            params.extend([pattern, pattern])
+        if min_score is not None:
+            where.append("relevance_score>=?")
+            params.append(float(min_score))
+        sql = "SELECT COUNT(*) AS n FROM papers"
+        if where:
+            sql += " WHERE " + " AND ".join(where)
+        return int(self.conn.execute(sql, params).fetchone()["n"])
 
     def top(self, limit: int = 10, *, sort: str = "relevance_score") -> list[sqlite3.Row]:
         return self.list_papers(limit=limit, sort=sort)
@@ -313,7 +529,8 @@ class PaperStore:
         )
         self.conn.commit()
 
-    def _normalized_tags(self, tags: Iterable[str]) -> list[str]:
+    @staticmethod
+    def _normalized_tags(tags: Iterable[str]) -> list[str]:
         values = {str(tag).strip() for tag in tags if str(tag).strip()}
         return sorted(values, key=str.casefold)
 
@@ -342,11 +559,26 @@ class PaperStore:
         )
         self.conn.commit()
 
-    def all_tags(self) -> list[str]:
-        tags: set[str] = set()
-        for row in self.conn.execute("SELECT tags_json FROM papers"):
-            tags.update(json.loads(row[0] or "[]"))
-        return sorted(tags, key=str.casefold)
+    def all_tags(self, *, include_source: bool = True) -> list[str]:
+        tags_by_key: dict[str, str] = {}
+        for row in self.conn.execute("SELECT tags_json, source_tags_json FROM papers"):
+            values = list(json.loads(row[0] or "[]"))
+            if include_source:
+                values.extend(json.loads(row[1] or "[]"))
+            for tag in values:
+                value = str(tag).strip()
+                if value:
+                    tags_by_key.setdefault(value.casefold(), value)
+        return sorted(tags_by_key.values(), key=str.casefold)
+
+    def source_tags(self, paper_id: int) -> list[str]:
+        row = self.get(paper_id)
+        if row is None:
+            raise KeyError(paper_id)
+        try:
+            return sorted(json.loads(row["source_tags_json"] or "[]"), key=str.casefold)
+        except json.JSONDecodeError:
+            return []
 
     def set_notes(self, paper_id: int, notes: str) -> None:
         if self.get(paper_id) is None:

@@ -32,7 +32,7 @@ def is_available_offline(row, base_dir: str | Path = DEFAULT_OFFLINE_DIR) -> boo
 
 
 def _download_file(url: str, destination: Path) -> int:
-    request = urllib.request.Request(url, headers={"User-Agent": "LitRadar/0.4.1"})
+    request = urllib.request.Request(url, headers={"User-Agent": "LitRadar/0.4.5"})
     with urllib.request.urlopen(request, timeout=30) as response:
         content_length = response.headers.get("Content-Length")
         if content_length and int(content_length) > MAX_DOWNLOAD_BYTES:

@@ -21,6 +21,17 @@ Screen {
     margin-left: 1;
 }
 
+#tag {
+    width: 22;
+    margin-left: 1;
+}
+
+#library_count {
+    width: 26;
+    margin-left: 1;
+    padding: 0 1;
+}
+
 #main {
     height: 1fr;
 }

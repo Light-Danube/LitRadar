@@ -141,6 +141,7 @@ def _print_rows(rows) -> None:
 
 def cmd_list(args: argparse.Namespace) -> int:
     store = PaperStore(args.db)
+    total = store.total_count(status=args.status, query=args.query, tag=args.tag, min_score=args.min_score)
     rows = store.list_papers(
         limit=args.limit,
         status=args.status,
@@ -149,6 +150,10 @@ def cmd_list(args: argparse.Namespace) -> int:
         min_score=args.min_score,
         sort=args.sort,
     )
+    if rows:
+        print(f"Showing {len(rows)} of {total} stored matching paper(s).")
+    else:
+        print(f"No papers matched the current view (0 of {total}).")
     _print_rows(rows)
     store.close()
     return 0
@@ -199,7 +204,10 @@ def cmd_show(args: argparse.Namespace) -> int:
     semantic = row["semantic_score"]
     print(f"Semantic score: {'n/a' if semantic is None else f'{semantic:.3f}'}")
     print(f"Scoring version: {row['scoring_version']}")
-    print(f"Tags: {', '.join(json.loads(row['tags_json'] or '[]')) or 'none'}")
+    user_tags = json.loads(row["tags_json"] or "[]")
+    source_tags = json.loads(row["source_tags_json"] or "[]")
+    print(f"Tags: {', '.join(user_tags) or 'none'}")
+    print(f"Source tags: {', '.join(source_tags) or 'none'}")
     if row["dismiss_reason"]:
         print(f"Dismiss reason: {row['dismiss_reason']}")
     if row["notes"]:
