@@ -1,5 +1,51 @@
 # Changelog
 
+## 0.5.0 — 2026-10-08
+
+### Added
+- Runtime `.env` configuration via `python-dotenv`.
+- `python cli.py config` for an effective configuration summary with secrets masked.
+- Source registry with adapter-based provider definitions and `LITRADAR_SOURCES` enable/disable configuration.
+- Concurrent source fetching with configurable worker count.
+- Shared HTTP retry/backoff layer for transient provider failures (`429`, `5xx`, connection/timeouts).
+- Local source-query cache with configurable TTL to reduce repeated API calls during research.
+- Explicit paper feedback events (`positive` / `negative`) stored separately from workflow status.
+- Conservative, transparent personalized ranking based on explicit feedback plus weak workflow signals.
+- `personalized` sorting in CLI and TUI.
+- TUI `Y` / `N` shortcuts for useful/not-relevant feedback.
+- New personalization controls: weight, minimum feedback threshold, and candidate scan limit.
+
+### Changed
+- Search now uses the source registry instead of hard-coded provider dispatch.
+- Provider clients accept configurable timeout/retry settings.
+- OpenAlex configuration now exposes `OPENALEX_API_KEY`; the old `LITRADAR_MAILTO` setting remains only for compatibility/documentation because the pre-2026 polite-pool mechanism is no longer the production path.
+- TUI displays the personalized score when `Personalized` sorting is selected while retaining the base relevance score in details.
+- README restructured around installation, configuration, workflow, personalization, development, and roadmap.
+
+### Design decisions
+- Personalization is gated until enough paper-level feedback exists, preventing early overfitting to a handful of actions.
+- Manual tags are not automatically interpreted as positive preferences because workflow tags do not necessarily represent topical interest.
+- Duplicate dismissals contribute neutral preference evidence.
+- Source caching is opt-out via `LITRADAR_SOURCE_CACHE_TTL=0` and cached results are kept outside Git.
+
+### Compatibility
+- Existing v0.4.x SQLite databases are migrated additively.
+- Existing CLI workflows remain supported.
+- No database reset is required.
+
+### Testing focus
+- 46 tests covering existing behavior plus personalization, source registry, cache, retry, explicit feedback, environment configuration, and CLI parser paths.
+- Textual UI tests remain optional in the local environment and run in the dedicated CI UI job when the dependency is installed.
+
+
+## 0.4.6 — TUI startup hotfix
+
+### Fixed
+- Tag filter now starts with an explicit `All tags` option instead of an empty, non-blank `Select`.
+- Prevented TUI startup deadlock/error before the user has an opportunity to choose a tag.
+- Added a regression test for the initial tag-filter state.
+
+
 ## 0.4.5 — 2026-10-08
 
 ### Added

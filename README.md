@@ -1,52 +1,46 @@
-# LitRadar v0.4.5
+# LitRadar v0.5.0
 
-A small personal literature radar and research inbox. LitRadar finds papers from multiple academic sources, ranks them against a research profile, stores them locally in SQLite, and lets you triage, tag, save offline, and export citations.
+Personal literature radar and research inbox for discovering, ranking, triaging, and keeping academic papers locally.
 
 ## Current release
 
-**v0.4.5 — TUI/library bridge + source metadata + deduplication.**
+**v0.5.0 — personalization + source configuration + resilient source fetching.**
 
-This patch stays compatible with the existing v0.4.x database. No database reset is required.
+This release keeps the v0.4.x SQLite database compatible. No database reset is required.
 
 ### What is new
 
-- TUI paper details now show citation count and source-derived tags.
-- TUI shows the number of papers matching the current view and provides a tag filter.
-- Tag filtering works against both manual tags and tags extracted from source metadata.
-- Search results can merge records found through multiple providers using normalized title hashes, DOI, and arXiv identifiers.
-- Cross-source links are retained instead of being discarded when a duplicate is refreshed.
-- `python cli.py list` now explicitly reports `Showing X of Y`.
-
-## Recent release history
-
-- **0.4.5** — TUI count/tag improvements, citation count in details, source-derived tags, conservative cross-source deduplication, and source-link preservation.
-- **0.4.4** — fixed Textual test lifecycle by using `App.run_test()` and added `pytest-asyncio`.
-- **0.4.3** — TUI help, sorting, tag editor, offline hotkey, and related UX hardening.
-- **0.4.2** — CI import-path fix plus SQLite/embedding ingestion improvements.
-- **0.4.1** — offline bundles and BibTeX export.
-- **0.4.0** — research inbox workflow, filtering, status tracking, notes/tags, and TUI foundation.
-
-For detailed file-level changes and bug fixes, see [`CHANGELOG.md`](CHANGELOG.md).
+- Runtime configuration via `.env` / environment variables.
+- Registered source providers with configurable enable/disable list.
+- Concurrent source fetching with per-source timeout, retry, exponential backoff, and local query-result cache.
+- `python cli.py config` for a masked view of effective configuration.
+- Lightweight personalized ranking based on explicit feedback plus conservative workflow signals.
+- Explicit positive/negative feedback via CLI and TUI (`Y` / `N`).
+- `personalized` library/top sorting.
+- Feedback is intentionally inactive until a configurable minimum number of useful interactions is available.
+- OpenAlex API-key configuration aligned with its post-February-2026 API authentication model.
 
 ## Start here
 
 ```bash
 python cli.py --help
+python cli.py config
 python cli.py init
 python cli.py stats
 python cli.py list --limit 50
+python cli.py ui
 ```
 
 Every command has its own help page:
 
 ```bash
-python cli.py list --help
 python cli.py search --help
-python cli.py review --help
+python cli.py list --help
+python cli.py feedback --help
 python cli.py ui --help
 ```
 
-Run the fixture without network access to verify the installation:
+Run the fixture without network access:
 
 ```bash
 python cli.py ingest-fixture data/fixture.json --no-semantic
@@ -54,9 +48,83 @@ python cli.py list
 pytest -q
 ```
 
+## Installation
+
+Create a virtual environment and install the core dependencies:
+
+```bash
+python -m venv .venv
+# Windows PowerShell
+.\.venv\Scripts\Activate.ps1
+# Linux/macOS
+# source .venv/bin/activate
+
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt
+```
+
+For development/tests:
+
+```bash
+python -m pip install -r requirements-dev.txt
+```
+
+For the optional TUI:
+
+```bash
+python -m pip install -r requirements-ui.txt
+```
+
+For optional LLM providers:
+
+```bash
+python -m pip install -r requirements-llm.txt
+```
+
+## Configuration
+
+Copy `.env.example` to `.env` and fill in the providers you use:
+
+```text
+LITRADAR_SOURCES=openalex,semantic_scholar,arxiv
+LITRADAR_SOURCE_WORKERS=3
+LITRADAR_SOURCE_TIMEOUT=20
+LITRADAR_SOURCE_RETRIES=3
+LITRADAR_SOURCE_BACKOFF=2
+LITRADAR_SOURCE_CACHE_TTL=3600
+
+OPENALEX_API_KEY=
+SEMANTIC_SCHOLAR_API_KEY=
+
+LITRADAR_PERSONALIZATION_ENABLED=true
+LITRADAR_PERSONALIZATION_WEIGHT=0.20
+LITRADAR_PERSONALIZATION_MIN_FEEDBACK=5
+LITRADAR_PERSONALIZATION_SCAN_LIMIT=5000
+```
+
+Check the effective, secret-masked configuration with:
+
+```bash
+python cli.py config
+```
+
+### Source expansion
+
+Sources are registered in `sources/registry.py`. The environment variable controls which registered providers run:
+
+```text
+LITRADAR_SOURCES=openalex,semantic_scholar,arxiv
+```
+
+Adding a future provider is intentionally isolated behind the `SourceDefinition` adapter interface. This means the core ranking/library workflow does not need to know provider-specific API details.
+
+### API/rate-limit notes
+
+LitRadar keeps provider requests conservative because these APIs have different limits and policies. Current OpenAlex documentation says API keys are required for normal production-scale use and recommends backoff for rate limits; the old pre-2026 "polite pool"/`mailto` mechanism is no longer the production path. Semantic Scholar recommends authenticated API keys and provides batch/bulk endpoints for high-volume work. LitRadar therefore limits concurrency, retries only transient failures, and caches repeated searches locally.
+
 ## Core workflow
 
-### Find and rank
+### Discover and rank
 
 ```bash
 python cli.py search "adaptive context emotion sarcasm"
@@ -64,6 +132,8 @@ python cli.py search "context selection" --sources openalex semantic_scholar arx
 ```
 
 The default ranking combines keyword and semantic relevance. Semantic embeddings are optional at runtime; LitRadar falls back to keyword scoring if the embedding backend is unavailable.
+
+Repeated identical source searches can be served from `data/source_cache/` for the configured TTL, reducing API usage while you iterate on queries.
 
 ### Browse the library
 
@@ -77,11 +147,12 @@ python cli.py list --tag sarcasm
 python cli.py list --sort recent
 python cli.py list --sort title
 python cli.py list --sort citations
+python cli.py list --sort personalized
 ```
 
-`list` keeps the default output limit at 50 so an accidentally large library does not flood the terminal, but it now reports the full matching count. Use `--limit` explicitly when you want more rows.
+`list` intentionally keeps a default display limit of 50, while reporting the full matching count. Use `--limit` when you want more rows.
 
-### Read / dismiss / tag
+### Read, dismiss, and tag
 
 ```bash
 python cli.py set-status 42 to-read
@@ -94,7 +165,23 @@ python cli.py tags 42 --set "context-selection,sarcasm,important"
 python cli.py note 42 "Useful baseline for related work."
 ```
 
-Manual tags are preserved across provider refreshes. Source-derived tags are stored separately so a metadata refresh cannot erase your own organization. Both kinds are visible to library filtering.
+Manual tags survive provider refreshes. Source-derived tags are stored separately.
+
+### Explicit feedback and personalized ranking
+
+Workflow status is only a weak preference signal: `read` means you read a paper, not necessarily that you liked it. v0.5 therefore adds explicit feedback:
+
+```bash
+python cli.py feedback 42 positive --reason useful
+python cli.py feedback 43 negative --reason not_relevant
+python cli.py list --sort personalized --limit 20
+```
+
+The personal ranker combines explicit feedback with conservative implicit signals from `to-read`, `read`, `archived`, and dismissal reasons. Duplicate dismissals are treated as neutral rather than as a dislike signal.
+
+Personalization is deliberately gated by `LITRADAR_PERSONALIZATION_MIN_FEEDBACK` (default: 5 effective paper-level interactions). Before enough evidence exists, the personalized sort is identical to the base relevance sort.
+
+The ranker is transparent and lightweight rather than a trained black-box recommender. It learns preference **by keyword-group evidence**, not by assuming every manual tag is a positive topic preference. This avoids misinterpreting workflow tags such as `to-cite`, `review-later`, or `important` as semantic likes.
 
 ### Offline reading and bibliography
 
@@ -106,7 +193,7 @@ python cli.py export-bibtex 42 --output paper.bib
 python cli.py export-bibtex --status read --output read.bib
 ```
 
-Offline bundles live under `data/offline/` and include metadata, abstract, notes, BibTeX, and a PDF when an accessible open PDF exists.
+Offline bundles live under `data/offline/` and can include metadata, abstract, notes, BibTeX, and an available PDF.
 
 ## Textual TUI
 
@@ -117,37 +204,38 @@ python -m pip install -r requirements-ui.txt
 python cli.py ui
 ```
 
-The TUI is designed as a fast research inbox rather than a full reference manager. It provides:
+The TUI is a fast research inbox rather than a full reference manager.
 
-- status filtering;
-- text search;
-- sorting by relevance, publication date, date added, title, and citations;
-- tag filtering;
-- paper details including citation count and source tags;
-- total-library and current-view counts;
-- tag editing;
-- offline saving in a background worker;
-- local-first opening of saved PDFs.
-
-Useful keys:
+### Main controls
 
 ```text
 ↑ / ↓   select paper
 Enter   select row
+/       search
+F       status filter
+K       tag filter
+S       sort
+```
+
+### Workflow
+
+```text
 T       To Read
 R       Read
+Y       useful / positive feedback
+N       not relevant / negative feedback
 D       Dismiss
 U       Restore
-G       Edit tags
-K       Tag filter
-L       Save offline
-O       Open local PDF / URL
-/       Search
-F       Status filter
-S       Sort
-?       Help
-Q       Quit
+G       edit tags
+L       save offline
+O       open local PDF / URL
+?       keyboard help
+Q       quit
 ```
+
+The TUI also supports a `Personalized` sort. The displayed Score column changes to the current ranking score while the detail panel shows both the base and displayed scores.
+
+Offline network work runs through a Textual worker so a slow PDF request does not block the main UI event loop.
 
 ## Automatic source tags
 
@@ -157,119 +245,139 @@ When available, LitRadar extracts lightweight subject/category metadata:
 - Semantic Scholar fields of study;
 - arXiv category identifiers.
 
-These values are stored in `source_tags_json` and participate in tag filtering without overwriting manually curated tags.
+These values participate in tag filtering without overwriting manually curated tags.
 
 ## Deduplication
 
-LitRadar uses several conservative identifiers when importing papers:
+LitRadar uses several conservative identifiers during import:
 
-1. DOI, normalized to its identifier form;
+1. normalized DOI;
 2. arXiv identifier, when available;
-3. SHA-256 of a normalized title (`lower/casefold + punctuation removed + whitespace normalized`).
+3. SHA-256 of a normalized title (`casefold + punctuation removed + whitespace normalized`).
 
-When a match is found, LitRadar updates the existing record instead of inserting another paper. Cross-source metadata is retained in `source_refs_json`. Existing manual status, tags, notes, and timestamps remain intact.
+When a match is found, the existing paper ID is updated and cross-source references are retained. Manual status, tags, notes, and workflow history are not replaced by provider refreshes.
 
-The title hash intentionally stays conservative. It handles punctuation/case/title-format differences but does not attempt aggressive fuzzy matching of substantially different titles.
-
-## Configuration
-
-Edit `research_profile.json` to change the research profile, weighted keyword groups, semantic/keyword weights, and embedding model.
-
-Environment variables currently used by optional providers include:
-
-```text
-LITRADAR_MAILTO
-SEMANTIC_SCHOLAR_API_KEY
-OPENAI_API_KEY
-ANTHROPIC_API_KEY
-OLLAMA_HOST
-```
-
-More source/provider configuration is planned for v0.5.
+This is intentionally conservative. It does not try to aggressively decide that two substantially different titles are the same study.
 
 ## LLM assessment
 
-LLM assessment is still experimental/advisory. It does not decide scientific novelty and does not alter the primary ranking.
+LLM assessment remains **experimental/advisory**. It does not decide scientific novelty and does not alter the primary ranking.
 
 ```bash
 python cli.py assess --provider ollama --model llama3.1:8b --limit 5
 ```
 
-For now, treat the assessment as an additional signal to inspect rather than as a final literature-review decision.
+Treat LLM output as another signal to inspect, not as an authoritative literature-review decision. A small local model may produce structured output without producing sufficiently useful explanations.
 
-## Database and upgrades
+## Database and local data
 
-The local database is:
+The main database is:
 
 ```text
 data/litradar.sqlite3
 ```
 
-**Do not delete it when upgrading.** LitRadar applies additive schema migrations automatically. Your local offline directory is also preserved.
+Additional local state:
 
-Recommended Git-based update workflow:
+```text
+data/offline/       # saved papers/PDFs
+ data/source_cache/  # cached provider results
+.env                 # secrets and local configuration
+```
+
+These are intentionally excluded from Git.
+
+Additive SQLite migrations are applied automatically. Upgrading from v0.4.x does not require a database reset.
+
+## Upgrading with GitHub Desktop
+
+Once the repository is published:
+
+1. Use **Fetch origin → Pull origin** to receive a release.
+2. Reinstall/update Python dependencies if `requirements*.txt` changed.
+3. Run:
 
 ```bash
-git pull
-python -m pip install -r requirements.txt
-python -m pip install -r requirements-dev.txt
-python -m pip install -r requirements-ui.txt
 python cli.py init
 pytest -q
 ```
 
-Install only the optional dependency groups you use.
+The local database, offline files, cache, and `.env` remain outside source control.
 
-## GitHub Desktop
+Do not commit API keys, the SQLite database, or your offline corpus.
 
-Create the repository by adding the local LitRadar folder in GitHub Desktop, then **Publish repository**. The included `.gitignore` keeps `data/*.sqlite3`, `data/offline/`, `.env`, `.venv/`, caches, and IDE metadata out of Git.
+## Development and CI
 
-After publication, use **Fetch origin → Pull origin** for future releases rather than replacing the project folder. The local database and offline files are intentionally outside version control.
-
-Commit the code changes, not your local research database or secrets.
-
-## Development
+Run:
 
 ```bash
 python -m pytest -q
 ```
 
-CI runs the core suite and the optional Textual UI suite with the UI dependency installed.
+GitHub Actions contains a core test job and an optional Textual UI job. The tests are configured through `pyproject.toml` so imports do not depend on the directory from which pytest was started.
 
 ## Architecture
 
 ```text
-sources/       OpenAlex / Semantic Scholar / arXiv
-    ↓
-normalized Paper objects + source metadata
-    ↓
-keyword + semantic ranking
-    ↓
-SQLite library + deduplication
-    ↓
-CLI / Textual TUI / offline bundles / BibTeX
-    ↓
-optional LLM assessment
+                    source registry
+              ┌─────────┼─────────┐
+              ↓         ↓         ↓
+          OpenAlex   Semantic    arXiv
+                       Scholar
+              └─────────┼─────────┘
+                        ↓
+                 retry + cache
+                        ↓
+                normalized Papers
+                        ↓
+             keyword + semantic rank
+                        ↓
+                    SQLite
+                        ↓
+          ┌─────────────┼──────────────┐
+          ↓             ↓              ↓
+        CLI            TUI           offline
+          └─────────────┼──────────────┘
+                        ↓
+              explicit user feedback
+                        ↓
+               personal ranking
+                        ↓
+                optional LLM triage
 ```
 
 ## Roadmap
 
-### v0.5 — personalization and source configuration
-
-Planned: `.env`/provider configuration cleanup, a source registry, more source enable/disable controls, and personalized ranking using `to-read`, `read`, `dismissed`, tags, and other explicit user feedback.
-
 ### v0.6 — citation intelligence
 
-References, cited-by, related papers, prior/derivative work exploration, and citation-aware discovery.
+- references / cited-by;
+- related papers;
+- prior and derivative work exploration;
+- citation-aware discovery;
+- better cross-source identifier linking.
 
-### v0.7 — automated research digest
+### v0.7 — research digest
 
-Scheduled digests with new highly relevant papers, possible overlap warnings, and reading-queue summaries.
+- scheduled new-paper scans;
+- weekly/daily digest;
+- possible-overlap warnings;
+- reading-queue summaries.
 
-### v0.8+ — research map / workspace
+### v0.8+ — research map/workspace
 
-Graph-based literature exploration, richer annotations, and eventually a browser-based workspace after the workflow is proven in the TUI.
+- citation/semantic graph;
+- richer annotations;
+- literature clusters;
+- eventually a browser-based workspace after the TUI workflow is proven.
+
+### Longer-term
+
+- stronger persistent vector indexing for large libraries;
+- SQLite FTS5 for full-text search at scale;
+- richer source adapters and provider-specific pagination/bulk endpoints;
+- evidence-grounded LLM assessment;
+- import/export interoperability with reference managers.
 
 ## Changelog
 
-See [`CHANGELOG.md`](CHANGELOG.md) for release-by-release changes and bug fixes.
+See [`CHANGELOG.md`](CHANGELOG.md) for the release history.

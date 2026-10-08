@@ -1,25 +1,29 @@
 from __future__ import annotations
 
 import json
-import os
 import urllib.parse
-import urllib.request
 
 from .base import Paper, parse_iso_date
+from .http import fetch_bytes
 
 BASE_URL = "https://api.openalex.org/works"
 
 
-def search(query: str, *, per_page: int = 25) -> list[Paper]:
-    params = urllib.parse.urlencode({"search": query, "per-page": per_page})
-    url = f"{BASE_URL}?{params}"
-    headers = {"User-Agent": "LitRadar/0.3"}
-    mailto = os.getenv("LITRADAR_MAILTO")
-    if mailto:
-        headers["From"] = mailto
-    request = urllib.request.Request(url, headers=headers)
-    with urllib.request.urlopen(request, timeout=20) as response:
-        payload = json.load(response)
+def search(
+    query: str,
+    *,
+    per_page: int = 25,
+    timeout: float = 20.0,
+    retries: int = 3,
+    backoff: float = 1.0,
+    api_key: str | None = None,
+) -> list[Paper]:
+    params = {"search": query, "per-page": per_page}
+    if api_key:
+        params["api_key"] = api_key
+    url = f"{BASE_URL}?{urllib.parse.urlencode(params)}"
+    headers = {"User-Agent": "LitRadar/0.5"}
+    payload = json.loads(fetch_bytes(url, headers=headers, timeout=timeout, retries=retries, backoff=backoff))
 
     papers: list[Paper] = []
     for item in payload.get("results", []):
@@ -30,10 +34,7 @@ def search(query: str, *, per_page: int = 25) -> list[Paper]:
         doi = item.get("doi") or item.get("ids", {}).get("doi")
         source_tags = []
         for keyword in item.get("keywords") or []:
-            if isinstance(keyword, dict):
-                value = keyword.get("display_name") or keyword.get("keyword")
-            else:
-                value = keyword
+            value = keyword.get("display_name") if isinstance(keyword, dict) else keyword
             if value:
                 source_tags.append(str(value).strip())
         papers.append(
@@ -41,7 +42,11 @@ def search(query: str, *, per_page: int = 25) -> list[Paper]:
                 source="openalex",
                 title=item.get("display_name") or item.get("title") or "Untitled",
                 abstract=abstract,
-                authors=[(a.get("author") or {}).get("display_name", "") for a in item.get("authorships", []) if (a.get("author") or {}).get("display_name")],
+                authors=[
+                    (a.get("author") or {}).get("display_name", "")
+                    for a in item.get("authorships", [])
+                    if (a.get("author") or {}).get("display_name")
+                ],
                 published_at=parse_iso_date(item.get("publication_date")),
                 doi=doi,
                 url=item.get("id") or item.get("landing_page_url"),

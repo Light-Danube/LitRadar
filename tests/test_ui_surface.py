@@ -21,9 +21,11 @@ async def test_ui_mounts_expected_controls(tmp_path):
         assert app.query_one("#search")
         assert app.query_one("#status")
         assert app.query_one("#sort")
+        assert app.query_one("#tag")
+        assert app.query_one("#library_count")
         assert app.query_one("#main")
         assert app.query_one("#papers")
         assert app.query_one("#details")
 
         bindings = {binding.key for binding in app.BINDINGS}
-        assert {"?", "g", "l", "s"}.issubset(bindings)
+        assert {"?", "g", "k", "l", "s", "y", "n"}.issubset(bindings)

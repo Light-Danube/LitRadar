@@ -1,24 +1,29 @@
 from __future__ import annotations
 
 import json
-import os
 import urllib.parse
-import urllib.request
 
 from .base import Paper, parse_iso_date
+from .http import fetch_bytes
 
 BASE_URL = "https://api.semanticscholar.org/graph/v1/paper/search"
 
 
-def search(query: str, *, limit: int = 25) -> list[Paper]:
+def search(
+    query: str,
+    *,
+    limit: int = 25,
+    timeout: float = 20.0,
+    retries: int = 3,
+    backoff: float = 1.0,
+    api_key: str | None = None,
+) -> list[Paper]:
     fields = "title,abstract,authors,year,venue,url,externalIds,citationCount,publicationDate,openAccessPdf,fieldsOfStudy"
     params = urllib.parse.urlencode({"query": query, "limit": limit, "fields": fields})
-    request = urllib.request.Request(f"{BASE_URL}?{params}", headers={"User-Agent": "LitRadar/0.3"})
-    api_key = os.getenv("SEMANTIC_SCHOLAR_API_KEY")
+    headers = {"User-Agent": "LitRadar/0.5"}
     if api_key:
-        request.add_header("x-api-key", api_key)
-    with urllib.request.urlopen(request, timeout=20) as response:
-        payload = json.load(response)
+        headers["x-api-key"] = api_key
+    payload = json.loads(fetch_bytes(f"{BASE_URL}?{params}", headers=headers, timeout=timeout, retries=retries, backoff=backoff))
 
     papers: list[Paper] = []
     for item in payload.get("data", []):

@@ -7,7 +7,9 @@ import textwrap
 import webbrowser
 from pathlib import Path
 
+from config import RadarConfig
 from ranking.keywords import KeywordProfile
+from ranking.personalization import PersonalizationModel, build_model, neutral_results, score_rows
 from ranking.scoring import Score, rank_papers, score_papers_semantic
 from bibliography import export_rows
 from offline import DEFAULT_OFFLINE_DIR, is_available_offline, offline_pdf_path, save_paper_offline
@@ -22,19 +24,6 @@ VERSION = (ROOT / "VERSION").read_text(encoding="utf-8").strip()
 
 def _load_profile(path: str | None) -> KeywordProfile:
     return KeywordProfile.from_json(path or DEFAULT_PROFILE)
-
-
-def _search_source(name: str, query: str, limit: int) -> list[Paper]:
-    if name == "openalex":
-        from sources.openalex import search
-        return search(query, per_page=limit)
-    if name == "semantic_scholar":
-        from sources.semantic_scholar import search
-        return search(query, limit=limit)
-    if name == "arxiv":
-        from sources.arxiv import search
-        return search(query, max_results=limit)
-    raise ValueError(name)
 
 
 def _make_embedder(profile: KeywordProfile):
@@ -64,36 +53,47 @@ def cmd_init(args: argparse.Namespace) -> int:
 
 
 def cmd_search(args: argparse.Namespace) -> int:
+    config = RadarConfig.load()
     profile = _load_profile(args.profile)
     query = args.query or "adaptive context emotion sarcasm online conversation"
     store = PaperStore(args.db)
-    all_papers: list[Paper] = []
+    try:
+        from sources.registry import search_all_sources
 
-    for source in args.sources:
-        try:
-            papers = _search_source(source, query, args.per_source)
+        requested_sources = tuple(args.sources) if args.sources else config.enabled_sources
+        source_results, source_errors = search_all_sources(
+            query,
+            sources=requested_sources,
+            per_source=args.per_source,
+            config=config,
+        )
+        all_papers: list[Paper] = []
+        for source in requested_sources:
+            if source in source_errors:
+                print(f"{source}: ERROR: {source_errors[source]}", file=sys.stderr)
+                continue
+            papers = source_results.get(source, [])
             print(f"{source}: fetched {len(papers)} papers", file=sys.stderr)
             all_papers.extend(papers)
-        except Exception as exc:
-            print(f"{source}: ERROR: {exc}", file=sys.stderr)
 
-    ranked = _rank(all_papers, profile, semantic=args.semantic)
-    store.upsert_papers(
-        (
-            paper,
-            score.total,
-            score.group_hits,
-            score.keyword_score,
-            score.semantic_score,
-            score.scoring_version,
+        ranked = _rank(all_papers, profile, semantic=args.semantic)
+        store.upsert_papers(
+            (
+                paper,
+                score.total,
+                score.group_hits,
+                score.keyword_score,
+                score.semantic_score,
+                score.scoring_version,
+            )
+            for paper, score in ranked
         )
-        for paper, score in ranked
-    )
 
-    for index, (paper, score) in enumerate(ranked[: args.limit], start=1):
-        _print_scored(index, paper, score)
-    store.close()
-    return 0 if ranked else 1
+        for index, (paper, score) in enumerate(ranked[: args.limit], start=1):
+            _print_scored(index, paper, score)
+        return 0 if ranked else 1
+    finally:
+        store.close()
 
 
 def _print_scored(index: int, paper: Paper, score: Score) -> None:
@@ -120,16 +120,18 @@ def _format_llm(row) -> str:
     return f" | LLM relevance={llm.get('relevance', 0):.2f} overlap={llm.get('overlap_level', 'n/a')}"
 
 
-def _print_rows(rows) -> None:
+def _print_rows(rows, score_overrides: dict[int, float] | None = None) -> None:
     if not rows:
         print("No papers matched the current view.")
         return
+    score_overrides = score_overrides or {}
     for index, row in enumerate(rows, start=1):
         semantic = "n/a" if row["semantic_score"] is None else f"{row['semantic_score']:.3f}"
         tags = json.loads(row["tags_json"] or "[]")
         tag_text = f" | tags={','.join(tags)}" if tags else ""
         offline_marker = " | offline" if is_available_offline(row) else ""
-        print(f"{index:>2}. [{row['relevance_score']:>5.3f}] {row['title']}{offline_marker}")
+        display_score = score_overrides.get(int(row["id"]), float(row["relevance_score"]))
+        print(f"{index:>2}. [{display_score:>5.3f}] {row['title']}{offline_marker}")
         print(
             f"    id={row['id']} | {row['status']} | {row['source']} | {row['published_at'] or 'date n/a'} "
             f"| keyword={row['keyword_score']:.3f} | semantic={semantic} | citations={row['citation_count']}"
@@ -139,31 +141,79 @@ def _print_rows(rows) -> None:
             print(f"    {row['url']}")
 
 
+def _personalized_view(store: PaperStore, *, profile: KeywordProfile, config: RadarConfig, limit: int, status: str = "all", query: str | None = None, tag: str | None = None, min_score: float | None = None):
+    base_rows = store.list_papers(
+        limit=config.personalization_scan_limit,
+        status=status,
+        query=query,
+        tag=tag,
+        min_score=min_score,
+        sort="relevance_score",
+    )
+    if not config.personalization_enabled:
+        return neutral_results(base_rows)[:limit], PersonalizationModel(interactions=0, group_signal={})
+    model = build_model(store.feedback_rows(), min_feedback=config.personalization_min_feedback)
+    ranked = score_rows(base_rows, model, profile, weight=config.personalized_weight)
+    return ranked[:limit], model
+
+
 def cmd_list(args: argparse.Namespace) -> int:
     store = PaperStore(args.db)
-    total = store.total_count(status=args.status, query=args.query, tag=args.tag, min_score=args.min_score)
-    rows = store.list_papers(
-        limit=args.limit,
-        status=args.status,
-        query=args.query,
-        tag=args.tag,
-        min_score=args.min_score,
-        sort=args.sort,
-    )
-    if rows:
-        print(f"Showing {len(rows)} of {total} stored matching paper(s).")
-    else:
-        print(f"No papers matched the current view (0 of {total}).")
-    _print_rows(rows)
-    store.close()
-    return 0
+    try:
+        total = store.total_count(status=args.status, query=args.query, tag=args.tag, min_score=args.min_score)
+        profile = _load_profile(args.profile) if args.sort == "personalized" else None
+        if args.sort == "personalized":
+            config = RadarConfig.load()
+            ranked, model = _personalized_view(
+                store,
+                profile=profile,
+                config=config,
+                limit=args.limit,
+                status=args.status,
+                query=args.query,
+                tag=args.tag,
+                min_score=args.min_score,
+            )
+            rows = [row for row, _ in ranked]
+            score_overrides = {int(row["id"]): result.score for row, result in ranked}
+            if not config.personalization_enabled:
+                print("Personalized ranking is disabled by configuration; showing base relevance.")
+            elif model.ready:
+                print(f"Personalized ranking active ({model.interactions} feedback actions).")
+            else:
+                print(f"Personalized ranking needs {config.personalization_min_feedback} feedback actions; showing base relevance.")
+        else:
+            rows = store.list_papers(
+                limit=args.limit,
+                status=args.status,
+                query=args.query,
+                tag=args.tag,
+                min_score=args.min_score,
+                sort=args.sort,
+            )
+        if rows:
+            print(f"Showing {len(rows)} of {total} stored matching paper(s).")
+        else:
+            print(f"No papers matched the current view (0 of {total}).")
+        _print_rows(rows, score_overrides if args.sort == "personalized" else None)
+        return 0
+    finally:
+        store.close()
 
 
 def cmd_top(args: argparse.Namespace) -> int:
     store = PaperStore(args.db)
-    _print_rows(store.top(args.limit, sort=args.sort))
-    store.close()
-    return 0
+    try:
+        if args.sort == "personalized":
+            config = RadarConfig.load()
+            profile = _load_profile(args.profile)
+            ranked, _model = _personalized_view(store, profile=profile, config=config, limit=args.limit)
+            _print_rows([row for row, _ in ranked], {int(row["id"]): result.score for row, result in ranked})
+        else:
+            _print_rows(store.top(args.limit, sort=args.sort))
+        return 0
+    finally:
+        store.close()
 
 
 def cmd_recent(args: argparse.Namespace) -> int:
@@ -286,6 +336,20 @@ def cmd_tags(args: argparse.Namespace) -> int:
         return 1
     finally:
         store.close()
+
+
+def cmd_feedback(args: argparse.Namespace) -> int:
+    store = PaperStore(args.db)
+    try:
+        signal = 1.0 if args.signal == "positive" else -1.0
+        store.record_feedback(args.paper_id, signal, reason=args.reason)
+    except KeyError:
+        print(f"Paper not found: {args.paper_id}", file=sys.stderr)
+        return 1
+    finally:
+        store.close()
+    print(f"Recorded {args.signal} feedback for paper {args.paper_id}.")
+    return 0
 
 
 def cmd_note(args: argparse.Namespace) -> int:
@@ -496,16 +560,26 @@ def cmd_assess(args: argparse.Namespace) -> int:
     return 0 if assessed else 1
 
 
+def cmd_config(args: argparse.Namespace) -> int:
+    config = RadarConfig.load()
+    print(json.dumps(config.masked_dict(), ensure_ascii=False, indent=2))
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     epilog = """
 Examples:
   python cli.py init
   python cli.py search "adaptive context emotion sarcasm"
+  python cli.py config
   python cli.py list --status new --sort recent
+  python cli.py list --sort personalized --limit 20
   python cli.py list --query "context selection" --min-score 0.80
   python cli.py show 42
   python cli.py set-status 42 to-read
   python cli.py dismiss 42 --reason irrelevant
+  python cli.py feedback 42 positive --reason useful
+  python cli.py list --sort personalized --limit 20
   python cli.py restore 42
   python cli.py review --status new
   python cli.py ui
@@ -531,10 +605,13 @@ Most commands have their own help page, e.g.:
     p_init = sub.add_parser("init", help="initialize or migrate the database")
     p_init.set_defaults(func=cmd_init)
 
+    p_config = sub.add_parser("config", help="show effective runtime configuration (secrets are masked)")
+    p_config.set_defaults(func=cmd_config)
+
     p_search = sub.add_parser("search", help="search sources, score papers, and store results")
     p_search.add_argument("query", nargs="?", help="search query")
     p_search.add_argument("--profile", default=str(DEFAULT_PROFILE), help="research profile JSON")
-    p_search.add_argument("--sources", nargs="+", default=["openalex", "semantic_scholar", "arxiv"], choices=["openalex", "semantic_scholar", "arxiv"])
+    p_search.add_argument("--sources", nargs="+", help="registered providers; defaults to LITRADAR_SOURCES")
     p_search.add_argument("--per-source", type=int, default=20, help="papers requested from each source")
     p_search.add_argument("--limit", type=int, default=15, help="number of fetched papers to print")
     p_search.add_argument("--semantic", action=argparse.BooleanOptionalAction, default=True, help="use sentence-transformer semantic scoring")
@@ -547,11 +624,13 @@ Most commands have their own help page, e.g.:
     p_list.add_argument("--tag", help="filter by tag")
     p_list.add_argument("--min-score", type=float, help="minimum relevance score")
     p_list.add_argument("--sort", choices=SORT_CHOICES, default="relevance_score")
+    p_list.add_argument("--profile", default=str(DEFAULT_PROFILE), help="research profile JSON (used by personalized sort)")
     p_list.set_defaults(func=cmd_list)
 
     p_top = sub.add_parser("top", help="show stored papers ranked by score")
     p_top.add_argument("limit", type=int, nargs="?", default=10)
     p_top.add_argument("--sort", choices=SORT_CHOICES, default="relevance_score")
+    p_top.add_argument("--profile", default=str(DEFAULT_PROFILE), help="research profile JSON (used by personalized sort)")
     p_top.set_defaults(func=cmd_top)
 
     p_recent = sub.add_parser("recent", help="show the most recently published stored papers")
@@ -574,6 +653,12 @@ Most commands have their own help page, e.g.:
     p_dismiss.add_argument("paper_id", type=int)
     p_dismiss.add_argument("--reason", choices=["irrelevant", "duplicate", "too broad", "wrong domain", "already known", "other"])
     p_dismiss.set_defaults(func=cmd_dismiss)
+
+    p_feedback = sub.add_parser("feedback", help="record explicit positive/negative feedback for personalization")
+    p_feedback.add_argument("paper_id", type=int)
+    p_feedback.add_argument("signal", choices=["positive", "negative"])
+    p_feedback.add_argument("--reason", default="", help="optional reason, e.g. useful, irrelevant, too broad")
+    p_feedback.set_defaults(func=cmd_feedback)
 
     p_restore = sub.add_parser("restore", help="restore a dismissed/archived paper")
     p_restore.add_argument("paper_id", type=int)

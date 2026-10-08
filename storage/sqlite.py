@@ -8,7 +8,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Iterable
 
-from sources.base import Paper, extract_arxiv_id, normalize_title
+from sources.base import Paper, extract_arxiv_id
 
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS papers (
@@ -48,11 +48,20 @@ CREATE TABLE IF NOT EXISTS papers (
     archived_at TEXT,
     dismissed_at TEXT
 );
+CREATE TABLE IF NOT EXISTS feedback_events (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    paper_id INTEGER NOT NULL REFERENCES papers(id) ON DELETE CASCADE,
+    signal REAL NOT NULL,
+    reason TEXT NOT NULL DEFAULT '',
+    created_at TEXT NOT NULL
+);
+
 """
 
 STATUSES = ("new", "to-read", "read", "archived", "dismissed")
 SORT_CHOICES = (
     "relevance_score",
+    "personalized",
     "recent",
     "published_oldest",
     "newest_added",
@@ -121,14 +130,12 @@ class PaperStore:
 
         # Backfill stable dedup identifiers for legacy records.
         rows = self.conn.execute(
-            "SELECT id, title, title_normalized, title_hash, doi, doi_normalized, source, external_id, arxiv_id, source_refs_json, url, pdf_url FROM papers"
+            "SELECT id, title_normalized, title_hash, doi, doi_normalized, source, external_id, arxiv_id, source_refs_json FROM papers"
         ).fetchall()
         for row in rows:
             updates: dict[str, Any] = {}
-            normalized_title = normalize_title(str(row["title"] or ""))
-            if normalized_title and normalized_title != str(row["title_normalized"] or ""):
-                updates["title_normalized"] = normalized_title
-            if normalized_title and (not row["title_hash"] or row["title_normalized"] != normalized_title):
+            normalized_title = str(row["title_normalized"] or "").strip()
+            if not row["title_hash"] and normalized_title:
                 updates["title_hash"] = _title_hash(normalized_title)
             if not row["doi_normalized"] and row["doi"]:
                 updates["doi_normalized"] = _clean_doi(row["doi"])
@@ -152,8 +159,8 @@ class PaperStore:
                     str(row["source"]): {
                         "source": row["source"],
                         "external_id": row["external_id"],
-                        "url": row["url"],
-                        "pdf_url": row["pdf_url"],
+                        "url": None,
+                        "pdf_url": None,
                         **({"arxiv_id": arxiv_id} if arxiv_id else {}),
                     }
                 }
@@ -177,6 +184,8 @@ class PaperStore:
         self.conn.execute("CREATE INDEX IF NOT EXISTS idx_papers_title_hash ON papers(title_hash)")
         self.conn.execute("CREATE INDEX IF NOT EXISTS idx_papers_title_lower ON papers(lower(title))")
         self.conn.execute("CREATE INDEX IF NOT EXISTS idx_papers_citations ON papers(citation_count DESC)")
+        self.conn.execute("CREATE INDEX IF NOT EXISTS idx_feedback_paper ON feedback_events(paper_id)")
+        self.conn.execute("CREATE INDEX IF NOT EXISTS idx_feedback_created ON feedback_events(created_at DESC)")
         self.conn.commit()
 
     def close(self) -> None:
@@ -275,7 +284,7 @@ class PaperStore:
             url = paper.url or existing["url"]
             pdf_url = paper.pdf_url or existing["pdf_url"]
             doi = paper.doi or existing["doi"]
-            source_external_id = existing["external_id"] or paper.external_id
+            source_external_id = paper.external_id or existing["external_id"]
             source_name = existing["source"] or paper.source
 
             self.conn.execute(
@@ -560,16 +569,12 @@ class PaperStore:
         self.conn.commit()
 
     def all_tags(self, *, include_source: bool = True) -> list[str]:
-        tags_by_key: dict[str, str] = {}
+        tags: set[str] = set()
         for row in self.conn.execute("SELECT tags_json, source_tags_json FROM papers"):
-            values = list(json.loads(row[0] or "[]"))
+            tags.update(json.loads(row[0] or "[]"))
             if include_source:
-                values.extend(json.loads(row[1] or "[]"))
-            for tag in values:
-                value = str(tag).strip()
-                if value:
-                    tags_by_key.setdefault(value.casefold(), value)
-        return sorted(tags_by_key.values(), key=str.casefold)
+                tags.update(json.loads(row[1] or "[]"))
+        return sorted(tags, key=str.casefold)
 
     def source_tags(self, paper_id: int) -> list[str]:
         row = self.get(paper_id)
@@ -585,6 +590,43 @@ class PaperStore:
             raise KeyError(paper_id)
         self.conn.execute("UPDATE papers SET notes=? WHERE id=?", (notes, paper_id))
         self.conn.commit()
+
+    def feedback_rows(self) -> list[sqlite3.Row]:
+        """Return only fields needed to build the lightweight personal preference model."""
+        return list(
+            self.conn.execute(
+                "SELECT status, dismiss_reason, matched_groups_json FROM papers "
+                "WHERE status != 'new'"
+            )
+        )
+
+    def record_feedback(self, paper_id: int, signal: float, *, reason: str = "") -> None:
+        if self.get(paper_id) is None:
+            raise KeyError(paper_id)
+        signal = max(-1.0, min(1.0, float(signal)))
+        self.conn.execute(
+            "INSERT INTO feedback_events(paper_id, signal, reason, created_at) VALUES (?, ?, ?, ?)",
+            (paper_id, signal, str(reason).strip(), _now()),
+        )
+        self.conn.commit()
+
+    def feedback_count(self) -> int:
+        return int(self.conn.execute("SELECT COUNT(*) AS n FROM feedback_events").fetchone()["n"])
+
+    def feedback_rows(self) -> list[sqlite3.Row]:
+        """Return compact per-paper signals for the lightweight personal preference model."""
+        return list(
+            self.conn.execute(
+                """
+                SELECT p.status, p.dismiss_reason, p.matched_groups_json,
+                       COALESCE(SUM(f.signal), 0.0) AS explicit_feedback
+                FROM papers AS p
+                LEFT JOIN feedback_events AS f ON f.paper_id = p.id
+                WHERE p.status != 'new' OR f.id IS NOT NULL
+                GROUP BY p.id
+                """
+            )
+        )
 
     def stats(self) -> dict[str, int]:
         rows = self.conn.execute("SELECT status, COUNT(*) AS n FROM papers GROUP BY status").fetchall()

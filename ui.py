@@ -4,6 +4,9 @@ import json
 import webbrowser
 from pathlib import Path
 
+from config import RadarConfig
+from ranking.keywords import KeywordProfile
+from ranking.personalization import build_model, neutral_results, score_rows
 from storage.sqlite import PaperStore, SORT_CHOICES, STATUSES
 from offline import is_available_offline, offline_pdf_path, save_paper_offline
 
@@ -23,6 +26,7 @@ SORT_LABELS = {
     "title": "Title A–Z",
     "score": "Score ↓",
     "citations": "Citations ↓",
+    "personalized": "Personalized",
 }
 
 
@@ -41,11 +45,14 @@ class HelpScreen(ModalScreen[None]):
             "[b]Workflow[/b]\n"
             "T       mark To Read\n"
             "R       mark Read\n"
+            "Y       useful / positive feedback\n"
+            "N       not relevant / negative feedback\n"
             "D       dismiss\n"
             "U       restore\n"
             "G       edit tags\n"
             "L       save current paper offline\n"
-            "O       open local PDF or paper URL\n\n"
+            "O       open local PDF or paper URL\n"
+            "S       includes Personalized sort\n\n"
             "?       this help\n"
             "Q / Esc close help / quit\n",
             id="help_body",
@@ -112,6 +119,8 @@ class LitRadarApp(App[None]):
         Binding("t", "to_read", "To Read"),
         Binding("d", "dismiss", "Dismiss"),
         Binding("u", "restore", "Restore"),
+        Binding("y", "positive_feedback", "Useful"),
+        Binding("n", "negative_feedback", "Not relevant"),
         Binding("g", "tags", "Tags"),
         Binding("l", "download_offline", "Offline"),
         Binding("o", "open", "Open"),
@@ -126,6 +135,9 @@ class LitRadarApp(App[None]):
         self.db_path = str(db_path)
         self.store = PaperStore(db_path)
         self.current_rows = []
+        self.current_display_scores: dict[int, float] = {}
+        self.profile = KeywordProfile.from_json(Path(__file__).resolve().parent / "research_profile.json")
+        self._personal_model = None
 
     def compose(self) -> ComposeResult:
         yield Header(show_clock=True)
@@ -143,7 +155,7 @@ class LitRadarApp(App[None]):
                 id="sort",
                 allow_blank=False,
             )
-            yield Select([("All tags", "__all_tags__")],value="__all_tags__", id="tag", allow_blank=False,)
+            yield Select([("All tags", "__all_tags__")], value="__all_tags__", id="tag", allow_blank=False)
             yield Static("Papers: 0", id="library_count")
         with Horizontal(id="main"):
             yield DataTable(id="papers", cursor_type="row", zebra_stripes=True)
@@ -176,13 +188,41 @@ class LitRadarApp(App[None]):
         library_total = self.store.total_count()
         view_total = self.store.total_count(status=status, query=query, tag=tag)
         self.query_one("#library_count", Static).update(f"Library: {library_total} | View: {view_total}")
-        self.current_rows = self.store.list_papers(limit=200, status=status, query=query, tag=tag, sort=sort)
+
+        if sort == "personalized":
+            config = RadarConfig.load()
+            scan_limit = config.personalization_scan_limit
+            base_rows = self.store.list_papers(
+                limit=scan_limit, status=status, query=query, tag=tag, sort="relevance_score"
+            )
+            if not config.personalization_enabled:
+                model = None
+                ranked = neutral_results(base_rows)
+            else:
+                if self._personal_model is None:
+                    self._personal_model = build_model(
+                        self.store.feedback_rows(), min_feedback=config.personalization_min_feedback
+                    )
+                model = self._personal_model
+                ranked = score_rows(base_rows, model, self._profile(), weight=config.personalized_weight)
+            self.current_rows = [row for row, _result in ranked[:200]]
+            self.current_display_scores = {int(row["id"]): result.score for row, result in ranked[:200]}
+        else:
+            self.current_rows = self.store.list_papers(
+                limit=200, status=status, query=query, tag=tag, sort=sort
+            )
+            self.current_display_scores = {int(row["id"]): float(row["relevance_score"] or 0.0) for row in self.current_rows}
+
         table = self.query_one("#papers", DataTable)
         table.clear(columns=False)
         for row in self.current_rows:
             year = (row["published_at"] or "")[:4] or "—"
-            table.add_row(str(row["id"]), f"{row['relevance_score']:.3f}", row["status"], year, row["title"])
+            display_score = self.current_display_scores.get(int(row["id"]), float(row["relevance_score"] or 0.0))
+            table.add_row(str(row["id"]), f"{display_score:.3f}", row["status"], year, row["title"])
         self._show_details()
+
+    def _profile(self) -> object:
+        return self.profile
 
     def _show_details(self) -> None:
         paper_id = self._selected_id()
@@ -197,7 +237,8 @@ class LitRadarApp(App[None]):
         source_tags = ", ".join(json.loads(row["source_tags_json"] or "[]")) or "—"
         body = (
             f"Status: {row['status']}\n"
-            f"Score: {row['relevance_score']:.3f}\n"
+            f"Base score: {row['relevance_score']:.3f}\n"
+            f"Displayed score: {self.current_display_scores.get(int(row['id']), float(row['relevance_score'] or 0.0)):.3f}\n"
             f"Source: {row['source']}\n"
             f"Published: {row['published_at'] or 'n/a'}\n"
             f"Venue: {row['venue'] or 'n/a'}\n"
@@ -234,13 +275,30 @@ class LitRadarApp(App[None]):
         paper_id = self._selected_id()
         if paper_id is not None:
             self.store.set_status(paper_id, "dismissed", dismiss_reason="user")
+            self._personal_model = None
             self.refresh_rows()
 
     def action_restore(self) -> None:
         paper_id = self._selected_id()
         if paper_id is not None:
             self.store.set_status(paper_id, "new")
+            self._personal_model = None
             self.refresh_rows()
+
+    def action_positive_feedback(self) -> None:
+        self._record_feedback(1.0, "useful")
+
+    def action_negative_feedback(self) -> None:
+        self._record_feedback(-1.0, "not_relevant")
+
+    def _record_feedback(self, signal: float, reason: str) -> None:
+        paper_id = self._selected_id()
+        if paper_id is None:
+            return
+        self.store.record_feedback(paper_id, signal, reason=reason)
+        self._personal_model = None
+        self.notify("Recorded useful feedback." if signal > 0 else "Recorded not-relevant feedback.")
+        self.refresh_rows()
 
     def action_tags(self) -> None:
         paper_id = self._selected_id()
@@ -251,6 +309,7 @@ class LitRadarApp(App[None]):
         paper_id = self._selected_id()
         if paper_id is not None:
             self.store.set_status(paper_id, status)
+            self._personal_model = None
             self.refresh_rows()
 
     def action_download_offline(self) -> None:
