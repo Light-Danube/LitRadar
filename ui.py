@@ -143,7 +143,7 @@ class LitRadarApp(App[None]):
                 id="sort",
                 allow_blank=False,
             )
-            yield Select([], value="__all_tags__", id="tag", allow_blank=False)
+            yield Select([("All tags", "__all_tags__")],value="__all_tags__", id="tag", allow_blank=False,)
             yield Static("Papers: 0", id="library_count")
         with Horizontal(id="main"):
             yield DataTable(id="papers", cursor_type="row", zebra_stripes=True)
