@@ -1,14 +1,12 @@
-# LitRadar v0.5.4
+# LitRadar v0.6.0
 
 Personal literature radar and research inbox for discovering, ranking, triaging, and keeping academic papers locally.
 
 ## Current release
 
-**v0.5.4 — visible TUI progress and reliable Windows updater feedback.**
+**v0.6.0 — bounded citation graph discovery with durable citation links.**
 
-This is a maintenance release on top of v0.5.3, improving search visibility and Windows update diagnostics without changing the existing SQLite library format destructively.
-
-This release keeps v0.4.x and v0.5.0 SQLite libraries compatible. No database reset is required.
+This functional release builds on v0.5.4 and implements the citation-intelligence roadmap: it records real reference/cited-by relationships and related-work links, adds bounded graph exploration, and strengthens cross-source identifier linking. The SQLite changes are additive. Existing v0.4.x–v0.5.4 libraries migrate in place; no database reset is required.
 
 ### What is new
 
@@ -18,7 +16,7 @@ This release keeps v0.4.x and v0.5.0 SQLite libraries compatible. No database re
 - **Offline access:** verified PDF downloads, readable PDF filenames, and optional legal open-access fallback through Unpaywall (`UNPAYWALL_EMAIL`).
 - **Notes and exports:** structured note template through `$EDITOR`/`VISUAL`, Markdown literature-notes export, and BibTeX export with normalized, collision-safe citekeys.
 - **Search:** SQLite FTS5 indexes title, abstract, venue, and personal notes when supported; a `LIKE` fallback remains available.
-- **Citation metadata:** displays reference count and, when supplied by the provider, influential citation count.
+- **Citation intelligence:** persists references, cited-by edges, and related-work links; explores a bounded citation neighborhood from the CLI or TUI; reconciles DOI, arXiv, OpenAlex, Semantic Scholar, PMID/PMCID, and corpus identifiers where available. The original reference/citation counts remain available as metadata.
 - **Maintenance:** Windows updater now keeps its console open and reports success/failure; ZIP installs are explicitly told that `update_litradar.bat` requires a Git checkout. The TUI keeps a durable multi-line progress panel for provider search, ranking, and saving. The Rich-style test now supports both style strings and `Style` objects.
 
 The LLM assessment remains experimental/advisory; it does not override the primary ranking or establish scientific novelty.
@@ -36,6 +34,7 @@ python cli.py init
 python cli.py stats
 python cli.py list --limit 50
 python cli.py search "adaptive context emotion sarcasm"
+python cli.py explore 42 --direction all --depth 1 --max-nodes 50
 python cli.py ui
 ```
 
@@ -46,6 +45,7 @@ python cli.py search --help
 python cli.py list --help
 python cli.py download --help
 python cli.py export-notes --help
+python cli.py explore --help
 ```
 
 Run the fixture without network access:
@@ -250,16 +250,34 @@ G       edit tags
 L       save offline
 O       open local PDF / URL
 I       open DOI link
+C       explore references, papers citing the selection, and related works
 Ctrl+Enter / Fetch papers   search enabled online providers inside the TUI
 ?       keyboard help
 Q       quit
 ```
 
-The online source search is separate from the local library filter and displays source progress plus fetched/new/library totals. Search terms are highlighted in the selected paper's abstract when they match the local library filter. The detail view includes citation, reference, and (when available) influential-citation counts.
+The online source search is separate from the local library filter and displays source progress plus fetched/new/library totals. Search terms are highlighted in the selected paper's abstract when they match the local library filter. The detail view includes citation, reference, and (when available) influential-citation counts. Press `C` on a selected paper to explore its citation neighborhood in the background; results are added to the local library and the persistent activity panel shows provider/cache progress, final counts, and any provider errors.
 
 The TUI also supports a `Personalized` sort. The displayed Score column changes to the current ranking score while the detail panel shows both the base and displayed scores.
 
 Offline network work runs through a Textual worker so a slow PDF request does not block the main UI event loop.
+
+## Citation intelligence (v0.6)
+
+Citation exploration works on a bounded graph rather than downloading an unbounded network. A paper’s reference edges are stored as `citing paper → cited paper`; papers that cite the selected paper are stored in the opposite edge direction; OpenAlex `related_works` are stored as a separate undirected relation. Provider and fetch timestamps are retained so the local graph can be reused without calling every API again. The default citation cache TTL is seven days (`LITRADAR_CITATION_CACHE_TTL=604800`); `--refresh` bypasses that cache. The cache records the requested result limit, so increasing `--limit` triggers a wider lookup instead of silently reusing a narrower cached slice.
+
+```bash
+# Use a paper ID printed by `python cli.py list` or `show`
+python cli.py explore 42 --direction both --depth 1
+python cli.py explore 42 --direction all --depth 1 --limit 20 --max-nodes 50
+python cli.py explore 42 --direction references --depth 2 --refresh
+```
+
+`--direction` accepts `references`, `cited-by`, `related`, `both`, or `all`. `depth` is limited to 1–2, the per-provider/per-direction result limit to 1–100, and unique traversal nodes to 1–200. These limits deliberately guard API usage and keep interactive exploration responsive. OpenAlex supplies reference lists, works citing a seed, and curated related works; Semantic Scholar independently supplies references and citing works. A provider can return no results because a record is missing from its index, identifiers could not be resolved, a rate limit was reached, or the API was temporarily unavailable—an empty result is not proof that the paper has no citations.
+
+Schema migration is additive. `paper_identifiers`, `paper_relations`, and `citation_fetches` are created/backfilled without resetting the library. Matching prioritizes normalized DOI, arXiv ID without a version suffix, and provider identifiers; title matching remains a conservative fallback and does not merge identical titles that carry different explicit DOIs. No NetworkX or other graph package is required for the bounded traversal; SQLite handles durable edges and neighbor queries directly.
+
+API documentation: [OpenAlex citation recipes](https://developers.openalex.org/guides/recipes) · [Semantic Scholar Academic Graph API](https://api.semanticscholar.org/api-docs/graph). [OpenCitations](https://opencitations.net/index/api/v2) is a possible future adapter, but not required for this release because the existing OpenAlex and Semantic Scholar integrations cover the current workflow.
 
 ## Automatic source tags
 
@@ -318,7 +336,7 @@ Additive SQLite migrations are applied automatically. Upgrading from v0.4.x does
 
 For a local Git checkout, the easiest Windows update path is `update_litradar.bat`; on Linux/macOS use `./update_litradar.sh`. These scripts refuse to pull over local changes, run a fast-forward-only pull, update dependencies, migrate the library, and run tests. If you prefer a GUI, use GitHub Desktop's **Fetch origin → Pull origin**, then run `python cli.py init` and `python -m pytest -q`.
 
-To publish a release: update `VERSION`, `pyproject.toml`, and `CHANGELOG.md`; commit and push in GitHub Desktop; then create a GitHub Release using a matching tag such as `v0.5.4`. The `.github/workflows/release.yml` workflow automatically builds and attaches a clean source ZIP. No manual ZIP replacement is needed for users working from a Git checkout.
+To publish a release: update `VERSION`, `pyproject.toml`, and `CHANGELOG.md`; commit and push in GitHub Desktop; then create a GitHub Release using a matching tag such as `v0.6.0`. The `.github/workflows/release.yml` workflow automatically builds and attaches a clean source ZIP. No manual ZIP replacement is needed for users working from a Git checkout.
 
 The local database, offline files, provider/OA caches, and `.env` remain outside source control.
 
@@ -366,12 +384,13 @@ GitHub Actions contains a core test job and an optional Textual UI job. The test
 
 ## Roadmap
 
-### v0.6 — citation intelligence
+### v0.6 — citation intelligence — implemented in this release
 
-- query/store source references and cited-by links, not just their counts;
-- related papers and prior/derivative work exploration;
-- citation-aware discovery using a bounded citation graph;
-- better cross-source identifier linking and citation graph tests.
+- query and store references, cited-by edges, and curated related-work links;
+- discover prior and derivative work using bounded breadth-first traversal;
+- cache graph fetches and preserve provider provenance in SQLite;
+- cross-source DOI/arXiv/OpenAlex/Semantic Scholar/PMID/PMCID/corpus ID linking;
+- CLI `explore` command, TUI `C` action, and offline citation-graph regression tests.
 
 ### v0.7 — research digest
 

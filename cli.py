@@ -16,6 +16,7 @@ from bibliography import export_rows
 from offline import DEFAULT_OFFLINE_DIR, is_available_offline, offline_pdf_path, save_paper_offline
 from sources.base import Paper
 from pipeline import search_and_ingest
+from citation_intelligence import explore_citation_graph
 from notes import edit_note, export_notes_markdown
 from storage.sqlite import PaperStore, SORT_CHOICES, STATUSES
 
@@ -616,6 +617,56 @@ def cmd_assess(args: argparse.Namespace) -> int:
     return 0 if assessed else 1
 
 
+def cmd_explore(args: argparse.Namespace) -> int:
+    config = RadarConfig.load()
+    store = PaperStore(args.db)
+    try:
+        def report(event: str, message: str) -> None:
+            label = {"started": "FETCH", "completed": "DONE", "cache-hit": "CACHE", "error": "ERROR"}.get(event, event.upper())
+            print(f"[{label}] {message}", file=sys.stderr, flush=True)
+
+        result = explore_citation_graph(
+            store,
+            args.paper_id,
+            direction=args.direction,
+            depth=args.depth,
+            limit=args.limit,
+            max_nodes=args.max_nodes,
+            config=config,
+            refresh=args.refresh,
+            progress=report,
+        )
+        print(f"Citation exploration: {result.root_title} (library id={result.root_id})")
+        print(
+            f"Discovered {len(result.papers)} other paper(s); stored {result.edges_added} new relation edge(s); "
+            f"provider lookups={result.provider_requests}; cache hits={result.cache_hits}; "
+            f"depth≤{result.depth_limit}; node cap={result.max_nodes}."
+        )
+        if result.papers:
+            print("\nPapers (stored in the library; use `show ID` or `set-status ID to-read` to triage):")
+            for item in result.papers:
+                rel = ", ".join(item.via) or "citation graph"
+                year = item.year or "year n/a"
+                doi = f" | DOI {item.doi}" if item.doi else ""
+                print(f"  id={item.paper_id} | depth={item.depth} | links={item.graph_links} | {rel} | {year} | citations={item.citation_count} | {item.title}{doi}")
+                if item.url:
+                    print(f"      {item.url}")
+        for warning in result.warnings:
+            print(f"WARNING: {warning}", file=sys.stderr)
+        for error in result.errors:
+            print(f"ERROR: {error}", file=sys.stderr)
+        if result.errors and not result.papers:
+            return 1
+        if not result.papers and result.provider_requests == 0 and result.cache_hits == 0:
+            return 1
+        return 0
+    except ValueError as exc:
+        print(str(exc), file=sys.stderr)
+        return 1
+    finally:
+        store.close()
+
+
 def cmd_config(args: argparse.Namespace) -> int:
     config = RadarConfig.load()
     print(json.dumps(config.masked_dict(), ensure_ascii=False, indent=2))
@@ -632,6 +683,7 @@ Examples:
   python cli.py list --sort personalized --limit 20
   python cli.py list --query "context selection" --min-score 0.80
   python cli.py show 42
+  python cli.py explore 42 --direction all --depth 1
   python cli.py set-status 42 to-read
   python cli.py dismiss 42 --reason irrelevant
   python cli.py feedback 42 positive --reason useful
@@ -651,6 +703,7 @@ Most commands have their own help page, e.g.:
   python cli.py list --help
   python cli.py search --help
   python cli.py ui --help
+  python cli.py explore --help
 """
     parser = argparse.ArgumentParser(
         description=f"LitRadar {VERSION} — personal literature radar and research inbox",
@@ -702,6 +755,20 @@ Most commands have their own help page, e.g.:
     p_show = sub.add_parser("show", help="show one stored paper in detail")
     p_show.add_argument("paper_id", type=int)
     p_show.set_defaults(func=cmd_show)
+
+    p_explore = sub.add_parser(
+        "explore", help="discover and store a bounded citation neighborhood around a paper"
+    )
+    p_explore.add_argument("paper_id", type=int, help="ID of the seed paper in the local library")
+    p_explore.add_argument(
+        "--direction", choices=["both", "references", "cited-by", "related", "all"], default="both",
+        help="follow references, papers citing the seed, related works, or combinations",
+    )
+    p_explore.add_argument("--depth", type=int, choices=[1, 2], default=1, help="graph traversal depth (max 2)")
+    p_explore.add_argument("--limit", type=int, default=20, help="maximum papers per direction and provider (1-100)")
+    p_explore.add_argument("--max-nodes", type=int, default=50, help="maximum unique nodes in this traversal (1-200)")
+    p_explore.add_argument("--refresh", action="store_true", help="bypass the local citation cache")
+    p_explore.set_defaults(func=cmd_explore)
 
     p_status = sub.add_parser("set-status", help="change a paper's workflow status")
     p_status.add_argument("paper_id", type=int)

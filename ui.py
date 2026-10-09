@@ -11,6 +11,7 @@ from ranking.personalization import build_model, explain_candidate, neutral_resu
 from storage.sqlite import PaperStore, SORT_CHOICES, STATUSES
 from offline import is_available_offline, offline_pdf_path, save_paper_offline
 from pipeline import search_and_ingest
+from citation_intelligence import explore_citation_graph
 
 from rich.text import Text
 from textual.app import App, ComposeResult
@@ -75,6 +76,7 @@ class HelpScreen(ModalScreen[None]):
             "G       edit tags\n"
             "L       save current paper offline\n"
             "O       open local PDF or paper URL\n"
+            "C       explore citations/references for selected paper\n"
             "S       includes Personalized sort\n\n"
             "?       this help\n"
             "Q / Esc close help / quit\n",
@@ -153,6 +155,7 @@ class LitRadarApp(App[None]):
         Binding("s", "focus_sort", "Sort"),
         Binding("k", "focus_tag", "Tag"),
         Binding("ctrl+enter", "search_sources", "Fetch papers"),
+        Binding("c", "explore_citations", "Citation graph"),
     ]
 
     def __init__(self, db_path: str | Path) -> None:
@@ -169,6 +172,7 @@ class LitRadarApp(App[None]):
         self._search_source_done: set[str] = set()
         self._search_source_messages: dict[str, str] = {}
         self._search_phase_line = "Ready. Enter a query above; provider activity and the final summary will appear here."
+        self._citation_busy = False
 
     def compose(self) -> ComposeResult:
         yield Header(show_clock=True)
@@ -326,6 +330,9 @@ class LitRadarApp(App[None]):
             self.action_search_sources()
 
     def action_search_sources(self) -> None:
+        if self._citation_busy:
+            self.notify("Citation exploration is still running.", severity="warning")
+            return
         query = self.query_one("#source_query", Input).value.strip()
         if not query:
             self.notify("Enter a source-search query in the online search field first.", severity="warning")
@@ -357,6 +364,85 @@ class LitRadarApp(App[None]):
             self.call_from_thread(self._finish_source_search, summary)
         except Exception as exc:
             self.call_from_thread(self._finish_source_search_error, str(exc))
+
+    def action_explore_citations(self) -> None:
+        if self._citation_busy:
+            self.notify("Citation exploration is already running.", severity="warning")
+            return
+        if self.query_one("#search_sources", Button).disabled:
+            self.notify("An online source search is already running; wait for it to finish first.", severity="warning")
+            return
+        paper_id = self._selected_id()
+        if paper_id is None:
+            self.notify("Select a paper first.", severity="warning")
+            return
+        self._citation_busy = True
+        self.query_one("#search_sources", Button).disabled = True
+        self._begin_source_search(f"Citation graph for paper id={paper_id}", 0)
+        self._search_phase_line = "Preparing bounded citation graph (references, cited-by and related; depth 1, up to 50 nodes)…"
+        self._render_search_activity()
+        self._fetch_citation_graph(paper_id)
+
+    @work(exclusive=True, thread=True)
+    def _fetch_citation_graph(self, paper_id: int) -> None:
+        store = PaperStore(self.db_path)
+        try:
+            def progress(event: str, message: str) -> None:
+                self.call_from_thread(self._handle_citation_progress, event, message)
+
+            result = explore_citation_graph(
+                store,
+                paper_id,
+                direction="all",
+                depth=1,
+                limit=20,
+                max_nodes=50,
+                config=RadarConfig.load(),
+                progress=progress,
+            )
+            self.call_from_thread(self._finish_citation_explore, result)
+        except Exception as exc:
+            self.call_from_thread(self._finish_citation_explore_error, str(exc))
+        finally:
+            store.close()
+
+    def _handle_citation_progress(self, event: str, message: str) -> None:
+        self._search_phase_line = message
+        if event in {"completed", "cache-hit"}:
+            bar = self.query_one("#search_progress", ProgressBar)
+            current = int(bar.progress or 0)
+            bar.update(total=100, progress=min(90, current + 12))
+        elif event == "error":
+            self._search_source_messages["citation-warning"] = f"warning: {message}"
+        self._search_source_messages[f"citation-{len(self._search_source_messages)}"] = message
+        self._render_search_activity()
+
+    def _finish_citation_explore(self, result) -> None:
+        self._citation_busy = False
+        self.query_one("#search_sources", Button).disabled = False
+        self._search_phase_line = (
+            f"Citation graph finished: {len(result.papers)} neighbor(s), {result.edges_added} new edge(s), "
+            f"{result.provider_requests} provider lookup(s), {result.cache_hits} cache hit(s)."
+        )
+        if result.warnings:
+            self._search_phase_line += " " + " ".join(result.warnings[:1])
+        self._search_source_messages = {
+            f"paper-{index}": f"id={paper.paper_id}, depth={paper.depth}: {paper.title}"
+            for index, paper in enumerate(result.papers[:4], start=1)
+        }
+        if result.errors:
+            self._search_source_messages["errors"] = f"{len(result.errors)} provider error(s): {result.errors[0]}"
+        self.query_one("#search_progress", ProgressBar).update(total=100, progress=100)
+        self._render_search_activity()
+        self._personal_model = None
+        self.refresh_rows()
+
+    def _finish_citation_explore_error(self, message: str) -> None:
+        self._citation_busy = False
+        self.query_one("#search_sources", Button).disabled = False
+        self._search_phase_line = f"Citation exploration failed: {message}"
+        self._render_search_activity()
+        self.notify(f"Citation exploration failed: {message}", severity="error")
 
     def _begin_source_search(self, query: str, source_count: int) -> None:
         """Reset the persistent search activity panel before a new network query."""

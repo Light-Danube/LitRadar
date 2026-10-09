@@ -1,5 +1,31 @@
 # Changelog
 
+## 0.6.0 — citation intelligence — 2026-10-09
+
+### Added
+- OpenAlex citation adapter for a work's `referenced_works`, works that cite it, and `related_works`; related IDs are batch-fetched rather than queried one at a time.
+- Semantic Scholar adapter for reference and citing-paper endpoints, with request pacing for its shared unauthenticated quota.
+- Bounded breadth-first graph exploration via `python cli.py explore ID` and TUI `C`; the TUI uses a background worker and the persistent activity panel.
+- Durable SQLite `paper_identifiers`, `paper_relations`, and `citation_fetches` tables with indexes, provenance, normalized identifiers, cache TTL, and additive migrations/backfill.
+- Cross-source identifier reconciliation for DOI, versionless arXiv ID, OpenAlex ID, Semantic Scholar paper ID, PMID, PMCID, and Semantic Scholar corpus ID; added regression coverage for same-title papers with distinct explicit DOIs.
+- Bound controls: depth 1–2, 1–100 papers per provider/direction, and 1–200 unique traversal nodes.
+
+### Design decisions
+- No extra graph library: SQLite persists edges and supports bounded neighbor traversal; adding NetworkX/igraph would expand dependencies without improving the core retrieval/storage task.
+- OpenAlex and Semantic Scholar remain the first providers because both are already integrated. OpenCitations is documented as a future adapter, not another dependency/API path in this release.
+- Citation direction is consistently `citing -> cited`; `cited-by` is an incoming query and is stored as neighbor -> seed. Related-work pairs are undirected and stored separately.
+- API results are cached for seven days by default. The cached requested limit is tracked, so increasing `--limit` forces a wider lookup. Use `--refresh` to bypass the cache; failed lookups get a shorter retry window.
+- Newly discovered records enter the normal library so they can be filtered, tagged, read, or exported through existing workflows.
+
+### Compatibility
+- Existing databases are migrated additively and backfilled from stored source references; no database reset is required.
+- No new mandatory package or API key was added. The existing OpenAlex and Semantic Scholar keys remain optional configuration, though configuring them is recommended for dependable API access/quota.
+
+### Testing and limits
+- Offline API mocks cover OpenAlex references/cited-by/related parsing, Semantic Scholar directional wrappers, edge direction, cache behavior, identifier linking, bounds, and CLI discoverability.
+- Graph-degree ranking queries only edges touching the bounded subgraph rather than scanning the full relation table.
+- Local run: `78 passed, 4 skipped`; all four skips are optional Textual UI tests because Textual is not installed in the current build environment. No live external API call was used as a test.
+
 ## 0.5.4 — TUI progress and Windows updater diagnostics — 2026-10-09
 
 - Replaced transient successful-search toast with a persistent TUI activity panel showing the query, per-provider status, ranking, saving, and a progress bar. The final fetched/new/library counts remain visible in the main screen.

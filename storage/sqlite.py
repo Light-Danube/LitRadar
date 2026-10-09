@@ -57,6 +57,35 @@ CREATE TABLE IF NOT EXISTS feedback_events (
     reason TEXT NOT NULL DEFAULT '',
     created_at TEXT NOT NULL
 );
+CREATE TABLE IF NOT EXISTS paper_identifiers (
+    identifier_type TEXT NOT NULL,
+    identifier_value TEXT NOT NULL,
+    paper_id INTEGER NOT NULL REFERENCES papers(id) ON DELETE CASCADE,
+    source TEXT NOT NULL DEFAULT '',
+    updated_at TEXT NOT NULL,
+    PRIMARY KEY(identifier_type, identifier_value)
+);
+CREATE INDEX IF NOT EXISTS idx_paper_identifiers_paper ON paper_identifiers(paper_id);
+CREATE TABLE IF NOT EXISTS paper_relations (
+    source_paper_id INTEGER NOT NULL REFERENCES papers(id) ON DELETE CASCADE,
+    target_paper_id INTEGER NOT NULL REFERENCES papers(id) ON DELETE CASCADE,
+    relation_type TEXT NOT NULL CHECK(relation_type IN ('cites', 'related')),
+    provider TEXT NOT NULL,
+    observed_at TEXT NOT NULL,
+    PRIMARY KEY(source_paper_id, target_paper_id, relation_type, provider),
+    CHECK(source_paper_id <> target_paper_id)
+);
+CREATE INDEX IF NOT EXISTS idx_paper_relations_target ON paper_relations(target_paper_id, relation_type);
+CREATE TABLE IF NOT EXISTS citation_fetches (
+    paper_id INTEGER NOT NULL REFERENCES papers(id) ON DELETE CASCADE,
+    provider TEXT NOT NULL,
+    direction TEXT NOT NULL,
+    fetched_at TEXT NOT NULL,
+    result_count INTEGER NOT NULL DEFAULT 0,
+    requested_limit INTEGER NOT NULL DEFAULT 0,
+    error_message TEXT NOT NULL DEFAULT '',
+    PRIMARY KEY(paper_id, provider, direction)
+);
 
 """
 
@@ -83,7 +112,7 @@ def _clean_doi(value: str | None) -> str | None:
     if not value:
         return None
     value = str(value).strip()
-    value = re.sub(r"^https?://doi.org/", "", value, flags=re.IGNORECASE)
+    value = re.sub(r"^https?://(?:dx\.)?doi\.org/", "", value, flags=re.IGNORECASE)
     return value.casefold() or None
 
 
@@ -128,6 +157,12 @@ class PaperStore:
         for name, statement in migrations.items():
             if name not in columns:
                 self.conn.execute(statement)
+
+        fetch_columns = {row[1] for row in self.conn.execute("PRAGMA table_info(citation_fetches)")}
+        if "requested_limit" not in fetch_columns:
+            self.conn.execute(
+                "ALTER TABLE citation_fetches ADD COLUMN requested_limit INTEGER NOT NULL DEFAULT 0"
+            )
 
         now = _now()
         self.conn.execute("UPDATE papers SET created_at=? WHERE created_at=''", (now,))
@@ -176,6 +211,18 @@ class PaperStore:
                 self.conn.execute(
                     f"UPDATE papers SET {assignments} WHERE id=?",
                     (*updates.values(), row["id"]),
+                )
+
+        # Backfill cross-source identifiers once for libraries created before v0.6.
+        identifier_rows = self.conn.execute(
+            "SELECT id, source, external_id, doi, arxiv_id, source_refs_json FROM papers ORDER BY id"
+        ).fetchall()
+        for row in identifier_rows:
+            identifiers = self._identifiers_from_stored_row(row)
+            for identifier_type, identifier_value in identifiers:
+                self.conn.execute(
+                    "INSERT OR IGNORE INTO paper_identifiers(identifier_type, identifier_value, paper_id, source, updated_at) VALUES (?, ?, ?, ?, ?)",
+                    (identifier_type, identifier_value, row["id"], row["source"] or "", now),
                 )
 
         self.conn.execute("CREATE INDEX IF NOT EXISTS idx_papers_score ON papers(relevance_score DESC)")
@@ -278,7 +325,248 @@ class PaperStore:
             key=str.casefold,
         )
 
+    @staticmethod
+    def _normalize_identifier(identifier_type: str, value: Any) -> str | None:
+        text = str(value or "").strip()
+        if not text:
+            return None
+        kind = identifier_type.casefold().strip()
+        if kind == "doi":
+            text = re.sub(r"^https?://(?:dx\.)?doi\.org/", "", text, flags=re.IGNORECASE)
+            text = re.sub(r"^doi:\s*", "", text, flags=re.IGNORECASE)
+            return text.casefold().strip() or None
+        if kind == "arxiv_id":
+            text = extract_arxiv_id(text) or ""
+            text = re.sub(r"v\d+$", "", text, flags=re.IGNORECASE)
+            return text.casefold() or None
+        if kind == "openalex_id":
+            text = text.rstrip("/").rsplit("/", 1)[-1]
+        elif kind in {"semantic_scholar_id", "corpus_id", "pmid", "pmcid"}:
+            text = text.rsplit("/", 1)[-1]
+        return text.casefold() or None
+
+    @classmethod
+    def _identifiers_from_stored_row(cls, row) -> list[tuple[str, str]]:
+        pairs: set[tuple[str, str]] = set()
+        def add(kind: str, value: Any) -> None:
+            normalized = cls._normalize_identifier(kind, value)
+            if normalized:
+                pairs.add((kind, normalized))
+
+        add("doi", row["doi"])
+        add("arxiv_id", row["arxiv_id"])
+        source = str(row["source"] or "").casefold()
+        if source == "openalex":
+            add("openalex_id", row["external_id"])
+        elif source == "semantic_scholar":
+            add("semantic_scholar_id", row["external_id"])
+        elif source == "arxiv":
+            add("arxiv_id", row["external_id"])
+        try:
+            refs = json.loads(row["source_refs_json"] or "{}")
+        except (json.JSONDecodeError, TypeError):
+            refs = {}
+        key_aliases = {
+            "doi": "doi", "openalex_id": "openalex_id", "semantic_scholar_id": "semantic_scholar_id",
+            "s2_id": "semantic_scholar_id", "arxiv_id": "arxiv_id", "pmid": "pmid",
+            "pmcid": "pmcid", "corpus_id": "corpus_id",
+        }
+        if isinstance(refs, dict):
+            for source_name, ref in refs.items():
+                if not isinstance(ref, dict):
+                    continue
+                ref_source = str(ref.get("source") or source_name).casefold()
+                external_id = ref.get("external_id")
+                if external_id:
+                    if ref_source == "openalex":
+                        add("openalex_id", external_id)
+                    elif ref_source == "semantic_scholar":
+                        add("semantic_scholar_id", external_id)
+                    elif ref_source == "arxiv":
+                        add("arxiv_id", external_id)
+                for key, value in ref.items():
+                    identifier_type = key_aliases.get(str(key).casefold())
+                    if identifier_type:
+                        add(identifier_type, value)
+        return sorted(pairs)
+
+    @classmethod
+    def _identifiers_for_paper(cls, paper: Paper) -> list[tuple[str, str]]:
+        pairs: set[tuple[str, str]] = set()
+        def add(kind: str, value: Any) -> None:
+            normalized = cls._normalize_identifier(kind, value)
+            if normalized:
+                pairs.add((kind, normalized))
+
+        add("doi", paper.doi)
+        if paper.source == "openalex":
+            add("openalex_id", paper.external_id)
+        elif paper.source == "semantic_scholar":
+            add("semantic_scholar_id", paper.external_id)
+        elif paper.source == "arxiv":
+            add("arxiv_id", paper.external_id)
+        aliases = {
+            "doi": "doi", "openalex_id": "openalex_id", "semantic_scholar_id": "semantic_scholar_id",
+            "s2_id": "semantic_scholar_id", "arxiv_id": "arxiv_id", "pmid": "pmid",
+            "pmcid": "pmcid", "corpus_id": "corpus_id",
+        }
+        for key, value in (paper.identifiers or {}).items():
+            kind = aliases.get(str(key).casefold())
+            if kind:
+                add(kind, value)
+        return sorted(pairs)
+
+    def _sync_identifiers(self, paper_id: int, paper: Paper) -> None:
+        now = _now()
+        for identifier_type, identifier_value in self._identifiers_for_paper(paper):
+            self.conn.execute(
+                "INSERT INTO paper_identifiers(identifier_type, identifier_value, paper_id, source, updated_at) "
+                "VALUES (?, ?, ?, ?, ?) ON CONFLICT(identifier_type, identifier_value) DO UPDATE SET "
+                "updated_at=excluded.updated_at",
+                (identifier_type, identifier_value, paper_id, paper.source, now),
+            )
+
+    def identifiers_for_paper(self, paper_id: int) -> dict[str, list[str]]:
+        rows = self.conn.execute(
+            "SELECT identifier_type, identifier_value FROM paper_identifiers WHERE paper_id=? ORDER BY identifier_type, identifier_value",
+            (paper_id,),
+        ).fetchall()
+        result: dict[str, list[str]] = {}
+        for row in rows:
+            result.setdefault(str(row["identifier_type"]), []).append(str(row["identifier_value"]))
+        return result
+
+    def has_fresh_citation_fetch(
+        self,
+        paper_id: int,
+        provider: str,
+        direction: str,
+        ttl_seconds: int,
+        *,
+        requested_limit: int | None = None,
+        force: bool = False,
+    ) -> bool:
+        if force or ttl_seconds <= 0:
+            return False
+        row = self.conn.execute(
+            "SELECT fetched_at, error_message, requested_limit FROM citation_fetches WHERE paper_id=? AND provider=? AND direction=?",
+            (paper_id, provider, direction),
+        ).fetchone()
+        if not row or not row["fetched_at"]:
+            return False
+        if requested_limit is not None and int(row["requested_limit"] or 0) < int(requested_limit):
+            # A caller asking for more neighbors than the cached result window
+            # must fetch again instead of silently reusing a narrower slice.
+            return False
+        try:
+            fetched = datetime.fromisoformat(str(row["fetched_at"]))
+            age = (datetime.now(timezone.utc) - fetched.astimezone(timezone.utc)).total_seconds()
+        except (ValueError, TypeError):
+            return False
+        allowed_age = min(ttl_seconds, 900) if row["error_message"] else ttl_seconds
+        return age >= 0 and age < allowed_age
+
+    def record_citation_fetch(
+        self,
+        paper_id: int,
+        provider: str,
+        direction: str,
+        result_count: int,
+        error_message: str = "",
+        *,
+        requested_limit: int = 0,
+    ) -> None:
+        with self.conn:
+            self.conn.execute(
+                "INSERT INTO citation_fetches(paper_id, provider, direction, fetched_at, result_count, requested_limit, error_message) "
+                "VALUES (?, ?, ?, ?, ?, ?, ?) ON CONFLICT(paper_id, provider, direction) DO UPDATE SET "
+                "fetched_at=excluded.fetched_at, result_count=excluded.result_count, "
+                "requested_limit=MAX(citation_fetches.requested_limit, excluded.requested_limit), "
+                "error_message=excluded.error_message",
+                (paper_id, provider, direction, _now(), int(result_count), max(0, int(requested_limit)), str(error_message)[:1000]),
+            )
+
+    def record_relation(self, source_paper_id: int, target_paper_id: int, relation_type: str, provider: str) -> bool:
+        if source_paper_id == target_paper_id:
+            return False
+        if relation_type not in {"cites", "related"}:
+            raise ValueError(f"Unsupported relation type: {relation_type}")
+        if relation_type == "related":
+            source_paper_id, target_paper_id = sorted((int(source_paper_id), int(target_paper_id)))
+        cursor = self.conn.execute(
+            "INSERT OR IGNORE INTO paper_relations(source_paper_id, target_paper_id, relation_type, provider, observed_at) "
+            "VALUES (?, ?, ?, ?, ?)",
+            (source_paper_id, target_paper_id, relation_type, provider, _now()),
+        )
+        self.conn.commit()
+        return cursor.rowcount > 0
+
+    def relation_neighbors(self, paper_id: int, direction: str) -> list[sqlite3.Row]:
+        if direction == "references":
+            query = "SELECT DISTINCT p.*, 'reference' AS relation_label FROM paper_relations r JOIN papers p ON p.id=r.target_paper_id WHERE r.source_paper_id=? AND r.relation_type='cites' ORDER BY p.citation_count DESC, p.title COLLATE NOCASE"
+        elif direction == "cited-by":
+            query = "SELECT DISTINCT p.*, 'cited-by' AS relation_label FROM paper_relations r JOIN papers p ON p.id=r.source_paper_id WHERE r.target_paper_id=? AND r.relation_type='cites' ORDER BY p.citation_count DESC, p.title COLLATE NOCASE"
+        elif direction == "related":
+            query = "SELECT DISTINCT p.*, 'related' AS relation_label FROM paper_relations r JOIN papers p ON p.id=CASE WHEN r.source_paper_id=? THEN r.target_paper_id ELSE r.source_paper_id END WHERE r.relation_type='related' AND (r.source_paper_id=? OR r.target_paper_id=?) ORDER BY p.citation_count DESC, p.title COLLATE NOCASE"
+        else:
+            raise ValueError(f"Unsupported neighbor direction: {direction}")
+        if direction == "related":
+            return self.conn.execute(query, (paper_id, paper_id, paper_id)).fetchall()
+        return self.conn.execute(query, (paper_id,)).fetchall()
+
+    def relation_degrees_within(self, paper_ids: Iterable[int]) -> dict[int, int]:
+        """Count distinct graph neighbors per node, ignoring duplicate provider edges."""
+        ids = {int(value) for value in paper_ids}
+        degrees = {value: 0 for value in ids}
+        if len(ids) < 2:
+            return degrees
+        ordered_ids = sorted(ids)
+        placeholders = ",".join("?" for _ in ordered_ids)
+        rows = self.conn.execute(
+            "SELECT source_paper_id, target_paper_id, relation_type FROM paper_relations "
+            f"WHERE source_paper_id IN ({placeholders}) OR target_paper_id IN ({placeholders})",
+            (*ordered_ids, *ordered_ids),
+        ).fetchall()
+        seen: set[tuple[int, int, str]] = set()
+        for row in rows:
+            source_id = int(row["source_paper_id"])
+            target_id = int(row["target_paper_id"])
+            if source_id not in ids or target_id not in ids:
+                continue
+            if row["relation_type"] == "related":
+                source_id, target_id = sorted((source_id, target_id))
+            edge_key = (source_id, target_id, str(row["relation_type"]))
+            if edge_key in seen:
+                continue
+            seen.add(edge_key)
+            degrees[source_id] += 1
+            degrees[target_id] += 1
+        return degrees
+
+    def citation_relation_count(self, paper_id: int) -> int:
+        row = self.conn.execute(
+            "SELECT COUNT(DISTINCT CASE WHEN relation_type='related' THEN "
+            "min(source_paper_id,target_paper_id)||':'||max(source_paper_id,target_paper_id) "
+            "ELSE source_paper_id||':'||target_paper_id END) AS n FROM paper_relations "
+            "WHERE source_paper_id=? OR target_paper_id=?",
+            (paper_id, paper_id),
+        ).fetchone()
+        return int(row["n"] or 0)
+
+    def find_existing_paper_id(self, paper: Paper) -> int | None:
+        row = self._find_duplicate(paper)
+        return int(row["id"]) if row else None
+
     def _find_duplicate(self, paper: Paper) -> sqlite3.Row | None:
+        for identifier_type, identifier_value in self._identifiers_for_paper(paper):
+            row = self.conn.execute(
+                "SELECT p.* FROM paper_identifiers i JOIN papers p ON p.id=i.paper_id "
+                "WHERE i.identifier_type=? AND i.identifier_value=? ORDER BY p.id LIMIT 1",
+                (identifier_type, identifier_value),
+            ).fetchone()
+            if row:
+                return row
+
         doi = _clean_doi(paper.doi)
         if doi:
             row = self.conn.execute(
@@ -299,11 +587,22 @@ class PaperStore:
 
         title_hash = paper.title_hash
         if title_hash:
-            row = self.conn.execute(
-                "SELECT * FROM papers WHERE title_hash=? ORDER BY id LIMIT 1", (title_hash,)
-            ).fetchone()
-            if row:
-                return row
+            if doi:
+                # A matching title must not merge two records that have different
+                # explicit DOIs (e.g. two similarly named versions/outputs).
+                row = self.conn.execute(
+                    "SELECT * FROM papers WHERE title_hash=? AND (doi_normalized IS NULL OR doi_normalized=?) "
+                    "ORDER BY CASE WHEN doi_normalized=? THEN 0 ELSE 1 END, id LIMIT 1",
+                    (title_hash, doi, doi),
+                ).fetchone()
+                if row:
+                    return row
+            else:
+                row = self.conn.execute(
+                    "SELECT * FROM papers WHERE title_hash=? ORDER BY id LIMIT 1", (title_hash,)
+                ).fetchone()
+                if row:
+                    return row
         return None
 
     def _upsert_paper_no_commit(
@@ -384,6 +683,7 @@ class PaperStore:
                     existing["id"],
                 ),
             )
+            self._sync_identifiers(int(existing["id"]), paper)
             return int(existing["id"])
 
         source_tags = sorted(set(paper.source_tags), key=str.casefold)
@@ -429,7 +729,9 @@ class PaperStore:
                 now,
             ),
         )
-        return int(cursor.lastrowid)
+        paper_id = int(cursor.lastrowid)
+        self._sync_identifiers(paper_id, paper)
+        return paper_id
 
     def upsert_paper(
         self,

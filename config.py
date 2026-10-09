@@ -64,6 +64,7 @@ class RadarConfig:
     source_retries: int = 3
     source_backoff: float = 2.0
     source_cache_ttl: int = 3600
+    citation_cache_ttl: int = 604800
 
     openalex_api_key: str | None = None
     semantic_scholar_api_key: str | None = None
@@ -88,6 +89,7 @@ class RadarConfig:
             source_retries=_get_int("LITRADAR_SOURCE_RETRIES", 3, 0),
             source_backoff=_get_float("LITRADAR_SOURCE_BACKOFF", 2.0, 0.0),
             source_cache_ttl=_get_int("LITRADAR_SOURCE_CACHE_TTL", 3600, 0),
+            citation_cache_ttl=_get_int("LITRADAR_CITATION_CACHE_TTL", 604800, 0),
             openalex_api_key=os.getenv("OPENALEX_API_KEY") or None,
             semantic_scholar_api_key=os.getenv("SEMANTIC_SCHOLAR_API_KEY") or None,
             openalex_mailto=os.getenv("LITRADAR_MAILTO") or None,
@@ -109,6 +111,7 @@ class RadarConfig:
             "source_retries": self.source_retries,
             "source_backoff": self.source_backoff,
             "source_cache_ttl": self.source_cache_ttl,
+            "citation_cache_ttl": self.citation_cache_ttl,
             "openalex_api_key": bool(self.openalex_api_key),
             "semantic_scholar_api_key": bool(self.semantic_scholar_api_key),
             "openalex_mailto_legacy": bool(self.openalex_mailto),
