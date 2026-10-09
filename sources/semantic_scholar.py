@@ -20,7 +20,7 @@ def search(
 ) -> list[Paper]:
     fields = "title,abstract,authors,year,venue,url,externalIds,citationCount,referenceCount,influentialCitationCount,publicationDate,openAccessPdf,fieldsOfStudy"
     params = urllib.parse.urlencode({"query": query, "limit": limit, "fields": fields})
-    headers = {"User-Agent": "LitRadar/0.5.3"}
+    headers = {"User-Agent": "LitRadar/0.5.4"}
     if api_key:
         headers["x-api-key"] = api_key
     payload = json.loads(fetch_bytes(f"{BASE_URL}?{params}", headers=headers, timeout=timeout, retries=retries, backoff=backoff))

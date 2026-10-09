@@ -3,7 +3,7 @@ set -euo pipefail
 cd "$(dirname "${BASH_SOURCE[0]}")"
 VENV="$PWD/.venv"
 PY="$VENV/bin/python"
-MARKER="$VENV/.litradar-deps-0.5.3"
+MARKER="$VENV/.litradar-deps-0.5.4"
 if [[ ! -x "$PY" ]]; then
   python3 -m venv "$VENV"
 fi

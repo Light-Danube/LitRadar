@@ -1,12 +1,12 @@
-# LitRadar v0.5.3
+# LitRadar v0.5.4
 
 Personal literature radar and research inbox for discovering, ranking, triaging, and keeping academic papers locally.
 
 ## Current release
 
-**v0.5.3 — literature workflow, offline retrieval, full-text search, and citation metadata.**
+**v0.5.4 — visible TUI progress and reliable Windows updater feedback.**
 
-This is a cumulative bridge release before Citation Intelligence (v0.6). It adds usability and data primitives without changing the existing SQLite library format destructively.
+This is a maintenance release on top of v0.5.3, improving search visibility and Windows update diagnostics without changing the existing SQLite library format destructively.
 
 This release keeps v0.4.x and v0.5.0 SQLite libraries compatible. No database reset is required.
 
@@ -19,7 +19,7 @@ This release keeps v0.4.x and v0.5.0 SQLite libraries compatible. No database re
 - **Notes and exports:** structured note template through `$EDITOR`/`VISUAL`, Markdown literature-notes export, and BibTeX export with normalized, collision-safe citekeys.
 - **Search:** SQLite FTS5 indexes title, abstract, venue, and personal notes when supported; a `LIKE` fallback remains available.
 - **Citation metadata:** displays reference count and, when supplied by the provider, influential citation count.
-- **Maintenance:** quick launch scripts, update scripts for Git checkouts, GitHub Actions tests, and automatic source ZIP attachments to published GitHub Releases.
+- **Maintenance:** Windows updater now keeps its console open and reports success/failure; ZIP installs are explicitly told that `update_litradar.bat` requires a Git checkout. The TUI keeps a durable multi-line progress panel for provider search, ranking, and saving. The Rich-style test now supports both style strings and `Style` objects.
 
 The LLM assessment remains experimental/advisory; it does not override the primary ranking or establish scientific novelty.
 
@@ -56,7 +56,7 @@ python cli.py list
 python -m pytest -q
 ```
 
-After publishing the repository, update the local checkout through GitHub Desktop (`Fetch origin` → `Pull origin`) or run `update_litradar.bat` on Windows / `./update_litradar.sh` on Linux/macOS. The updater refuses to pull over tracked local edits, updates dependencies, runs `init`, and executes tests. It does not replace the local database, `.env`, or offline PDFs.
+After publishing the repository, update a Git checkout through GitHub Desktop (`Fetch origin` → `Pull origin`) or run `update_litradar.bat` on Windows / `./update_litradar.sh` on Linux/macOS. The updater refuses to pull over tracked local edits, updates dependencies, runs `init`, and executes tests. It does not replace the local database, `.env`, or offline PDFs. If you installed LitRadar by extracting/copying a ZIP, the updater cannot fetch code because that folder has no `.git` directory; apply a newer patch/full ZIP manually or clone the repository with GitHub Desktop.
 ## Installation
 
 Create a virtual environment and install the core dependencies:
@@ -318,7 +318,7 @@ Additive SQLite migrations are applied automatically. Upgrading from v0.4.x does
 
 For a local Git checkout, the easiest Windows update path is `update_litradar.bat`; on Linux/macOS use `./update_litradar.sh`. These scripts refuse to pull over local changes, run a fast-forward-only pull, update dependencies, migrate the library, and run tests. If you prefer a GUI, use GitHub Desktop's **Fetch origin → Pull origin**, then run `python cli.py init` and `python -m pytest -q`.
 
-To publish a release: update `VERSION`, `pyproject.toml`, and `CHANGELOG.md`; commit and push in GitHub Desktop; then create a GitHub Release using a matching tag such as `v0.5.3`. The `.github/workflows/release.yml` workflow automatically builds and attaches a clean source ZIP. No manual ZIP replacement is needed for users working from a Git checkout.
+To publish a release: update `VERSION`, `pyproject.toml`, and `CHANGELOG.md`; commit and push in GitHub Desktop; then create a GitHub Release using a matching tag such as `v0.5.4`. The `.github/workflows/release.yml` workflow automatically builds and attaches a clean source ZIP. No manual ZIP replacement is needed for users working from a Git checkout.
 
 The local database, offline files, provider/OA caches, and `.env` remain outside source control.
 

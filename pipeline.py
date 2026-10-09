@@ -66,6 +66,8 @@ def search_and_ingest(
     store = PaperStore(db_path)
     try:
         before = store.total_count()
+        if progress is not None:
+            progress("phase", "search", f"Searching {len(requested_sources)} online source(s) for: {query}")
         source_results, source_errors = search_all_sources(
             query,
             sources=requested_sources,
@@ -79,7 +81,11 @@ def search_and_ingest(
             fetched = source_results.get(source, [])
             counts[source] = len(fetched)
             papers.extend(fetched)
+        if progress is not None:
+            progress("phase", "ranking", f"Ranking {len(papers)} fetched paper(s); this can take longer when semantic scoring is enabled.")
         ranked = _rank(papers, profile, semantic=semantic, progress=progress)
+        if progress is not None:
+            progress("phase", "saving", f"Saving {len(ranked)} ranked paper(s) to the local library.")
         store.upsert_papers(
             (
                 paper,
@@ -101,6 +107,12 @@ def search_and_ingest(
             source_errors={name: str(error) for name, error in source_errors.items()},
             scoring_version=ranked[0][1].scoring_version if ranked else ("keyword-v0.1" if not semantic else "semantic-or-keyword"),
         )
+        if progress is not None:
+            progress(
+                "phase",
+                "complete",
+                f"Search complete: fetched {summary.fetched}; added {summary.newly_stored}; library total {summary.library_total}.",
+            )
         return summary, ranked
     finally:
         store.close()

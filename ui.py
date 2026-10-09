@@ -18,7 +18,7 @@ from textual import work
 from textual.binding import Binding
 from textual.containers import Horizontal, Vertical
 from textual.screen import ModalScreen
-from textual.widgets import Button, DataTable, Footer, Header, Input, Select, Static
+from textual.widgets import Button, DataTable, Footer, Header, Input, ProgressBar, Select, Static
 
 
 SORT_LABELS = {
@@ -63,7 +63,8 @@ class HelpScreen(ModalScreen[None]):
             "F       focus status filter\n"
             "S       focus sort\n"
             "Search box filters the saved library locally.\n"
-            "Online search box + Fetch / Ctrl+Enter queries enabled providers.\n\n"
+            "Online search box + Fetch / Ctrl+Enter queries enabled providers.\n"
+            "The progress panel below shows provider activity, ranking, and saving.\n\n"
             "[b]Workflow[/b]\n"
             "T       mark To Read\n"
             "R       mark Read\n"
@@ -163,6 +164,11 @@ class LitRadarApp(App[None]):
         self.profile = KeywordProfile.from_json(Path(__file__).resolve().parent / "research_profile.json")
         self._personal_model = None
         self._personalization_model_active = False
+        self._search_query = ""
+        self._search_source_count = 0
+        self._search_source_done: set[str] = set()
+        self._search_source_messages: dict[str, str] = {}
+        self._search_phase_line = "Ready. Enter a query above; provider activity and the final summary will appear here."
 
     def compose(self) -> ComposeResult:
         yield Header(show_clock=True)
@@ -185,7 +191,13 @@ class LitRadarApp(App[None]):
         with Horizontal(id="actionbar"):
             yield Input(placeholder="Search online sources…", id="source_query")
             yield Button("Fetch papers", id="search_sources", variant="primary")
-            yield Static("Ready. Saved-library search is separate from source search.", id="search_status")
+        with Horizontal(id="search_progress_row"):
+            yield ProgressBar(total=100, show_eta=False, show_percentage=True, id="search_progress")
+            yield Static(
+                "Ready. Enter a query above; provider activity and the final summary will appear here.",
+                id="search_status",
+                markup=False,
+            )
         with Horizontal(id="main"):
             yield DataTable(id="papers", cursor_type="row", zebra_stripes=True)
             with Vertical(id="details"):
@@ -319,18 +331,17 @@ class LitRadarApp(App[None]):
             self.notify("Enter a source-search query in the online search field first.", severity="warning")
             self.query_one("#source_query", Input).focus()
             return
-        status = self.query_one("#search_status", Static)
-        status.update(f"Starting source search for: {query}")
         self.query_one("#search_sources", Button).disabled = True
+        self._begin_source_search(query, 0)
         self._fetch_sources(query)
 
     @work(exclusive=True, thread=True)
     def _fetch_sources(self, query: str) -> None:
         config = RadarConfig.load()
+        self.call_from_thread(self._begin_source_search, query, len(config.enabled_sources))
 
         def progress(event: str, source: str, message: str) -> None:
-            label = {"started": "searching", "cache-hit": "cached", "completed": "done", "error": "error"}.get(event, event)
-            self.call_from_thread(self._set_search_status, f"{source}: {label} — {message}")
+            self.call_from_thread(self._handle_search_progress, event, source, message)
 
         try:
             summary, _ranked = search_and_ingest(
@@ -347,22 +358,76 @@ class LitRadarApp(App[None]):
         except Exception as exc:
             self.call_from_thread(self._finish_source_search_error, str(exc))
 
-    def _set_search_status(self, message: str) -> None:
-        self.query_one("#search_status", Static).update(message)
+    def _begin_source_search(self, query: str, source_count: int) -> None:
+        """Reset the persistent search activity panel before a new network query."""
+        self._search_query = query
+        self._search_source_count = max(int(source_count), 0)
+        self._search_source_done = set()
+        self._search_source_messages = {}
+        self._search_phase_line = f"Searching {self._search_source_count} source(s)…"
+        self.query_one("#search_progress", ProgressBar).update(total=100, progress=0)
+        self._render_search_activity()
+
+    def _handle_search_progress(self, event: str, source: str, message: str) -> None:
+        """Render provider and pipeline progress in the main TUI instead of a toast."""
+        progress_bar = self.query_one("#search_progress", ProgressBar)
+
+        if event == "phase":
+            self._search_phase_line = message
+            if source == "search":
+                progress_bar.update(total=100, progress=0)
+            elif source == "ranking":
+                progress_bar.update(total=100, progress=78)
+            elif source == "saving":
+                progress_bar.update(total=100, progress=90)
+            elif source == "complete":
+                progress_bar.update(total=100, progress=100)
+            self._render_search_activity()
+            return
+
+        label = {
+            "started": "searching",
+            "cache-hit": "cached",
+            "completed": "done",
+            "error": "ERROR",
+            "warning": "warning",
+        }.get(event, event)
+        self._search_source_messages[source] = f"{source}: {label} — {message}"
+
+        if event in {"cache-hit", "completed", "error"}:
+            self._search_source_done.add(source)
+        if self._search_source_count and event in {"started", "cache-hit", "completed", "error"}:
+            ratio = len(self._search_source_done) / self._search_source_count
+            progress_bar.update(total=100, progress=min(70, round(70 * ratio)))
+            self._search_phase_line = (
+                f"Searching online sources: {len(self._search_source_done)}/"
+                f"{self._search_source_count} finished. Other stages will follow."
+            )
+        self._render_search_activity()
+
+    def _render_search_activity(self) -> None:
+        # Keep the query and current phase fixed, then show the latest provider states.
+        source_lines = list(self._search_source_messages.values())[-4:]
+        lines = [f"Query: {self._search_query}", self._search_phase_line, *source_lines]
+        self.query_one("#search_status", Static).update("\n".join(lines))
 
     def _finish_source_search(self, summary) -> None:
         self.query_one("#search_sources", Button).disabled = False
         errors = f"; {len(summary.source_errors)} source error(s)" if summary.source_errors else ""
-        self.query_one("#search_status", Static).update(
-            f"Fetched {summary.fetched}; added {summary.newly_stored}; library total {summary.library_total}{errors}."
+        self._search_phase_line = (
+            f"Finished: fetched {summary.fetched}; added {summary.newly_stored}; "
+            f"library total {summary.library_total}{errors}."
         )
-        self.notify(f"Search complete: {summary.newly_stored} new paper(s); {summary.library_total} total.")
+        self.query_one("#search_progress", ProgressBar).update(total=100, progress=100)
+        self._render_search_activity()
+        # The durable result is shown in the activity panel; no disappearing success toast.
         self._personal_model = None
         self.refresh_rows()
 
     def _finish_source_search_error(self, message: str) -> None:
         self.query_one("#search_sources", Button).disabled = False
-        self.query_one("#search_status", Static).update(f"Search failed: {message}")
+        self._search_phase_line = f"Search failed: {message}"
+        self._render_search_activity()
         self.notify(f"Source search failed: {message}", severity="error")
 
     def on_select_changed(self, event: Select.Changed) -> None:

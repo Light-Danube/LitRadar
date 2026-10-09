@@ -36,13 +36,20 @@ def test_pipeline_reports_added_and_library_totals(tmp_path: Path, monkeypatch):
     paper = Paper(source="fake", title="Context Selection Paper", abstract="Context selection for a test.")
     monkeypatch.setattr(pipeline, "search_all_sources", lambda *a, **k: ({"fake": [paper]}, {}))
 
-    first, ranked = pipeline.search_and_ingest("context", db_path=db, profile_path=profile, semantic=False, config=config)
+    events = []
+    first, ranked = pipeline.search_and_ingest(
+        "context", db_path=db, profile_path=profile, semantic=False, config=config,
+        progress=lambda *event: events.append(event),
+    )
     second, _ = pipeline.search_and_ingest("context", db_path=db, profile_path=profile, semantic=False, config=config)
     assert first.fetched == 1
     assert first.newly_stored == 1
     assert first.library_total == 1
     assert first.source_results == {"fake": 1}
     assert ranked[0][0].title == paper.title
+    assert [(event, stage) for event, stage, _message in events if event == "phase"] == [
+        ("phase", "search"), ("phase", "ranking"), ("phase", "saving"), ("phase", "complete")
+    ]
     assert second.fetched == 1
     assert second.newly_stored == 0
     assert second.library_total == 1

@@ -22,7 +22,7 @@ def search(
     if api_key:
         params["api_key"] = api_key
     url = f"{BASE_URL}?{urllib.parse.urlencode(params)}"
-    headers = {"User-Agent": "LitRadar/0.5.3"}
+    headers = {"User-Agent": "LitRadar/0.5.4"}
     payload = json.loads(fetch_bytes(url, headers=headers, timeout=timeout, retries=retries, backoff=backoff))
 
     papers: list[Paper] = []

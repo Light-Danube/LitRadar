@@ -11,12 +11,12 @@ if not exist "%VENV%\Scripts\python.exe" (
   )
   if errorlevel 1 exit /b 1
 )
-if not exist "%VENV%\.litradar-deps-0.5.3" (
+if not exist "%VENV%\.litradar-deps-0.5.4" (
   "%VENV%\Scripts\python.exe" -m pip install --upgrade pip
   if errorlevel 1 exit /b 1
   "%VENV%\Scripts\python.exe" -m pip install -r requirements.txt -r requirements-ui.txt
   if errorlevel 1 exit /b 1
-  echo ready>"%VENV%\.litradar-deps-0.5.3"
+  echo ready>"%VENV%\.litradar-deps-0.5.4"
 )
 if "%~1"=="" (
   "%VENV%\Scripts\python.exe" cli.py ui

@@ -2,7 +2,7 @@ $ErrorActionPreference = 'Stop'
 Set-Location $PSScriptRoot
 $venv = Join-Path $PSScriptRoot '.venv'
 $python = Join-Path $venv 'Scripts/python.exe'
-$marker = Join-Path $venv '.litradar-deps-0.5.3'
+$marker = Join-Path $venv '.litradar-deps-0.5.4'
 if (-not (Test-Path $python)) {
     if (Get-Command py -ErrorAction SilentlyContinue) { & py -3 -m venv $venv }
     else { & python -m venv $venv }

@@ -1,9 +1,15 @@
 $ErrorActionPreference = 'Stop'
 Set-Location $PSScriptRoot
+Write-Host 'LitRadar updater — Git checkout mode' -ForegroundColor Cyan
 if (-not (Test-Path (Join-Path $PSScriptRoot '.git'))) {
-    Write-Error 'This folder is not a Git checkout. Clone/publish the repository first, then use GitHub Desktop or this updater.'
+    Write-Host ''
+    Write-Host 'Update not started: this folder has no .git directory.' -ForegroundColor Red
+    Write-Host 'It looks like LitRadar was installed by copying files from a ZIP archive.' -ForegroundColor Yellow
+    Write-Host 'This updater can pull source updates only for a Git checkout; it did not change any files.'
+    Write-Host 'For a ZIP install, apply the next released patch/full ZIP manually. To enable this updater, clone the repository with GitHub Desktop.'
     exit 2
 }
+Write-Host 'Checking local changes before pulling...' -ForegroundColor Cyan
 $dirty = git status --porcelain
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 if ($dirty) {
@@ -13,7 +19,11 @@ if ($dirty) {
     exit 3
 }
 git pull --ff-only
-if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+if ($LASTEXITCODE -ne 0) {
+    Write-Host 'git pull failed. Check the message above and your network/repository state.' -ForegroundColor Red
+    exit $LASTEXITCODE
+}
+Write-Host 'Source files updated. Preparing environment...' -ForegroundColor Green
 $venv = Join-Path $PSScriptRoot '.venv'
 $python = Join-Path $venv 'Scripts/python.exe'
 if (-not (Test-Path $python)) {
@@ -28,4 +38,9 @@ if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 & $python cli.py init
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 & $python -m pytest -q
-exit $LASTEXITCODE
+if ($LASTEXITCODE -ne 0) {
+    Write-Host 'Tests failed. LitRadar was updated, but the installation is not verified.' -ForegroundColor Red
+    exit $LASTEXITCODE
+}
+Write-Host 'LitRadar update verified: dependencies installed and tests passed.' -ForegroundColor Green
+exit 0

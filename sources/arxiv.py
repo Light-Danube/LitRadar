@@ -27,7 +27,7 @@ def search(
             "sortOrder": "descending",
         }
     )
-    headers = {"User-Agent": "LitRadar/0.5.3 (academic literature research tool)"}
+    headers = {"User-Agent": "LitRadar/0.5.4 (academic literature research tool)"}
     xml_text = fetch_bytes(
         f"{BASE_URL}?{params}",
         headers=headers,

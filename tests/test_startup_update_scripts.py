@@ -9,7 +9,12 @@ def test_cross_platform_launchers_and_updaters_exist():
         assert path.exists(), name
         assert path.stat().st_size > 50
     assert ".venv" in (ROOT / "run_litradar.bat").read_text(encoding="utf-8")
-    assert "--ff-only" in (ROOT / "update_litradar.ps1").read_text(encoding="utf-8")
+    updater = (ROOT / "update_litradar.ps1").read_text(encoding="utf-8")
+    assert "--ff-only" in updater
+    assert "no .git directory" in updater
+    batch_updater = (ROOT / "update_litradar.bat").read_text(encoding="utf-8").lower()
+    assert "pause >nul" in batch_updater
+    assert "update_exit_code" in batch_updater
 
 
 def test_release_workflow_attaches_a_clean_zip():

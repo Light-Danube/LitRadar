@@ -105,8 +105,23 @@ TagScreen {
     margin-right: 1;
 }
 
+#search_progress_row {
+    height: 5;
+    padding: 0 1;
+}
+
+#search_progress {
+    width: 28;
+    margin-right: 1;
+    content-align: left middle;
+}
+
 #search_status {
     width: 1fr;
-    content-align: left middle;
+    height: 5;
+    content-align: left top;
     color: $text-muted;
+    padding: 0 1;
+    border: round $primary;
+    overflow-y: auto;
 }

@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.5.4 — TUI progress and Windows updater diagnostics — 2026-10-09
+
+- Replaced transient successful-search toast with a persistent TUI activity panel showing the query, per-provider status, ranking, saving, and a progress bar. The final fetched/new/library counts remain visible in the main screen.
+- Added pipeline phase events so slow ranking/saving phases are distinguishable from a stalled network request; CLI also prints these phase events.
+- Made `update_litradar.bat` display an exit result and pause before closing, so error messages cannot disappear on double-click.
+- Clarified the non-Git/ZIP installation case in the updater: it now reports that no update was pulled and explains how to proceed.
+- Made the Rich highlighting test work with both string-based and object-based `Span.style` values across Rich versions; added coverage for persistent progress UI and updater diagnostics.
+
+
 ## 0.5.3 — search and citation primitives — 2026-10-09
 
 ### Added
