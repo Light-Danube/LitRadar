@@ -18,9 +18,9 @@ def search(
     backoff: float = 1.0,
     api_key: str | None = None,
 ) -> list[Paper]:
-    fields = "title,abstract,authors,year,venue,url,externalIds,citationCount,publicationDate,openAccessPdf,fieldsOfStudy"
+    fields = "title,abstract,authors,year,venue,url,externalIds,citationCount,referenceCount,influentialCitationCount,publicationDate,openAccessPdf,fieldsOfStudy"
     params = urllib.parse.urlencode({"query": query, "limit": limit, "fields": fields})
-    headers = {"User-Agent": "LitRadar/0.5"}
+    headers = {"User-Agent": "LitRadar/0.5.3"}
     if api_key:
         headers["x-api-key"] = api_key
     payload = json.loads(fetch_bytes(f"{BASE_URL}?{params}", headers=headers, timeout=timeout, retries=retries, backoff=backoff))
@@ -46,6 +46,11 @@ def search(
                 pdf_url=open_access_pdf.get("url"),
                 venue=item.get("venue"),
                 citation_count=int(item.get("citationCount") or 0),
+                reference_count=int(item.get("referenceCount") or 0),
+                influential_citation_count=(
+                    int(item["influentialCitationCount"])
+                    if item.get("influentialCitationCount") is not None else None
+                ),
                 external_id=item.get("paperId"),
                 raw=item,
                 source_tags=sorted(set(source_tags), key=str.casefold),

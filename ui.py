@@ -1,15 +1,18 @@
 from __future__ import annotations
 
 import json
+import re
 import webbrowser
 from pathlib import Path
 
 from config import RadarConfig
 from ranking.keywords import KeywordProfile
-from ranking.personalization import build_model, neutral_results, score_rows
+from ranking.personalization import build_model, explain_candidate, neutral_results, score_rows
 from storage.sqlite import PaperStore, SORT_CHOICES, STATUSES
 from offline import is_available_offline, offline_pdf_path, save_paper_offline
+from pipeline import search_and_ingest
 
+from rich.text import Text
 from textual.app import App, ComposeResult
 from textual import work
 from textual.binding import Binding
@@ -26,8 +29,25 @@ SORT_LABELS = {
     "title": "Title A–Z",
     "score": "Score ↓",
     "citations": "Citations ↓",
+    "references": "References ↓",
+    "influential_citations": "Influential citations ↓",
     "personalized": "Personalized",
 }
+
+
+def highlight_search_terms(body: str, abstract: str, query: str) -> Text:
+    """Return safe Rich text with matching query tokens highlighted in the abstract."""
+    rendered = Text(body)
+    if not query or not abstract:
+        return rendered
+    abstract_start = body.rfind(abstract)
+    if abstract_start < 0:
+        return rendered
+    tokens = list(dict.fromkeys(re.findall(r"[\w-]+", query, flags=re.UNICODE)))
+    for token in tokens:
+        for match in re.finditer(re.escape(token), abstract, flags=re.IGNORECASE):
+            rendered.stylize("bold yellow", abstract_start + match.start(), abstract_start + match.end())
+    return rendered
 
 
 class HelpScreen(ModalScreen[None]):
@@ -41,7 +61,9 @@ class HelpScreen(ModalScreen[None]):
             "Enter   select row\n"
             "/       focus search\n"
             "F       focus status filter\n"
-            "S       focus sort\n\n"
+            "S       focus sort\n"
+            "Search box filters the saved library locally.\n"
+            "Online search box + Fetch / Ctrl+Enter queries enabled providers.\n\n"
             "[b]Workflow[/b]\n"
             "T       mark To Read\n"
             "R       mark Read\n"
@@ -124,10 +146,12 @@ class LitRadarApp(App[None]):
         Binding("g", "tags", "Tags"),
         Binding("l", "download_offline", "Offline"),
         Binding("o", "open", "Open"),
+        Binding("i", "open_doi", "DOI"),
         Binding("/", "focus_search", "Search"),
         Binding("f", "focus_status", "Filter"),
         Binding("s", "focus_sort", "Sort"),
         Binding("k", "focus_tag", "Tag"),
+        Binding("ctrl+enter", "search_sources", "Fetch papers"),
     ]
 
     def __init__(self, db_path: str | Path) -> None:
@@ -138,11 +162,12 @@ class LitRadarApp(App[None]):
         self.current_display_scores: dict[int, float] = {}
         self.profile = KeywordProfile.from_json(Path(__file__).resolve().parent / "research_profile.json")
         self._personal_model = None
+        self._personalization_model_active = False
 
     def compose(self) -> ComposeResult:
         yield Header(show_clock=True)
         with Horizontal(id="toolbar"):
-            yield Input(placeholder="Search title, abstract, venue…", id="search")
+            yield Input(placeholder="Filter saved library by title/abstract/notes…", id="search")
             yield Select(
                 [(label.replace("-", " ").title(), label) for label in ["all", *STATUSES]],
                 value="all",
@@ -157,6 +182,10 @@ class LitRadarApp(App[None]):
             )
             yield Select([("All tags", "__all_tags__")], value="__all_tags__", id="tag", allow_blank=False)
             yield Static("Papers: 0", id="library_count")
+        with Horizontal(id="actionbar"):
+            yield Input(placeholder="Search online sources…", id="source_query")
+            yield Button("Fetch papers", id="search_sources", variant="primary")
+            yield Static("Ready. Saved-library search is separate from source search.", id="search_status")
         with Horizontal(id="main"):
             yield DataTable(id="papers", cursor_type="row", zebra_stripes=True)
             with Vertical(id="details"):
@@ -197,8 +226,10 @@ class LitRadarApp(App[None]):
             )
             if not config.personalization_enabled:
                 model = None
+                self._personalization_model_active = False
                 ranked = neutral_results(base_rows)
             else:
+                self._personalization_model_active = True
                 if self._personal_model is None:
                     self._personal_model = build_model(
                         self.store.feedback_rows(), min_feedback=config.personalization_min_feedback
@@ -235,6 +266,7 @@ class LitRadarApp(App[None]):
             return
         tags = ", ".join(json.loads(row["tags_json"] or "[]")) or "—"
         source_tags = ", ".join(json.loads(row["source_tags_json"] or "[]")) or "—"
+        abstract_value = row["abstract"] or "(no abstract)"
         body = (
             f"Status: {row['status']}\n"
             f"Base score: {row['relevance_score']:.3f}\n"
@@ -242,14 +274,33 @@ class LitRadarApp(App[None]):
             f"Source: {row['source']}\n"
             f"Published: {row['published_at'] or 'n/a'}\n"
             f"Venue: {row['venue'] or 'n/a'}\n"
+            f"DOI: {row['doi'] or 'n/a'}\n"
             f"Citations: {row['citation_count']}\n"
+            f"References: {row['reference_count'] if row['reference_count'] is not None else 'n/a'}\n"
+            f"Influential citations: {row['influential_citation_count'] if row['influential_citation_count'] is not None else 'n/a'}\n"
             f"Tags: {tags}\n"
             f"Source tags: {source_tags}\n"
             f"Offline PDF: {offline_pdf_path(row) if is_available_offline(row) else 'not saved'}\n\n"
-            f"{row['abstract'] or '(no abstract)'}"
+            f"{abstract_value}"
         )
+        if str(self.query_one("#sort", Select).value) == "personalized" and self._personalization_model_active and self._personal_model is not None:
+            config = RadarConfig.load()
+            explanation = explain_candidate(
+                row,
+                self._personal_model,
+                self._profile(),
+                weight=config.personalized_weight,
+            )
+            body += f"\n\nPersonalized recommendation: {explanation}"
+        elif str(self.query_one("#sort", Select).value) == "personalized":
+            body += "\n\nPersonalized recommendation: not active yet; add more feedback or enable personalization."
         self.query_one("#details_title", Static).update(row["title"])
-        self.query_one("#details_body", Static).update(body)
+        search_query = self.query_one("#search", Input).value.strip()
+        # Construct Rich Text from literal content so abstracts containing
+        # markup-like characters remain safe to display.
+        self.query_one("#details_body", Static).update(
+            highlight_search_terms(body, abstract_value, search_query)
+        )
 
     def on_data_table_row_highlighted(self, event: DataTable.RowHighlighted) -> None:
         self._show_details()
@@ -257,6 +308,62 @@ class LitRadarApp(App[None]):
     def on_input_changed(self, event: Input.Changed) -> None:
         if event.input.id == "search":
             self.refresh_rows()
+
+    def on_button_pressed(self, event: Button.Pressed) -> None:
+        if event.button.id == "search_sources":
+            self.action_search_sources()
+
+    def action_search_sources(self) -> None:
+        query = self.query_one("#source_query", Input).value.strip()
+        if not query:
+            self.notify("Enter a source-search query in the online search field first.", severity="warning")
+            self.query_one("#source_query", Input).focus()
+            return
+        status = self.query_one("#search_status", Static)
+        status.update(f"Starting source search for: {query}")
+        self.query_one("#search_sources", Button).disabled = True
+        self._fetch_sources(query)
+
+    @work(exclusive=True, thread=True)
+    def _fetch_sources(self, query: str) -> None:
+        config = RadarConfig.load()
+
+        def progress(event: str, source: str, message: str) -> None:
+            label = {"started": "searching", "cache-hit": "cached", "completed": "done", "error": "error"}.get(event, event)
+            self.call_from_thread(self._set_search_status, f"{source}: {label} — {message}")
+
+        try:
+            summary, _ranked = search_and_ingest(
+                query,
+                db_path=self.db_path,
+                profile_path=Path(__file__).resolve().parent / "research_profile.json",
+                semantic=True,
+                sources=config.enabled_sources,
+                per_source=20,
+                config=config,
+                progress=progress,
+            )
+            self.call_from_thread(self._finish_source_search, summary)
+        except Exception as exc:
+            self.call_from_thread(self._finish_source_search_error, str(exc))
+
+    def _set_search_status(self, message: str) -> None:
+        self.query_one("#search_status", Static).update(message)
+
+    def _finish_source_search(self, summary) -> None:
+        self.query_one("#search_sources", Button).disabled = False
+        errors = f"; {len(summary.source_errors)} source error(s)" if summary.source_errors else ""
+        self.query_one("#search_status", Static).update(
+            f"Fetched {summary.fetched}; added {summary.newly_stored}; library total {summary.library_total}{errors}."
+        )
+        self.notify(f"Search complete: {summary.newly_stored} new paper(s); {summary.library_total} total.")
+        self._personal_model = None
+        self.refresh_rows()
+
+    def _finish_source_search_error(self, message: str) -> None:
+        self.query_one("#search_sources", Button).disabled = False
+        self.query_one("#search_status", Static).update(f"Search failed: {message}")
+        self.notify(f"Source search failed: {message}", severity="error")
 
     def on_select_changed(self, event: Select.Changed) -> None:
         if event.select.id in {"status", "sort", "tag"}:
@@ -325,7 +432,7 @@ class LitRadarApp(App[None]):
 
     @work(exclusive=True, thread=True)
     def _save_offline(self, row) -> None:
-        result = save_paper_offline(row)
+        result = save_paper_offline(row, unpaywall_email=RadarConfig.load().unpaywall_email)
         message = (
             f"Offline copy ready: {row['title']}"
             if result["has_pdf"]
@@ -349,6 +456,21 @@ class LitRadarApp(App[None]):
         url = row["pdf_url"] or row["url"]
         if url:
             webbrowser.open(url)
+
+    def action_open_doi(self) -> None:
+        paper_id = self._selected_id()
+        if paper_id is None:
+            return
+        row = self.store.get(paper_id)
+        if row is None or not row["doi"]:
+            self.notify("The selected paper has no DOI recorded.", severity="warning")
+            return
+        doi = str(row["doi"]).strip()
+        if doi.startswith("http://") or doi.startswith("https://"):
+            target = doi
+        else:
+            target = f"https://doi.org/{doi}"
+        webbrowser.open(target)
 
     def action_focus_search(self) -> None:
         self.query_one("#search", Input).focus()

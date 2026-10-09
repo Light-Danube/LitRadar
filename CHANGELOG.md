@@ -1,5 +1,53 @@
 # Changelog
 
+## 0.5.3 — search and citation primitives — 2026-10-09
+
+### Added
+- SQLite FTS5 full-text search across title, abstract, venue, and personal notes, maintained by triggers and rebuilt for existing libraries on initial index creation.
+- Graceful `LIKE` fallback for SQLite builds without FTS5.
+- Reference-count and influential-citation-count fields where providers expose them; sort choices for both metrics.
+- TUI search-term highlighting in the displayed abstract and a dedicated `I` action to open a paper's DOI link.
+- Markdown literature-notes export and a structured external-editor note template.
+- `pyproject.toml` packaging entries for `pipeline` and `notes`, with optional semantic/UI/LLM dependency groups.
+
+### Changed
+- BibTeX citation keys are normalized to lowercase and support `Surname, Given` and `Given Surname` author formats; collisions still receive numeric suffixes during bulk export.
+- Bulk offline downloads report progress per paper.
+- A successful PDF retrieval removes stale error/status files from a previous failed attempt.
+- The Textual CI job installs UI dependencies so UI tests are exercised rather than skipped in GitHub Actions.
+
+### Compatibility
+- FTS5 setup is additive; existing databases are not reset.
+- Search remains usable if the local SQLite build does not support FTS5.
+
+## 0.5.2 — offline retrieval and note workflow — 2026-10-09
+
+### Added
+- Optional Unpaywall DOI resolver via `UNPAYWALL_EMAIL`, only for legal open-access locations returned by Unpaywall.
+- PDF signature validation (`%PDF-`), bounded download size, atomic `.part` writes, and protection against saving HTML error pages as PDFs.
+- Readable PDF file names based on year, first author, and normalized title, while retaining per-paper offline bundles.
+- Structured Markdown note editing through `EDITOR` / `VISUAL` and Windows Notepad fallback.
+- `python cli.py export-notes --status read --output literature_review_draft.md`.
+
+### Changed
+- Provider direct PDF URLs are tried first; Unpaywall is used as an optional fallback and cached locally.
+- Metadata and abstract are still saved even if no legal/open PDF can be retrieved.
+
+## 0.5.1 — workflow and search UX — 2026-10-09
+
+### Added
+- Cross-platform quick launch scripts: `run_litradar.bat`, `run_litradar.ps1`, and `run_litradar.sh`.
+- Git-checkout update helpers that check tracked changes, pull fast-forward only, update dependencies, migrate the database, and run tests.
+- GitHub Release workflow that attaches a clean source ZIP automatically when a release is published.
+- Live per-source progress in CLI and TUI, with counts for fetched results, new unique papers, and total library size.
+- Online source search from inside the TUI, separate from local saved-library filtering.
+- Human-readable rationale for personalized recommendations based on the matching research-profile groups and learned feedback directions.
+
+### Changed
+- Updating a Git checkout no longer requires replacing the project folder with a new ZIP.
+- Source-query operations share a `search_and_ingest` service so CLI and TUI produce the same summary and data path.
+
+
 ## 0.5.0 — 2026-10-08
 
 ### Added

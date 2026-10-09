@@ -1,0 +1,25 @@
+name: Attach source ZIP to GitHub Release
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: write
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.release.tag_name }}
+      - name: Build clean source archive
+        env:
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+        run: |
+          git archive --format=zip --prefix="LitRadar-${RELEASE_TAG}/" HEAD -o "LitRadar-${RELEASE_TAG}.zip"
+      - name: Attach ZIP to release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: LitRadar-${{ github.event.release.tag_name }}.zip

@@ -1,26 +1,33 @@
-# LitRadar v0.5.0
+# LitRadar v0.5.3
 
 Personal literature radar and research inbox for discovering, ranking, triaging, and keeping academic papers locally.
 
 ## Current release
 
-**v0.5.0 — personalization + source configuration + resilient source fetching.**
+**v0.5.3 — literature workflow, offline retrieval, full-text search, and citation metadata.**
 
-This release keeps the v0.4.x SQLite database compatible. No database reset is required.
+This is a cumulative bridge release before Citation Intelligence (v0.6). It adds usability and data primitives without changing the existing SQLite library format destructively.
+
+This release keeps v0.4.x and v0.5.0 SQLite libraries compatible. No database reset is required.
 
 ### What is new
 
-- Runtime configuration via `.env` / environment variables.
-- Registered source providers with configurable enable/disable list.
-- Concurrent source fetching with per-source timeout, retry, exponential backoff, and local query-result cache.
-- `python cli.py config` for a masked view of effective configuration.
-- Lightweight personalized ranking based on explicit feedback plus conservative workflow signals.
-- Explicit positive/negative feedback via CLI and TUI (`Y` / `N`).
-- `personalized` library/top sorting.
-- Feedback is intentionally inactive until a configurable minimum number of useful interactions is available.
-- OpenAlex API-key configuration aligned with its post-February-2026 API authentication model.
+- **Search workflow:** visible per-source progress in CLI/TUI, online source search from inside TUI, and a summary of fetched/new/library totals.
+- **Personalization:** optional feedback-based ranking, explicit Useful/Not relevant feedback, and explanations of which research-profile groups influenced the recommendation.
+- **Configuration:** `.env`, registered providers, API keys, timeouts/retries/backoff, and cached source-query results.
+- **Offline access:** verified PDF downloads, readable PDF filenames, and optional legal open-access fallback through Unpaywall (`UNPAYWALL_EMAIL`).
+- **Notes and exports:** structured note template through `$EDITOR`/`VISUAL`, Markdown literature-notes export, and BibTeX export with normalized, collision-safe citekeys.
+- **Search:** SQLite FTS5 indexes title, abstract, venue, and personal notes when supported; a `LIKE` fallback remains available.
+- **Citation metadata:** displays reference count and, when supplied by the provider, influential citation count.
+- **Maintenance:** quick launch scripts, update scripts for Git checkouts, GitHub Actions tests, and automatic source ZIP attachments to published GitHub Releases.
+
+The LLM assessment remains experimental/advisory; it does not override the primary ranking or establish scientific novelty.
 
 ## Start here
+
+For the quickest first launch on Windows, run `run_litradar.bat` from the project folder. It creates `.venv`, installs runtime/TUI dependencies once per dependency marker, and opens the TUI. Use `run_litradar.ps1` in PowerShell or `./run_litradar.sh` on Linux/macOS.
+
+To launch a CLI command through the same helper, pass arguments, for example `run_litradar.bat list --status to-read`.
 
 ```bash
 python cli.py --help
@@ -28,6 +35,7 @@ python cli.py config
 python cli.py init
 python cli.py stats
 python cli.py list --limit 50
+python cli.py search "adaptive context emotion sarcasm"
 python cli.py ui
 ```
 
@@ -36,8 +44,8 @@ Every command has its own help page:
 ```bash
 python cli.py search --help
 python cli.py list --help
-python cli.py feedback --help
-python cli.py ui --help
+python cli.py download --help
+python cli.py export-notes --help
 ```
 
 Run the fixture without network access:
@@ -45,9 +53,10 @@ Run the fixture without network access:
 ```bash
 python cli.py ingest-fixture data/fixture.json --no-semantic
 python cli.py list
-pytest -q
+python -m pytest -q
 ```
 
+After publishing the repository, update the local checkout through GitHub Desktop (`Fetch origin` → `Pull origin`) or run `update_litradar.bat` on Windows / `./update_litradar.sh` on Linux/macOS. The updater refuses to pull over tracked local edits, updates dependencies, runs `init`, and executes tests. It does not replace the local database, `.env`, or offline PDFs.
 ## Installation
 
 Create a virtual environment and install the core dependencies:
@@ -95,6 +104,9 @@ LITRADAR_SOURCE_CACHE_TTL=3600
 
 OPENALEX_API_KEY=
 SEMANTIC_SCHOLAR_API_KEY=
+
+# Optional legal OA PDF fallback by DOI (Unpaywall requires a contact email)
+UNPAYWALL_EMAIL=you@example.org
 
 LITRADAR_PERSONALIZATION_ENABLED=true
 LITRADAR_PERSONALIZATION_WEIGHT=0.20
@@ -147,10 +159,12 @@ python cli.py list --tag sarcasm
 python cli.py list --sort recent
 python cli.py list --sort title
 python cli.py list --sort citations
+python cli.py list --sort references
+python cli.py list --sort influential_citations
 python cli.py list --sort personalized
 ```
 
-`list` intentionally keeps a default display limit of 50, while reporting the full matching count. Use `--limit` when you want more rows.
+`list` intentionally keeps a default display limit of 50, while reporting the full matching count. Use `--limit` when you want more rows. Text search covers title, abstract, venue, and personal notes. SQLite FTS5 is used when available; otherwise LitRadar falls back to `LIKE` search.
 
 ### Read, dismiss, and tag
 
@@ -191,9 +205,15 @@ python cli.py download --status to-read --limit 10
 python cli.py open 42
 python cli.py export-bibtex 42 --output paper.bib
 python cli.py export-bibtex --status read --output read.bib
+python cli.py note 42 --edit
+python cli.py export-notes --status read --output literature_review_draft.md
 ```
 
-Offline bundles live under `data/offline/` and can include metadata, abstract, notes, BibTeX, and an available PDF.
+Offline bundles live under `data/offline/` and can include metadata, abstract, notes, BibTeX, and an available PDF. PDF downloads try the provider's direct PDF URL first, then—only when `UNPAYWALL_EMAIL` is set and the paper has a DOI—Unpaywall's documented legal OA PDF locations. LitRadar never attempts to bypass a paywall. A downloaded file is accepted only if it starts with the `%PDF-` signature. The resolver is cached locally to avoid repeated requests.
+
+PDFs are stored inside each paper's offline bundle with a readable name based on year, first author, and title. Metadata/abstract/citation/notes are saved even if no PDF can be found.
+
+Use `python cli.py note 42 --edit` to open a structured Markdown template in the editor configured by `VISUAL` or `EDITOR` (Windows falls back to Notepad). `export-notes` assembles metadata, abstract, and personal notes into one Markdown draft; it is a working document, not a generated literature review.
 
 ## Textual TUI
 
@@ -229,9 +249,13 @@ U       Restore
 G       edit tags
 L       save offline
 O       open local PDF / URL
+I       open DOI link
+Ctrl+Enter / Fetch papers   search enabled online providers inside the TUI
 ?       keyboard help
 Q       quit
 ```
+
+The online source search is separate from the local library filter and displays source progress plus fetched/new/library totals. Search terms are highlighted in the selected paper's abstract when they match the local library filter. The detail view includes citation, reference, and (when available) influential-citation counts.
 
 The TUI also supports a `Personalized` sort. The displayed Score column changes to the current ranking score while the detail panel shows both the base and displayed scores.
 
@@ -281,7 +305,8 @@ Additional local state:
 
 ```text
 data/offline/       # saved papers/PDFs
- data/source_cache/  # cached provider results
+data/source_cache/   # cached provider results
+data/oa_cache/       # cached Unpaywall legal-OA resolutions
 .env                 # secrets and local configuration
 ```
 
@@ -289,20 +314,13 @@ These are intentionally excluded from Git.
 
 Additive SQLite migrations are applied automatically. Upgrading from v0.4.x does not require a database reset.
 
-## Upgrading with GitHub Desktop
+## Upgrading and releasing with GitHub Desktop
 
-Once the repository is published:
+For a local Git checkout, the easiest Windows update path is `update_litradar.bat`; on Linux/macOS use `./update_litradar.sh`. These scripts refuse to pull over local changes, run a fast-forward-only pull, update dependencies, migrate the library, and run tests. If you prefer a GUI, use GitHub Desktop's **Fetch origin → Pull origin**, then run `python cli.py init` and `python -m pytest -q`.
 
-1. Use **Fetch origin → Pull origin** to receive a release.
-2. Reinstall/update Python dependencies if `requirements*.txt` changed.
-3. Run:
+To publish a release: update `VERSION`, `pyproject.toml`, and `CHANGELOG.md`; commit and push in GitHub Desktop; then create a GitHub Release using a matching tag such as `v0.5.3`. The `.github/workflows/release.yml` workflow automatically builds and attaches a clean source ZIP. No manual ZIP replacement is needed for users working from a Git checkout.
 
-```bash
-python cli.py init
-pytest -q
-```
-
-The local database, offline files, cache, and `.env` remain outside source control.
+The local database, offline files, provider/OA caches, and `.env` remain outside source control.
 
 Do not commit API keys, the SQLite database, or your offline corpus.
 
@@ -350,11 +368,10 @@ GitHub Actions contains a core test job and an optional Textual UI job. The test
 
 ### v0.6 — citation intelligence
 
-- references / cited-by;
-- related papers;
-- prior and derivative work exploration;
-- citation-aware discovery;
-- better cross-source identifier linking.
+- query/store source references and cited-by links, not just their counts;
+- related papers and prior/derivative work exploration;
+- citation-aware discovery using a bounded citation graph;
+- better cross-source identifier linking and citation graph tests.
 
 ### v0.7 — research digest
 
@@ -372,11 +389,11 @@ GitHub Actions contains a core test job and an optional Textual UI job. The test
 
 ### Longer-term
 
-- stronger persistent vector indexing for large libraries;
-- SQLite FTS5 for full-text search at scale;
+- persistent vector indexing for large libraries;
 - richer source adapters and provider-specific pagination/bulk endpoints;
-- evidence-grounded LLM assessment;
-- import/export interoperability with reference managers.
+- evidence-grounded LLM assessment with inspectable evidence;
+- import/export interoperability with reference managers;
+- browser-based UI only after the TUI workflow is stable.
 
 ## Changelog
 

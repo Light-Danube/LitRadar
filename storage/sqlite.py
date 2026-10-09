@@ -29,6 +29,8 @@ CREATE TABLE IF NOT EXISTS papers (
     pdf_url TEXT,
     venue TEXT,
     citation_count INTEGER NOT NULL DEFAULT 0,
+    reference_count INTEGER,
+    influential_citation_count INTEGER,
     relevance_score REAL NOT NULL DEFAULT 0,
     keyword_score REAL NOT NULL DEFAULT 0,
     semantic_score REAL,
@@ -68,6 +70,8 @@ SORT_CHOICES = (
     "title",
     "score",
     "citations",
+    "references",
+    "influential_citations",
 )
 
 
@@ -105,6 +109,8 @@ class PaperStore:
             "arxiv_id": "ALTER TABLE papers ADD COLUMN arxiv_id TEXT",
             "source_refs_json": "ALTER TABLE papers ADD COLUMN source_refs_json TEXT NOT NULL DEFAULT '{}'",
             "source_tags_json": "ALTER TABLE papers ADD COLUMN source_tags_json TEXT NOT NULL DEFAULT '[]'",
+            "reference_count": "ALTER TABLE papers ADD COLUMN reference_count INTEGER",
+            "influential_citation_count": "ALTER TABLE papers ADD COLUMN influential_citation_count INTEGER",
             "keyword_score": "ALTER TABLE papers ADD COLUMN keyword_score REAL NOT NULL DEFAULT 0",
             "semantic_score": "ALTER TABLE papers ADD COLUMN semantic_score REAL",
             "scoring_version": "ALTER TABLE papers ADD COLUMN scoring_version TEXT NOT NULL DEFAULT 'keyword-v0.1'",
@@ -184,9 +190,56 @@ class PaperStore:
         self.conn.execute("CREATE INDEX IF NOT EXISTS idx_papers_title_hash ON papers(title_hash)")
         self.conn.execute("CREATE INDEX IF NOT EXISTS idx_papers_title_lower ON papers(lower(title))")
         self.conn.execute("CREATE INDEX IF NOT EXISTS idx_papers_citations ON papers(citation_count DESC)")
+        self.conn.execute("CREATE INDEX IF NOT EXISTS idx_papers_references ON papers(reference_count DESC)")
+        self.conn.execute("CREATE INDEX IF NOT EXISTS idx_papers_influential_citations ON papers(influential_citation_count DESC)")
         self.conn.execute("CREATE INDEX IF NOT EXISTS idx_feedback_paper ON feedback_events(paper_id)")
         self.conn.execute("CREATE INDEX IF NOT EXISTS idx_feedback_created ON feedback_events(created_at DESC)")
         self.conn.commit()
+        self.fts_available = self._ensure_fts()
+
+    def _ensure_fts(self) -> bool:
+        """Initialize FTS5 full-text indexing, falling back cleanly if unavailable."""
+        try:
+            existing = self.conn.execute(
+                "SELECT 1 FROM sqlite_master WHERE type='table' AND name='papers_fts'"
+            ).fetchone() is not None
+            self.conn.execute(
+                "CREATE VIRTUAL TABLE IF NOT EXISTS papers_fts USING fts5("
+                "title, abstract, venue, notes, content='papers', content_rowid='id', tokenize='unicode61')"
+            )
+            self.conn.executescript(
+                """
+                CREATE TRIGGER IF NOT EXISTS papers_fts_ai AFTER INSERT ON papers BEGIN
+                  INSERT INTO papers_fts(rowid, title, abstract, venue, notes)
+                  VALUES (new.id, new.title, new.abstract, new.venue, new.notes);
+                END;
+                CREATE TRIGGER IF NOT EXISTS papers_fts_ad AFTER DELETE ON papers BEGIN
+                  INSERT INTO papers_fts(papers_fts, rowid, title, abstract, venue, notes)
+                  VALUES ('delete', old.id, old.title, old.abstract, old.venue, old.notes);
+                END;
+                CREATE TRIGGER IF NOT EXISTS papers_fts_au AFTER UPDATE OF title, abstract, venue, notes ON papers BEGIN
+                  INSERT INTO papers_fts(papers_fts, rowid, title, abstract, venue, notes)
+                  VALUES ('delete', old.id, old.title, old.abstract, old.venue, old.notes);
+                  INSERT INTO papers_fts(rowid, title, abstract, venue, notes)
+                  VALUES (new.id, new.title, new.abstract, new.venue, new.notes);
+                END;
+                """
+            )
+            if not existing:
+                self.conn.execute("INSERT INTO papers_fts(papers_fts) VALUES('rebuild')")
+            self.conn.commit()
+            return True
+        except sqlite3.OperationalError as exc:
+            # FTS5 is optional in some custom SQLite builds. LIKE remains available.
+            self.conn.rollback()
+            if "fts5" not in str(exc).casefold() and "no such module" not in str(exc).casefold():
+                raise
+            return False
+
+    @staticmethod
+    def _fts_query(query: str) -> str:
+        tokens = re.findall(r"[\w]+", query, flags=re.UNICODE)
+        return " AND ".join(f'"{token.replace(chr(34), chr(34) * 2)}"' for token in tokens)
 
     def close(self) -> None:
         self.conn.close()
@@ -293,6 +346,8 @@ class PaperStore:
                   source=?, external_id=?, title=?, title_normalized=?, title_hash=?, abstract=?,
                   authors_json=?, published_at=?, updated_at=?, doi=?, doi_normalized=?, arxiv_id=?,
                   url=?, pdf_url=?, venue=?, citation_count=MAX(citation_count, ?),
+                  reference_count=COALESCE(?, reference_count),
+                  influential_citation_count=COALESCE(?, influential_citation_count),
                   relevance_score=?, keyword_score=?, semantic_score=?, scoring_version=?,
                   matched_groups_json=?, raw_json=?, source_refs_json=?, source_tags_json=?,
                   last_seen_at=?
@@ -315,6 +370,8 @@ class PaperStore:
                     pdf_url,
                     venue,
                     int(paper.citation_count or 0),
+                    paper.reference_count,
+                    paper.influential_citation_count,
                     relevance_score,
                     keyword_score if keyword_score is not None else relevance_score,
                     semantic_score,
@@ -335,10 +392,11 @@ class PaperStore:
             INSERT INTO papers (
               source, external_id, title, title_normalized, title_hash, abstract, authors_json,
               published_at, updated_at, doi, doi_normalized, arxiv_id, url, pdf_url, venue,
-              citation_count, relevance_score, keyword_score, semantic_score, scoring_version,
+              citation_count, reference_count, influential_citation_count,
+              relevance_score, keyword_score, semantic_score, scoring_version,
               matched_groups_json, raw_json, source_refs_json, source_tags_json,
               created_at, last_seen_at, status
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'new')
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'new')
             """,
             (
                 paper.source,
@@ -357,6 +415,8 @@ class PaperStore:
                 paper.pdf_url,
                 paper.venue,
                 int(paper.citation_count or 0),
+                paper.reference_count,
+                paper.influential_citation_count,
                 relevance_score,
                 keyword_score if keyword_score is not None else relevance_score,
                 semantic_score,
@@ -435,6 +495,8 @@ class PaperStore:
             "title": "lower(title) ASC, id ASC",
             "score": "relevance_score DESC, citation_count DESC, published_at DESC, id DESC",
             "citations": "citation_count DESC, relevance_score DESC, published_at DESC, id DESC",
+            "references": "reference_count DESC, relevance_score DESC, published_at DESC, id DESC",
+            "influential_citations": "influential_citation_count DESC, relevance_score DESC, published_at DESC, id DESC",
         }
         order = order_map.get(sort)
         if order is None:
@@ -448,9 +510,14 @@ class PaperStore:
             where.append("status=?")
             params.append(status)
         if query:
-            where.append("(lower(title) LIKE lower(?) OR lower(abstract) LIKE lower(?) OR lower(venue) LIKE lower(?))")
-            pattern = f"%{query}%"
-            params.extend([pattern, pattern, pattern])
+            fts_query = self._fts_query(query) if getattr(self, "fts_available", False) else ""
+            if fts_query:
+                where.append("id IN (SELECT rowid FROM papers_fts WHERE papers_fts MATCH ?)")
+                params.append(fts_query)
+            else:
+                where.append("(lower(title) LIKE lower(?) OR lower(abstract) LIKE lower(?) OR lower(venue) LIKE lower(?) OR lower(notes) LIKE lower(?))")
+                pattern = f"%{query}%"
+                params.extend([pattern, pattern, pattern, pattern])
         if tag:
             where.append("(lower(tags_json) LIKE lower(?) OR lower(source_tags_json) LIKE lower(?))")
             tag_pattern = f'%"{tag.casefold()}"%'
@@ -482,11 +549,16 @@ class PaperStore:
             where.append("status=?")
             params.append(status)
         if query:
-            pattern = f"%{query}%"
-            where.append("(lower(title) LIKE lower(?) OR lower(abstract) LIKE lower(?) OR lower(venue) LIKE lower(?))")
-            params.extend([pattern, pattern, pattern])
+            fts_query = self._fts_query(query) if getattr(self, "fts_available", False) else ""
+            if fts_query:
+                where.append("id IN (SELECT rowid FROM papers_fts WHERE papers_fts MATCH ?)")
+                params.append(fts_query)
+            else:
+                where.append("(lower(title) LIKE lower(?) OR lower(abstract) LIKE lower(?) OR lower(venue) LIKE lower(?) OR lower(notes) LIKE lower(?))")
+                pattern = f"%{query}%"
+                params.extend([pattern, pattern, pattern, pattern])
         if tag:
-            pattern = f'%"{tag.casefold()}%"%'
+            pattern = f'%"{tag.casefold()}"%'
             where.append("(lower(tags_json) LIKE lower(?) OR lower(source_tags_json) LIKE lower(?))")
             params.extend([pattern, pattern])
         if min_score is not None:

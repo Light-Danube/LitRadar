@@ -123,3 +123,43 @@ def _row_feedback_weight(row) -> float:
         explicit = 0.0
     # Explicit signals are stronger than workflow-derived hints, but remain bounded.
     return max(-1.5, min(1.5, implicit * 0.5 + explicit))
+
+
+def explain_candidate(row, model: PersonalizationModel, profile: KeywordProfile, *, weight: float = 0.20) -> str:
+    """Return a human-readable, evidence-linked explanation of a personalized score.
+
+    Explanations name the profile groups that matched the paper and their learned
+    preference direction. They describe the ranker's heuristic, not causal model
+    reasoning or a scientific novelty judgment.
+    """
+    if not model.ready:
+        return "Personalization inactive: not enough feedback signals yet."
+    try:
+        matched = json.loads(row["matched_groups_json"] or "{}")
+    except (json.JSONDecodeError, TypeError):
+        matched = {}
+    group_weights = {group.name: max(group.weight, 0.0) for group in profile.groups}
+    evidence = []
+    for name in matched:
+        if name in model.group_signal:
+            signal = model.group_signal[name]
+            if signal > 0.05:
+                direction = "preferred"
+            elif signal < -0.05:
+                direction = "deprioritized"
+            else:
+                direction = "neutral"
+            evidence.append((name, signal, direction, group_weights.get(name, 1.0)))
+    evidence.sort(key=lambda item: abs(item[1]) * item[3], reverse=True)
+    if not evidence:
+        return "No learned preference matched this paper's keyword groups; base relevance dominates."
+    positive = [name for name, signal, direction, _ in evidence if direction == "preferred"]
+    negative = [name for name, signal, direction, _ in evidence if direction == "deprioritized"]
+    parts = []
+    if positive:
+        parts.append("boosted by preferences for " + ", ".join(positive[:3]))
+    if negative:
+        parts.append("reduced by negative feedback on " + ", ".join(negative[:3]))
+    if not parts:
+        parts.append("matched groups have neutral learned preference")
+    return "; ".join(parts) + f" (personalization weight={weight:.2f})"

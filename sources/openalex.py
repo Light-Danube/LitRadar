@@ -22,7 +22,7 @@ def search(
     if api_key:
         params["api_key"] = api_key
     url = f"{BASE_URL}?{urllib.parse.urlencode(params)}"
-    headers = {"User-Agent": "LitRadar/0.5"}
+    headers = {"User-Agent": "LitRadar/0.5.3"}
     payload = json.loads(fetch_bytes(url, headers=headers, timeout=timeout, retries=retries, backoff=backoff))
 
     papers: list[Paper] = []
@@ -53,6 +53,7 @@ def search(
                 pdf_url=best_oa.get("pdf_url"),
                 venue=source.get("display_name"),
                 citation_count=int(item.get("cited_by_count") or 0),
+                reference_count=int(item.get("referenced_works_count") or 0),
                 external_id=item.get("id"),
                 raw=item,
                 source_tags=sorted(set(source_tags), key=str.casefold),

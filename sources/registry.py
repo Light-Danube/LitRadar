@@ -3,6 +3,7 @@ from __future__ import annotations
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass
 from typing import Callable
+import time
 
 from config import RadarConfig
 from .base import Paper
@@ -93,8 +94,20 @@ def search_all_sources(
     per_source: int = 20,
     config: RadarConfig | None = None,
     registry: SourceRegistry | None = None,
+    progress: Callable[[str, str, str], None] | None = None,
 ) -> tuple[dict[str, list[Paper]], dict[str, Exception]]:
-    """Search providers concurrently with per-source cache and retry handling."""
+    """Search providers concurrently with per-source cache/retries and progress events.
+
+    ``progress(event, source, message)`` is invoked from the calling thread for
+    cache/start/completion events. A callback failure is ignored deliberately so
+    that UI/logging code cannot make a source search fail.
+    """
+    def emit(event: str, source: str, message: str) -> None:
+        if progress is not None:
+            try:
+                progress(event, source, message)
+            except Exception:
+                pass
     config = config or RadarConfig.load()
     registry = registry or default_registry()
     requested = tuple(sources or config.enabled_sources)
@@ -108,8 +121,10 @@ def search_all_sources(
         cached = load_cached(definition.name, query, per_source, config.source_cache_ttl)
         if cached is not None:
             results[definition.name] = cached
+            emit("cache-hit", definition.name, f"cache hit ({len(cached)} papers)")
         else:
             missing.append(definition)
+            emit("started", definition.name, "request started")
 
     if not missing:
         return results, errors
@@ -126,7 +141,9 @@ def search_all_sources(
                 papers = future.result()
                 results[definition.name] = papers
                 save_cached(definition.name, query, per_source, papers)
+                emit("completed", definition.name, f"received {len(papers)} papers")
             except Exception as exc:
                 errors[definition.name] = exc
+                emit("error", definition.name, str(exc))
 
     return results, errors

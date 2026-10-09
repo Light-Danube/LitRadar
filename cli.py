@@ -3,17 +3,20 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+import subprocess
 import textwrap
 import webbrowser
 from pathlib import Path
 
 from config import RadarConfig
 from ranking.keywords import KeywordProfile
-from ranking.personalization import PersonalizationModel, build_model, neutral_results, score_rows
+from ranking.personalization import PersonalizationModel, build_model, explain_candidate, neutral_results, score_rows
 from ranking.scoring import Score, rank_papers, score_papers_semantic
 from bibliography import export_rows
 from offline import DEFAULT_OFFLINE_DIR, is_available_offline, offline_pdf_path, save_paper_offline
 from sources.base import Paper
+from pipeline import search_and_ingest
+from notes import edit_note, export_notes_markdown
 from storage.sqlite import PaperStore, SORT_CHOICES, STATUSES
 
 ROOT = Path(__file__).resolve().parent
@@ -54,46 +57,45 @@ def cmd_init(args: argparse.Namespace) -> int:
 
 def cmd_search(args: argparse.Namespace) -> int:
     config = RadarConfig.load()
-    profile = _load_profile(args.profile)
     query = args.query or "adaptive context emotion sarcasm online conversation"
-    store = PaperStore(args.db)
-    try:
-        from sources.registry import search_all_sources
+    requested_sources = tuple(args.sources) if args.sources else config.enabled_sources
+    print(
+        f"Searching {len(requested_sources)} source(s) for: {query!r} "
+        f"(up to {args.per_source} papers per source)",
+        file=sys.stderr,
+        flush=True,
+    )
 
-        requested_sources = tuple(args.sources) if args.sources else config.enabled_sources
-        source_results, source_errors = search_all_sources(
-            query,
-            sources=requested_sources,
-            per_source=args.per_source,
-            config=config,
-        )
-        all_papers: list[Paper] = []
-        for source in requested_sources:
-            if source in source_errors:
-                print(f"{source}: ERROR: {source_errors[source]}", file=sys.stderr)
-                continue
-            papers = source_results.get(source, [])
-            print(f"{source}: fetched {len(papers)} papers", file=sys.stderr)
-            all_papers.extend(papers)
+    def report(event: str, source: str, message: str) -> None:
+        prefix = {
+            "started": "START",
+            "cache-hit": "CACHE",
+            "completed": "DONE",
+            "error": "ERROR",
+        }.get(event, event.upper())
+        print(f"[{prefix}] {source}: {message}", file=sys.stderr, flush=True)
 
-        ranked = _rank(all_papers, profile, semantic=args.semantic)
-        store.upsert_papers(
-            (
-                paper,
-                score.total,
-                score.group_hits,
-                score.keyword_score,
-                score.semantic_score,
-                score.scoring_version,
-            )
-            for paper, score in ranked
-        )
-
-        for index, (paper, score) in enumerate(ranked[: args.limit], start=1):
-            _print_scored(index, paper, score)
-        return 0 if ranked else 1
-    finally:
-        store.close()
+    summary, ranked = search_and_ingest(
+        query,
+        db_path=args.db,
+        profile_path=args.profile,
+        semantic=args.semantic,
+        sources=requested_sources,
+        per_source=args.per_source,
+        config=config,
+        progress=report,
+    )
+    print(
+        "Search complete: "
+        f"{summary.fetched} result(s) fetched; {summary.newly_stored} new unique paper(s); "
+        f"library now contains {summary.library_total} paper(s)."
+    )
+    print(f"Scoring: {summary.scoring_version}")
+    for index, (paper, score) in enumerate(ranked[: args.limit], start=1):
+        _print_scored(index, paper, score)
+    if not ranked and summary.source_errors:
+        return 1
+    return 0 if ranked else 1
 
 
 def _print_scored(index: int, paper: Paper, score: Score) -> None:
@@ -120,11 +122,12 @@ def _format_llm(row) -> str:
     return f" | LLM relevance={llm.get('relevance', 0):.2f} overlap={llm.get('overlap_level', 'n/a')}"
 
 
-def _print_rows(rows, score_overrides: dict[int, float] | None = None) -> None:
+def _print_rows(rows, score_overrides: dict[int, float] | None = None, reasons: dict[int, str] | None = None) -> None:
     if not rows:
         print("No papers matched the current view.")
         return
     score_overrides = score_overrides or {}
+    reasons = reasons or {}
     for index, row in enumerate(rows, start=1):
         semantic = "n/a" if row["semantic_score"] is None else f"{row['semantic_score']:.3f}"
         tags = json.loads(row["tags_json"] or "[]")
@@ -137,6 +140,9 @@ def _print_rows(rows, score_overrides: dict[int, float] | None = None) -> None:
             f"| keyword={row['keyword_score']:.3f} | semantic={semantic} | citations={row['citation_count']}"
             f"{tag_text}{_format_llm(row)}"
         )
+        if int(row["id"]) in reasons:
+            print(f"    Recommended because: {reasons[int(row['id'])]}")
+        print(f"    references={row['reference_count'] if row['reference_count'] is not None else 'n/a'} | influential citations={row['influential_citation_count'] if row['influential_citation_count'] is not None else 'n/a'}")
         if row["url"]:
             print(f"    {row['url']}")
 
@@ -176,6 +182,10 @@ def cmd_list(args: argparse.Namespace) -> int:
             )
             rows = [row for row, _ in ranked]
             score_overrides = {int(row["id"]): result.score for row, result in ranked}
+            personalized_reasons = {
+                int(row["id"]): explain_candidate(row, model, profile, weight=config.personalized_weight)
+                for row, _result in ranked
+            }
             if not config.personalization_enabled:
                 print("Personalized ranking is disabled by configuration; showing base relevance.")
             elif model.ready:
@@ -195,7 +205,11 @@ def cmd_list(args: argparse.Namespace) -> int:
             print(f"Showing {len(rows)} of {total} stored matching paper(s).")
         else:
             print(f"No papers matched the current view (0 of {total}).")
-        _print_rows(rows, score_overrides if args.sort == "personalized" else None)
+        _print_rows(
+            rows,
+            score_overrides if args.sort == "personalized" else None,
+            personalized_reasons if args.sort == "personalized" else None,
+        )
         return 0
     finally:
         store.close()
@@ -249,6 +263,9 @@ def cmd_show(args: argparse.Namespace) -> int:
     print(f"DOI: {row['doi'] or 'n/a'}")
     print(f"URL: {row['url'] or 'n/a'}")
     print(f"Offline PDF: {offline_pdf_path(row) if is_available_offline(row) else 'not saved'}")
+    print(f"Citations: {row['citation_count']}")
+    print(f"References: {row['reference_count'] if row['reference_count'] is not None else 'n/a'}")
+    print(f"Influential citations: {row['influential_citation_count'] if row['influential_citation_count'] is not None else 'n/a'}")
     print(f"Relevance score: {row['relevance_score']:.3f}")
     print(f"Keyword score: {row['keyword_score']:.3f}")
     semantic = row["semantic_score"]
@@ -355,10 +372,25 @@ def cmd_feedback(args: argparse.Namespace) -> int:
 def cmd_note(args: argparse.Namespace) -> int:
     store = PaperStore(args.db)
     try:
-        store.set_notes(args.paper_id, args.text)
+        row = store.get(args.paper_id)
+        if row is None:
+            print(f"Paper not found: {args.paper_id}", file=sys.stderr)
+            return 1
+        if args.edit:
+            try:
+                text = edit_note(row["notes"] or "")
+            except (RuntimeError, OSError, ValueError, subprocess.SubprocessError) as exc:
+                print(f"Cannot open note editor: {exc}", file=sys.stderr)
+                print("Set EDITOR/VISUAL (e.g. code --wait, notepad) or pass note text directly.", file=sys.stderr)
+                return 2
+        elif args.text is not None:
+            text = args.text
+        else:
+            print("Provide note text or use --edit to open the structured Markdown template.", file=sys.stderr)
+            return 2
+        store.set_notes(args.paper_id, text)
     except KeyError:
         print(f"Paper not found: {args.paper_id}", file=sys.stderr)
-        store.close()
         return 1
     finally:
         store.close()
@@ -403,8 +435,14 @@ def cmd_download(args: argparse.Namespace) -> int:
 
     saved = 0
     pdfs = 0
-    for row in rows:
-        result = save_paper_offline(row, args.output_dir)
+    unpaywall_email = RadarConfig.load().unpaywall_email
+    if unpaywall_email:
+        print("Unpaywall OA fallback enabled (direct provider PDF links are tried first).")
+    else:
+        print("Unpaywall OA fallback disabled; set UNPAYWALL_EMAIL to enable legal DOI-based OA lookup.")
+    for index, row in enumerate(rows, start=1):
+        print(f"[{index}/{len(rows)}] Saving offline bundle: {row['title']}", flush=True)
+        result = save_paper_offline(row, args.output_dir, unpaywall_email=unpaywall_email)
         saved += 1
         if result["has_pdf"]:
             pdfs += 1
@@ -415,6 +453,17 @@ def cmd_download(args: argparse.Namespace) -> int:
     store.close()
     print(f"Offline save complete: {saved} paper(s), {pdfs} with PDF.")
     return 0
+
+def cmd_export_notes(args: argparse.Namespace) -> int:
+    store = PaperStore(args.db)
+    try:
+        rows = store.list_papers(limit=1000000, status=args.status, sort="recent")
+        count = export_notes_markdown(rows, args.output)
+    finally:
+        store.close()
+    print(f"Exported notes for {count} paper(s) to {args.output}")
+    return 0
+
 
 def cmd_open(args: argparse.Namespace) -> int:
     store = PaperStore(args.db)
@@ -429,8 +478,11 @@ def cmd_open(args: argparse.Namespace) -> int:
         print(f"Opened offline PDF: {local_pdf}")
         return 0
     url = row["pdf_url"] or row["url"]
+    if not url and row["doi"]:
+        doi = str(row["doi"]).strip()
+        url = doi if doi.startswith(("https://", "http://")) else f"https://doi.org/{doi}"
     if not url:
-        print("Paper has no URL/PDF URL.", file=sys.stderr)
+        print("Paper has no URL, PDF URL, or DOI.", file=sys.stderr)
         return 1
     webbrowser.open(url)
     print(f"Opened online: {url}")
@@ -523,7 +575,9 @@ def cmd_assess(args: argparse.Namespace) -> int:
     store = PaperStore(args.db)
     rows = store.list_papers(limit=args.limit, status=args.status, sort="relevance_score")
     assessed = 0
-    for row in rows:
+    failed = 0
+    for index, row in enumerate(rows, start=1):
+        print(f"[{index}/{len(rows)}] Assessing: {row['title']}", flush=True)
         paper = Paper(
             source=row["source"],
             title=row["title"],
@@ -555,8 +609,10 @@ def cmd_assess(args: argparse.Namespace) -> int:
                 f"overlap={assessment.potential_overlap:.2f} | {paper.title}"
             )
         except Exception as exc:
+            failed += 1
             print(f"id={row['id']} ERROR: {exc}", file=sys.stderr)
     store.close()
+    print(f"Assessment complete: {assessed} succeeded, {failed} failed, {len(rows)} attempted.")
     return 0 if assessed else 1
 
 
@@ -580,11 +636,14 @@ Examples:
   python cli.py dismiss 42 --reason irrelevant
   python cli.py feedback 42 positive --reason useful
   python cli.py list --sort personalized --limit 20
+  python cli.py list --sort influential_citations
   python cli.py restore 42
   python cli.py review --status new
   python cli.py ui
   python cli.py export-bibtex 42 --output paper.bib
   python cli.py export-bibtex --status read --output read.bib
+  python cli.py note 42 --edit
+  python cli.py export-notes --status read --output literature_review_draft.md
   python cli.py download 42
   python cli.py download --status to-read --limit 10
 
@@ -620,7 +679,7 @@ Most commands have their own help page, e.g.:
     p_list = sub.add_parser("list", help="browse papers stored in SQLite")
     p_list.add_argument("--limit", type=int, default=50, help="maximum number of papers to show")
     p_list.add_argument("--status", choices=["all", *STATUSES], default="all", help="filter by workflow status")
-    p_list.add_argument("--query", help="search title, abstract, or venue")
+    p_list.add_argument("--query", help="full-text search title, abstract, venue, or personal notes (FTS5 when available)")
     p_list.add_argument("--tag", help="filter by tag")
     p_list.add_argument("--min-score", type=float, help="minimum relevance score")
     p_list.add_argument("--sort", choices=SORT_CHOICES, default="relevance_score")
@@ -674,8 +733,14 @@ Most commands have their own help page, e.g.:
 
     p_note = sub.add_parser("note", help="set a free-text note on a paper")
     p_note.add_argument("paper_id", type=int)
-    p_note.add_argument("text", help="replacement note text")
+    p_note.add_argument("text", nargs="?", help="replacement note text")
+    p_note.add_argument("--edit", action="store_true", help="open existing notes or structured template in $EDITOR/VISUAL")
     p_note.set_defaults(func=cmd_note)
+
+    p_export_notes = sub.add_parser("export-notes", help="export paper metadata, abstracts, and personal notes as Markdown")
+    p_export_notes.add_argument("--status", choices=["all", *STATUSES], default="read", help="library view to export")
+    p_export_notes.add_argument("--output", default="literature_review_draft.md", help="output Markdown file")
+    p_export_notes.set_defaults(func=cmd_export_notes)
 
     p_bib = sub.add_parser("export-bibtex", help="export one or more papers or a status view to a .bib file")
     p_bib.add_argument("paper_ids", nargs="*", type=int, help="paper IDs; omit to export a filtered library view")

@@ -68,6 +68,7 @@ class RadarConfig:
     openalex_api_key: str | None = None
     semantic_scholar_api_key: str | None = None
     openalex_mailto: str | None = None
+    unpaywall_email: str | None = None
 
     personalized_weight: float = 0.20
     personalization_min_feedback: int = 5
@@ -90,6 +91,7 @@ class RadarConfig:
             openalex_api_key=os.getenv("OPENALEX_API_KEY") or None,
             semantic_scholar_api_key=os.getenv("SEMANTIC_SCHOLAR_API_KEY") or None,
             openalex_mailto=os.getenv("LITRADAR_MAILTO") or None,
+            unpaywall_email=os.getenv("UNPAYWALL_EMAIL") or None,
             personalized_weight=min(_get_float("LITRADAR_PERSONALIZATION_WEIGHT", 0.20, 0.0), 1.0),
             personalization_min_feedback=_get_int("LITRADAR_PERSONALIZATION_MIN_FEEDBACK", 5, 0),
             personalization_scan_limit=_get_int("LITRADAR_PERSONALIZATION_SCAN_LIMIT", 5000, 100),
@@ -110,6 +112,7 @@ class RadarConfig:
             "openalex_api_key": bool(self.openalex_api_key),
             "semantic_scholar_api_key": bool(self.semantic_scholar_api_key),
             "openalex_mailto_legacy": bool(self.openalex_mailto),
+            "unpaywall_email_configured": bool(self.unpaywall_email),
             "personalized_weight": self.personalized_weight,
             "personalization_min_feedback": self.personalization_min_feedback,
             "personalization_scan_limit": self.personalization_scan_limit,

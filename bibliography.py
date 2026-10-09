@@ -19,7 +19,11 @@ def _cite_key(row) -> str:
         authors = []
     surname = "paper"
     if authors:
-        surname = re.sub(r"[^A-Za-z0-9]+", "", str(authors[0]).split()[-1]) or "paper"
+        first_author = str(authors[0]).strip()
+        # Support both "Jane Doe" and bibliographic "Doe, Jane" forms.
+        surname_raw = first_author.split(",", 1)[0] if "," in first_author else first_author.split()[-1]
+        ascii_surname = unicodedata.normalize("NFKD", surname_raw).encode("ascii", "ignore").decode("ascii")
+        surname = re.sub(r"[^A-Za-z0-9]+", "", ascii_surname).lower() or "paper"
     year = (row["published_at"] or "")[:4] or "nodate"
     words = re.findall(r"[A-Za-z0-9]+", unicodedata.normalize("NFKD", row["title"]))
     token = next((w.lower() for w in words if len(w) > 3), "paper")

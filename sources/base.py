@@ -19,6 +19,8 @@ class Paper:
     pdf_url: str | None = None
     venue: str | None = None
     citation_count: int = 0
+    reference_count: int | None = None
+    influential_citation_count: int | None = None
     external_id: str | None = None
     raw: dict[str, Any] = field(default_factory=dict)
     source_tags: list[str] = field(default_factory=list)

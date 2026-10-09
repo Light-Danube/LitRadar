@@ -79,3 +79,15 @@ def test_negative_feedback_lowers_matching_group_and_duplicate_dismiss_is_neutra
     by_id = {r["id"]: result for r, result in results}
     assert by_id[1].score < 0.7
     assert by_id[2].score == 0.7
+
+
+def test_personalized_explanation_names_matched_preference_group(tmp_path):
+    from ranking.personalization import PersonalizationModel, explain_candidate
+
+    p = profile(tmp_path)
+    model = PersonalizationModel(interactions=8, group_signal={"emotion": 0.75, "sarcasm": -0.40})
+    paper = candidate(10, 0.65, {"emotion": ["emotion recognition"]})
+    explanation = explain_candidate(paper, model, p, weight=0.2)
+    assert "boosted by preferences" in explanation
+    assert "emotion" in explanation
+    assert "weight=0.20" in explanation

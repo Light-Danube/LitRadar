@@ -55,4 +55,6 @@ def test_tags_can_be_added_removed_and_replaced(tmp_path: Path) -> None:
     assert store.all_tags() == ["important", "research"]
     assert [r["id"] for r in store.list_papers(tag="research")] == [paper_id]
     assert [r["id"] for r in store.list_papers(tag="search")] == []
+    assert store.total_count(tag="research") == 1
+    assert store.total_count(tag="search") == 0
     store.close()
