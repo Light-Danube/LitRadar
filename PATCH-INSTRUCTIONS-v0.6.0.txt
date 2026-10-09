@@ -1,9 +1,0 @@
-LitRadar v0.5.4 -> v0.6.0 patch instructions
-
-1. Make a backup of your LitRadar project folder and database.
-2. Extract the files in this archive directly into the existing LitRadar project root and allow file overwrite.
-3. Do not delete or replace data/litradar.sqlite3, data/offline/, .env, .venv/, data/source_cache/, data/oa_cache/, or your own files.
-4. Run `python cli.py init` for the additive SQLite migration, then `python -m pytest -q`.
-5. Try `python cli.py explore 42 --direction all --depth 1 --max-nodes 50` using a real ID from `python cli.py list`.
-
-This patch is intended for a v0.5.4 project folder. It does not contain a local database, API credentials, or downloaded PDFs. ZIP installs should apply ZIP patches manually; update_litradar scripts require a Git checkout.
