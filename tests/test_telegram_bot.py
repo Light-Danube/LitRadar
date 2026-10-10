@@ -117,7 +117,7 @@ def test_poller_persists_offset_and_sends_menu_response(tmp_path: Path):
     state = json.loads((tmp_path / "data" / "telegram_bot_state.json").read_text(encoding="utf-8"))
     assert state["next_update_offset"] == 25
     messages = [payload for method, payload, _ in api.calls if method == "sendMessage"]
-    assert messages and "LitRadar" in messages[0]["text"]
+    assert messages and "LitBeacon" in messages[0]["text"]
     assert "reply_markup" in messages[0]
 
 
