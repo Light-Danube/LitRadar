@@ -6,8 +6,8 @@ if not exist ".venv\Scripts\python.exe" (
   pause
   exit /b 2
 )
-echo Installing a daily paper scan at 07:30 local time...
-.venv\Scripts\python.exe cli.py schedule install --job scan --frequency daily --time 07:30
+echo Installing a daily paper scan at 12:30 local time...
+.venv\Scripts\python.exe cli.py schedule install --job scan --frequency daily --time 12:30
 if errorlevel 1 goto failed
 echo.
 echo Installing a weekly digest at 09:00 every Sunday...
