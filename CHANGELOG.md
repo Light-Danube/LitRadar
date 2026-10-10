@@ -1,5 +1,32 @@
 # Changelog
 
+## 0.7.1 — interactive Telegram and launchers — 2026-10-10
+
+### Added
+- Added a private, long-polling Telegram command listener with Telegram's command menu and inline action buttons.
+- Added `/start`, `/help`, `/digest`, `/scan`, `/schedule`, `/settings`, `/topics`, `/topic add|remove`, `/search`, `/recent`, `/queue`, `/limit`, `/overlap`, and `/stats` commands.
+- Added configurable daily/weekly digest schedule and time through Telegram; Windows updates the existing Task Scheduler task. Weekly schedule is Sunday.
+- Added bounded customization for digest paper count (1–30), queue display count (0–10), overlap section, and up to 10 saved research queries (200 characters each).
+- Added persisted Telegram long-poll offset under `data/telegram_bot_state.json`, single-chat allowlisting, error feedback, and protection against duplicate listeners via Telegram's conflict errors.
+- Added `run_cli.bat` for a persistent activated CLI shell, `run_telegram_bot.bat` for the interactive command listener, and `setup_litradar.bat` as a shared dependency/database setup helper.
+- All Windows/POSIX launchers and the Git updater now install all four sets: core, UI, development, and LLM dependencies.
+
+### Changed
+- Added `digest.include_overlap` (default `true`) so overlap warnings can be hidden without disabling scan ingestion.
+- Updated package/version metadata and dependency marker to `0.7.1`.
+- Refactored Windows launchers to use the shared setup helper; initialization is run before TUI/CLI sessions and after updater dependency refresh.
+- The bot only responds to the configured `LITRADAR_TELEGRAM_CHAT_ID`; scheduled digest delivery remains independent of the listener process.
+
+### Design notes
+- Windows Task Scheduler remains responsible for daily/weekly background scan and delivery; the bot long-poll process is only needed to receive interactive commands/buttons. This keeps scheduled delivery functioning even if the command-listener window is closed, but interactive commands will not respond while it is stopped.
+- Digest schedule customization supports daily and weekly intervals only to keep cadence predictable and avoid adding unnecessary scheduler complexity.
+- Inline commands edit `digest_config.json` atomically and keep limits conservative. Complex query editing remains available through the JSON file.
+
+### Validation
+- Offline tests cover Telegram polling offsets, configured-chat authorization, command registration, topic CRUD, bounds, schedule configuration, and digest settings.
+- Local result: **101 passed, 4 skipped**. The four skipped tests are optional Textual UI tests because Textual is absent in the current build environment.
+- No live Telegram send/poll, Windows Task Scheduler modification, or remote GitHub Actions run was performed. These still need real Windows verification.
+
 ## 0.7.0 — research digest and scheduled scanning — 2026-10-10
 
 ### Added

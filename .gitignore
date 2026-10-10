@@ -22,3 +22,8 @@ dist/
 # Scheduled task logs and generated research digests
 logs/
 reports/
+# Telegram polling state is local per bot installation
+data/telegram_bot_state.json
+data/telegram_bot_state.json.tmp
+UI-REVIEW-v0.7.1.md
+PATCH-INSTRUCTIONS.txt

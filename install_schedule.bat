@@ -1,16 +1,14 @@
 @echo off
 setlocal
 cd /d "%~dp0"
-if not exist ".venv\Scripts\python.exe" (
-  echo Please run run_litradar.bat once first to create the virtual environment.
-  pause
-  exit /b 2
-)
-echo Installing a daily paper scan at 12:30 local time...
-.venv\Scripts\python.exe cli.py schedule install --job scan --frequency daily --time 12:30
+call "%~dp0setup_litradar.bat"
 if errorlevel 1 goto failed
 echo.
-echo Installing a weekly digest at 09:00 every Sunday...
+echo Installing daily scan at 07:30 local time...
+.venv\Scripts\python.exe cli.py schedule install --job scan --frequency daily --time 07:30
+if errorlevel 1 goto failed
+echo.
+echo Installing weekly digest at 09:00 every Sunday...
 .venv\Scripts\python.exe cli.py schedule install --job digest --frequency weekly --time 09:00
 if errorlevel 1 goto failed
 echo.

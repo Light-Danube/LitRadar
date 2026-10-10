@@ -1,12 +1,10 @@
-LitRadar v0.6.0 -> v0.7.0 patch
+LitRadar v0.7.0 → v0.7.1 patch
 
-1. Back up your LitRadar folder and data/litradar.sqlite3.
-2. Extract all files in this archive into the root of the existing LitRadar v0.6.0 folder, merging folders and replacing files when prompted.
-3. Keep your existing data/litradar.sqlite3, data/offline/, .env, .venv/, data/source_cache/, and data/oa_cache/.
-4. Run run_litradar.bat once to confirm the environment/dependencies.
-5. Run: python cli.py init
-6. Run: python -m pytest -q
-7. Edit digest_config.json before enabling a schedule.
-8. For Windows scheduling: ensure .venv exists, then use install_schedule.bat. For Telegram, configure the optional bot token/chat ID in .env first.
+1. Make a backup of the LitRadar folder and data/litradar.sqlite3.
+2. Extract this ZIP into the ROOT of the existing v0.7.0 folder and allow source files to be replaced.
+3. Do not replace/delete your .env, local SQLite database, .venv, data/offline, data/source_cache, data/oa_cache, logs, or reports. None of those local data folders is bundled in this patch.
+4. Run run_litradar.bat once. setup_litradar.bat installs requirements.txt, requirements-ui.txt, requirements-dev.txt, and requirements-llm.txt, then runs cli.py init.
+5. Use run_cli.bat for a persistent activated CLI shell. Use run_telegram_bot.bat and keep it open for interactive Telegram commands/buttons. Scheduled Task Scheduler digest sending does not require the listener to be running.
+6. For bot commands, ensure LITRADAR_TELEGRAM_BOT_TOKEN and LITRADAR_TELEGRAM_CHAT_ID are set in .env. Only one telegram-run process may poll a given bot token.
 
-Manual ZIP patch, not a Git patch. Contains new and changed project files only; no private DB or local configuration.
+The patch is intended for v0.7.0. For any older release, use the corresponding full archive/upgrade path.

@@ -323,3 +323,20 @@ def test_telegram_chats_loads_dotenv_before_lookup(monkeypatch, capsys):
     output = capsys.readouterr().out
     assert "chat_id=12345" in output
     assert "research chat" in output
+
+
+def test_digest_can_hide_overlap_section_without_disabling_other_sections(tmp_path: Path):
+    db = tmp_path / "library.sqlite3"
+    cfg = _scan_config(tmp_path / "digest.json")
+    payload = json.loads(cfg.read_text(encoding="utf-8"))
+    payload["digest"]["include_overlap"] = False
+    cfg.write_text(json.dumps(payload), encoding="utf-8")
+    store = PaperStore(db)
+    try:
+        _add(store, "Adaptive context selection for emotion recognition", "Context selection for conversational emotion recognition.")
+    finally:
+        store.close()
+    result = research_digest.build_digest(db_path=db, period="weekly", config_path=cfg)
+    assert "Possible overlap / related works" not in result.text
+    assert "Reading queue" in result.text
+    assert result.warnings_count == 0

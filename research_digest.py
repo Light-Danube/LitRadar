@@ -145,6 +145,7 @@ def load_scan_config(path: str | Path = DEFAULT_SCAN_CONFIG) -> dict[str, Any]:
         "semantic": bool(scan_settings.get("semantic", False)),
         "digest_limit": _bounded_int(digest_settings.get("limit", 15), 15, 1, 100),
         "queue_limit": _bounded_int(digest_settings.get("queue_limit", 5), 5, 0, 20),
+        "include_overlap": bool(digest_settings.get("include_overlap", True)),
         "overlap_candidates": _bounded_int(overlap_settings.get("candidates", 500), 500, 50, 5000),
         "overlap_min_similarity": _bounded_float(overlap_settings.get("min_similarity", 0.24), 0.24, 0.0, 1.0),
         "overlap_title_similarity": _bounded_float(overlap_settings.get("title_similarity", 0.42), 0.42, 0.0, 1.0),
@@ -453,7 +454,7 @@ def build_digest(
             candidates_limit=payload["overlap_candidates"],
             min_similarity=payload["overlap_min_similarity"],
             title_similarity=payload["overlap_title_similarity"],
-        )
+        ) if payload["include_overlap"] else []
 
         lines = [
             f"LitRadar {period.capitalize()} Research Digest",
@@ -500,24 +501,27 @@ def build_digest(
                     lines.append(f"   - Abstract: {_truncate(row['abstract'], 340)}")
                 lines.append("")
 
-        lines.extend(["## Possible overlap / related works", ""])
-        if not overlap_warnings:
-            lines.append("No strong overlap signals were detected by the configured checks. This does not establish novelty.")
-        else:
-            for warning in overlap_warnings:
-                paper = warning["paper"]
-                if warning["kind"] == "model":
-                    lines.append(f"- **{_truncate(paper['title'], 120)}** — {warning['message']}")
-                else:
-                    other = warning["other"]
-                    lines.append(
-                        f"- **{_truncate(paper['title'], 120)}** — {warning['message']} "
-                        f"Existing work: **{_truncate(other['title'], 140)}**."
-                    )
+        if payload["include_overlap"]:
+            lines.extend(["## Possible overlap / related works", ""])
+            if not overlap_warnings:
+                lines.append("No strong overlap signals were detected by the configured checks. This does not establish novelty.")
+            else:
+                for warning in overlap_warnings:
+                    paper = warning["paper"]
+                    if warning["kind"] == "model":
+                        lines.append(f"- **{_truncate(paper['title'], 120)}** — {warning['message']}")
+                    else:
+                        other = warning["other"]
+                        lines.append(
+                            f"- **{_truncate(paper['title'], 120)}** — {warning['message']} "
+                            f"Existing work: **{_truncate(other['title'], 140)}**."
+                        )
+            lines.extend([
+                "",
+                "*Overlap signals are heuristic/advisory. They can surface related methods or shared vocabulary; they do not determine whether a dissertation topic is novel.*",
+                "",
+            ])
         lines.extend([
-            "",
-            "*Overlap signals are heuristic/advisory. They can surface related methods or shared vocabulary; they do not determine whether a dissertation topic is novel.*",
-            "",
             f"## Reading queue ({queue_count} item(s); showing {len(queue_rows)})",
             "",
         ])
@@ -617,7 +621,7 @@ def telegram_chat_ids(token: str | None = None) -> list[dict[str, str]]:
     if not token:
         raise ValueError("Set LITRADAR_TELEGRAM_BOT_TOKEN in .env first")
     url = f"https://api.telegram.org/bot{token}/getUpdates?allowed_updates=%5B%22message%22%2C%22channel_post%22%5D&limit=100"
-    request = urllib.request.Request(url, headers={"User-Agent": "LitRadar/0.7.0"})
+    request = urllib.request.Request(url, headers={"User-Agent": "LitRadar/0.7.1"})
     try:
         with urllib.request.urlopen(request, timeout=20) as response:
             payload = json.loads(response.read().decode("utf-8"))

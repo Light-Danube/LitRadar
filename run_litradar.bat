@@ -1,26 +1,20 @@
 @echo off
 setlocal
 cd /d "%~dp0"
-set "VENV=%~dp0.venv"
-if not exist "%VENV%\Scripts\python.exe" (
-  where py >nul 2>nul
-  if errorlevel 1 (
-    python -m venv "%VENV%"
-  ) else (
-    py -3 -m venv "%VENV%"
-  )
-  if errorlevel 1 exit /b 1
-)
-if not exist "%VENV%\.litradar-deps-0.7.0" (
-  "%VENV%\Scripts\python.exe" -m pip install --upgrade pip
-  if errorlevel 1 exit /b 1
-  "%VENV%\Scripts\python.exe" -m pip install -r requirements.txt -r requirements-ui.txt -r requirements-dev.txt -r requirements-llm.txt
-  if errorlevel 1 exit /b 1
-  echo ready>"%VENV%\.litradar-deps-0.7.0"
-)
-if "%~1"=="" (
-  "%VENV%\Scripts\python.exe" cli.py ui
-) else (
-  "%VENV%\Scripts\python.exe" cli.py %*
-)
-exit /b %errorlevel%
+call "%~dp0setup_litradar.bat"
+if errorlevel 1 goto failed
+set "PYTHON=%~dp0.venv\Scripts\python.exe"
+if "%~1"=="" goto run_ui
+"%PYTHON%" cli.py %*
+set "EXIT_CODE=%ERRORLEVEL%"
+endlocal & exit /b %EXIT_CODE%
+
+:run_ui
+"%PYTHON%" cli.py ui
+set "EXIT_CODE=%ERRORLEVEL%"
+endlocal & exit /b %EXIT_CODE%
+
+:failed
+echo LitRadar setup could not be completed.
+pause
+endlocal & exit /b 1

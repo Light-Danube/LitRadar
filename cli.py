@@ -24,6 +24,7 @@ from notes import edit_note, export_notes_markdown
 from research_digest import (
     DEFAULT_SCAN_CONFIG, build_digest, run_scheduled_scan, send_telegram, telegram_chat_ids,
 )
+from telegram_bot import LitRadarTelegramBot
 from storage.sqlite import PaperStore, SORT_CHOICES, STATUSES
 
 ROOT = Path(__file__).resolve().parent
@@ -830,6 +831,26 @@ def cmd_schedule(args: argparse.Namespace) -> int:
         return 1
 
 
+def cmd_telegram_run(args: argparse.Namespace) -> int:
+    try:
+        # Load project .env into the current process before reading bot credentials.
+        RadarConfig.load()
+        token = os.getenv("LITRADAR_TELEGRAM_BOT_TOKEN", "").strip()
+        chat_id = os.getenv("LITRADAR_TELEGRAM_CHAT_ID", "").strip()
+        bot = LitRadarTelegramBot(
+            token=token,
+            chat_id=chat_id,
+            config_path=args.config,
+            db_path=args.db,
+            profile_path=args.profile,
+        )
+        bot.run_forever(timeout=args.poll_timeout)
+        return 0
+    except (ValueError, OSError, RuntimeError) as exc:
+        print(f"Telegram bot could not start: {exc}", file=sys.stderr)
+        return 2
+
+
 def cmd_telegram_chats(args: argparse.Namespace) -> int:
     try:
         # telegram_chat_ids reads os.environ, so load the project .env first.
@@ -864,6 +885,7 @@ Examples:
   python cli.py schedule install --job scan --frequency daily --time 08:00
   python cli.py schedule install --job digest --frequency weekly --time 09:00
   python cli.py telegram-chats
+  python cli.py telegram-run
   python cli.py set-status 42 to-read
   python cli.py dismiss 42 --reason irrelevant
   python cli.py feedback 42 positive --reason useful
@@ -935,6 +957,12 @@ Most commands have their own help page, e.g.:
 
     p_telegram = sub.add_parser("telegram-chats", help="list chat IDs from recent Telegram bot updates; message contents are not shown")
     p_telegram.set_defaults(func=cmd_telegram_chats)
+
+    p_telegram_run = sub.add_parser("telegram-run", help="listen for private Telegram bot commands (keep this process running)")
+    p_telegram_run.add_argument("--config", default=str(DEFAULT_SCAN_CONFIG), help="digest/scheduled scan JSON configuration")
+    p_telegram_run.add_argument("--profile", default=str(DEFAULT_PROFILE), help="research profile JSON")
+    p_telegram_run.add_argument("--poll-timeout", type=int, default=25, help="Telegram long-poll timeout in seconds (0–25)")
+    p_telegram_run.set_defaults(func=cmd_telegram_run)
 
     p_search = sub.add_parser("search", help="search sources, score papers, and store results")
     p_search.add_argument("query", nargs="?", help="search query")

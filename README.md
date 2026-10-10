@@ -1,12 +1,12 @@
-# LitRadar v0.7.0
+# LitRadar v0.7.1
 
 Personal literature radar and research inbox for discovering, ranking, triaging, and keeping academic papers locally.
 
 ## Current release
 
-**v0.7.0 — scheduled research scans, daily/weekly digest, and overlap alerts.**
+**v0.7.1 — interactive Telegram bot, adjustable digest settings, and simpler Windows launchers.**
 
-This release builds on v0.6.0 Citation Intelligence and adds configurable background scanning, digest generation/delivery, reading-queue summaries, and cautious overlap warnings. It also gives citation-discovered papers a lightweight profile-based keyword score without resetting existing semantic scores. The SQLite changes are additive. Existing databases from earlier releases, including v0.6.0, migrate in place; no database reset is required.
+This release builds on v0.7.0 Research Digest and adds a private interactive Telegram command interface, buttons, configurable schedules, custom search topics, library queries, and simpler Windows dependency/CLI launchers. The SQLite schema remains additive; no database reset is required.
 
 ### What is new
 
@@ -17,15 +17,16 @@ This release builds on v0.6.0 Citation Intelligence and adds configurable backgr
 - **Notes and exports:** structured note template through `$EDITOR`/`VISUAL`, Markdown literature-notes export, and BibTeX export with normalized, collision-safe citekeys.
 - **Search:** SQLite FTS5 indexes title, abstract, venue, and personal notes when supported; a `LIKE` fallback remains available.
 - **Citation intelligence:** persists references, cited-by edges, and related-work links; explores a bounded citation neighborhood from the CLI or TUI; reconciles DOI, arXiv, OpenAlex, Semantic Scholar, PMID/PMCID, and corpus identifiers where available. The original reference/citation counts remain available as metadata.
-- **Maintenance:** Windows updater now keeps its console open and reports success/failure; ZIP installs are explicitly told that `update_litradar.bat` requires a Git checkout. The TUI keeps a durable multi-line progress panel for provider search, ranking, and saving. The Rich-style test now supports both style strings and `Style` objects.
+- **Telegram bot:** `telegram-run` / `run_telegram_bot.bat` listens for `/digest`, `/scan`, `/schedule`, `/settings`, `/topic`, `/search`, `/recent`, `/queue`, `/limit`, `/overlap`, and `/stats`; the bot also registers a command menu and inline action buttons. Schedule, digest-size, reading-queue, overlap, and search-topic settings persist in `digest_config.json` with bounded values. Only `LITRADAR_TELEGRAM_CHAT_ID` is allowed to issue commands.
+- **Windows convenience:** `run_cli.bat` opens a persistent activated CLI shell; `setup_litradar.bat` is shared by launchers and installs core, UI, dev, and LLM requirement sets. The TUI launcher, updater, and schedule installer use the same dependency setup.
 
 The LLM assessment remains experimental/advisory; it does not override the primary ranking or establish scientific novelty.
 
 ## Start here
 
-For the quickest first launch on Windows, run `run_litradar.bat` from the project folder. It creates `.venv`, installs runtime/TUI dependencies once per dependency marker, and opens the TUI. Use `run_litradar.ps1` in PowerShell or `./run_litradar.sh` on Linux/macOS.
+For the quickest first launch on Windows, run `run_litradar.bat`. It creates `.venv`, installs `requirements.txt`, `requirements-ui.txt`, `requirements-dev.txt`, and `requirements-llm.txt`, initializes the database, and opens the TUI. Use `run_cli.bat` for a persistent CLI shell, or `run_telegram_bot.bat` to handle interactive Telegram commands. Scheduled digest delivery works independently of the Telegram listener. Use `run_litradar.ps1` in PowerShell or `./run_litradar.sh` on Linux/macOS.
 
-To launch a CLI command through the same helper, pass arguments, for example `run_litradar.bat list --status to-read`.
+To run a single CLI command through the launcher, pass arguments, for example `run_litradar.bat list --status to-read`.
 
 ```bash
 python cli.py --help
@@ -56,7 +57,7 @@ python cli.py list
 python -m pytest -q
 ```
 
-After publishing the repository, update a Git checkout through GitHub Desktop (`Fetch origin` → `Pull origin`) or run `update_litradar.bat` on Windows / `./update_litradar.sh` on Linux/macOS. The updater refuses to pull over tracked local edits, updates dependencies, runs `init`, and executes tests. It does not replace the local database, `.env`, or offline PDFs. If you installed LitRadar by extracting/copying a ZIP, the updater cannot fetch code because that folder has no `.git` directory; apply a newer patch/full ZIP manually or clone the repository with GitHub Desktop.
+After publishing the repository, update a Git checkout through GitHub Desktop (`Fetch origin` → `Pull origin`) or run `update_litradar.bat` on Windows / `./update_litradar.sh` on Linux/macOS. The updater refuses to pull over tracked local edits, updates dependencies, runs `init`, and executes tests. It does not replace the local database, `.env`, or offline PDFs. If you installed LitRadar by extracting/copying a ZIP, `update_litradar.bat` can refresh all dependency sets but cannot fetch source code without `.git`; apply a newer patch/full ZIP manually or clone the repository with GitHub Desktop.
 ## Installation
 
 Create a virtual environment and install the core dependencies:
@@ -439,7 +440,7 @@ The overlap section has two sources: high-overlap flags already stored by an opt
 
 ### Windows Task Scheduler
 
-Run `run_litradar.bat` once to create `.venv` and install dependencies, then use either `install_schedule.bat` for the default daily scan + weekly digest, or install jobs individually:
+Run `run_litradar.bat` once to create `.venv` and install all four requirement sets, then use `install_schedule.bat` for the default daily scan + weekly digest, or install jobs individually:
 
 ```powershell
 python cli.py schedule install --job scan --frequency daily --time 07:30
@@ -458,6 +459,30 @@ Times are local to Windows. Weekly jobs run on Sunday. Scheduled tasks use the c
 4. Preview first; then send with `python cli.py digest --period weekly --send`. Never commit `.env` or share the bot token.
 
 If Telegram is not configured, scheduled digest jobs save a Markdown report locally rather than failing or silently claiming delivery. No ChatGPT plugin/connector is required; LitRadar calls the Telegram Bot API directly.
+
+#### Interactive Telegram command bot (v0.7.1)
+
+The scheduled Task Scheduler job sends digests without a permanently running bot process. To use slash commands and inline menu buttons, configure both `LITRADAR_TELEGRAM_BOT_TOKEN` and `LITRADAR_TELEGRAM_CHAT_ID`, then run `run_telegram_bot.bat` and keep that window open. The polling process receives commands only from the configured chat ID and saves its update offset under `data/telegram_bot_state.json`. Do not run multiple `telegram-run` instances or use `telegram-chats` concurrently with the listener; Telegram allows only one active `getUpdates` poller per bot token.
+
+Useful commands:
+
+```text
+/start /help
+/digest daily                 # generate and send a digest now
+/digest weekly
+/schedule daily 08:00         # change scheduled delivery time
+/schedule weekly 09:00        # weekly jobs run on Sunday
+/limit 10                    # 1–30 new papers per digest
+/queue 5                     # 0–10 queue items included in digest
+/overlap off                 # suppress overlap section
+/topics                      # inspect active research queries
+/topic add irony | context-aware irony detection
+/topic remove irony
+/search context attribution  # search the local library
+/recent /stats
+```
+
+`/schedule` updates the digest's Windows Task Scheduler job as well as the configuration. On Linux/macOS it records the setting and reminds you that cron/launchd must be updated separately. Search-topic commands are intentionally bounded: at most 10 configured topics, a maximum of 200 query characters, and a conservative default of 10 results per provider per topic.
 
 ### Cross-platform schedule entry point
 
