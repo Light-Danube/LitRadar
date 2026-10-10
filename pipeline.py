@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import json
 from pathlib import Path
 from typing import Callable
 
@@ -84,6 +85,28 @@ def search_and_ingest(
         if progress is not None:
             progress("phase", "ranking", f"Ranking {len(papers)} fetched paper(s); this can take longer when semantic scoring is enabled.")
         ranked = _rank(papers, profile, semantic=semantic, progress=progress)
+        if not semantic and ranked:
+            # Scheduled/background scans default to lightweight keyword scoring.
+            # Do not let a later keyword-only refresh erase a previously computed
+            # semantic score for an already-known work.
+            preserved: list[tuple[Paper, Score]] = []
+            for paper, score in ranked:
+                existing_id = store.find_existing_paper_id(paper)
+                existing = store.get(existing_id) if existing_id is not None else None
+                if existing is not None and existing["semantic_score"] is not None and str(existing["scoring_version"]).startswith("semantic-v0.2"):
+                    try:
+                        existing_groups = json.loads(existing["matched_groups_json"] or "{}")
+                    except (ValueError, TypeError):
+                        existing_groups = {}
+                    score = Score(
+                        total=float(existing["relevance_score"] or 0.0),
+                        keyword_score=float(existing["keyword_score"] or 0.0),
+                        semantic_score=float(existing["semantic_score"]),
+                        group_hits=existing_groups,
+                        scoring_version=str(existing["scoring_version"]),
+                    )
+                preserved.append((paper, score))
+            ranked = preserved
         if progress is not None:
             progress("phase", "saving", f"Saving {len(ranked)} ranked paper(s) to the local library.")
         store.upsert_papers(

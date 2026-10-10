@@ -86,6 +86,35 @@ CREATE TABLE IF NOT EXISTS citation_fetches (
     error_message TEXT NOT NULL DEFAULT '',
     PRIMARY KEY(paper_id, provider, direction)
 );
+CREATE TABLE IF NOT EXISTS research_runs (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    job TEXT NOT NULL,
+    started_at TEXT NOT NULL,
+    completed_at TEXT NOT NULL,
+    status TEXT NOT NULL,
+    summary_json TEXT NOT NULL DEFAULT '{}',
+    error_message TEXT NOT NULL DEFAULT ''
+);
+CREATE INDEX IF NOT EXISTS idx_research_runs_started ON research_runs(started_at DESC);
+CREATE TABLE IF NOT EXISTS digest_deliveries (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    channel TEXT NOT NULL,
+    period TEXT NOT NULL,
+    generated_at TEXT NOT NULL,
+    sent_at TEXT,
+    since_at TEXT NOT NULL,
+    paper_ids_json TEXT NOT NULL DEFAULT '[]',
+    output_path TEXT NOT NULL DEFAULT '',
+    status TEXT NOT NULL,
+    error_message TEXT NOT NULL DEFAULT ''
+);
+CREATE INDEX IF NOT EXISTS idx_digest_deliveries_sent ON digest_deliveries(channel, sent_at DESC);
+CREATE TABLE IF NOT EXISTS digest_delivery_papers (
+    delivery_id INTEGER NOT NULL REFERENCES digest_deliveries(id) ON DELETE CASCADE,
+    paper_id INTEGER NOT NULL REFERENCES papers(id) ON DELETE CASCADE,
+    PRIMARY KEY(delivery_id, paper_id)
+);
+CREATE INDEX IF NOT EXISTS idx_digest_delivery_papers_paper ON digest_delivery_papers(paper_id);
 
 """
 
@@ -1001,6 +1030,70 @@ class PaperStore:
                 """
             )
         )
+
+    def record_research_run(
+        self,
+        *,
+        job: str,
+        started_at: str,
+        completed_at: str,
+        status: str,
+        summary: dict[str, Any],
+        error_message: str = "",
+    ) -> int:
+        with self.conn:
+            cursor = self.conn.execute(
+                "INSERT INTO research_runs(job, started_at, completed_at, status, summary_json, error_message) "
+                "VALUES (?, ?, ?, ?, ?, ?)",
+                (str(job), str(started_at), str(completed_at), str(status),
+                 json.dumps(summary, ensure_ascii=False, default=str), str(error_message)[:2000]),
+            )
+            return int(cursor.lastrowid)
+
+    def record_digest_delivery(
+        self,
+        *,
+        channel: str,
+        period: str,
+        generated_at: str,
+        sent_at: str | None,
+        since_at: str,
+        paper_ids: Iterable[int],
+        output_path: str = "",
+        status: str,
+        error_message: str = "",
+    ) -> int:
+        with self.conn:
+            normalized_ids = [int(value) for value in paper_ids]
+            cursor = self.conn.execute(
+                "INSERT INTO digest_deliveries(channel, period, generated_at, sent_at, since_at, paper_ids_json, output_path, status, error_message) "
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                (str(channel), str(period), str(generated_at), sent_at, str(since_at),
+                 json.dumps(normalized_ids), str(output_path), str(status), str(error_message)[:2000]),
+            )
+            delivery_id = int(cursor.lastrowid)
+            if str(status) == "sent" and sent_at:
+                self.conn.executemany(
+                    "INSERT OR IGNORE INTO digest_delivery_papers(delivery_id, paper_id) VALUES (?, ?)",
+                    [(delivery_id, paper_id) for paper_id in normalized_ids],
+                )
+            return delivery_id
+
+    def first_digest_since_at(self, channel: str) -> str | None:
+        row = self.conn.execute(
+            "SELECT since_at FROM digest_deliveries WHERE channel=? AND status='sent' AND sent_at IS NOT NULL "
+            "ORDER BY sent_at ASC, id ASC LIMIT 1",
+            (str(channel),),
+        ).fetchone()
+        return str(row["since_at"]) if row else None
+
+    def latest_digest_sent_at(self, channel: str) -> str | None:
+        row = self.conn.execute(
+            "SELECT sent_at FROM digest_deliveries WHERE channel=? AND status='sent' AND sent_at IS NOT NULL "
+            "ORDER BY sent_at DESC, id DESC LIMIT 1",
+            (str(channel),),
+        ).fetchone()
+        return str(row["sent_at"]) if row else None
 
     def stats(self) -> dict[str, int]:
         rows = self.conn.execute("SELECT status, COUNT(*) AS n FROM papers GROUP BY status").fetchall()

@@ -1,12 +1,12 @@
-# LitRadar v0.6.0
+# LitRadar v0.7.0
 
 Personal literature radar and research inbox for discovering, ranking, triaging, and keeping academic papers locally.
 
 ## Current release
 
-**v0.6.0 — bounded citation graph discovery with durable citation links.**
+**v0.7.0 — scheduled research scans, daily/weekly digest, and overlap alerts.**
 
-This functional release builds on v0.5.4 and implements the citation-intelligence roadmap: it records real reference/cited-by relationships and related-work links, adds bounded graph exploration, and strengthens cross-source identifier linking. The SQLite changes are additive. Existing v0.4.x–v0.5.4 libraries migrate in place; no database reset is required.
+This release builds on v0.6.0 Citation Intelligence and adds configurable background scanning, digest generation/delivery, reading-queue summaries, and cautious overlap warnings. It also gives citation-discovered papers a lightweight profile-based keyword score without resetting existing semantic scores. The SQLite changes are additive. Existing databases from earlier releases, including v0.6.0, migrate in place; no database reset is required.
 
 ### What is new
 
@@ -417,3 +417,55 @@ GitHub Actions contains a core test job and an optional Textual UI job. The test
 ## Changelog
 
 See [`CHANGELOG.md`](CHANGELOG.md) for the release history.
+
+
+## v0.7: scheduled research digest
+
+### Edit your scheduled topics
+
+Edit `digest_config.json`. It contains three example queries tailored to the current research profile. Each query can specify `name`, `query`, `sources`, and `per_source`. Keep limits modest at first; the example requests at most 20 results per source/query. `scan.semantic` defaults to `false`, which keeps background jobs lightweight and avoids first-run model downloads. Set it to `true` only if semantic dependencies/model availability are acceptable for scheduled runs.
+
+### Run a scan or preview a digest manually
+
+```bash
+python cli.py scan
+python cli.py digest --period daily
+python cli.py digest --period weekly --output reports/weekly.md
+```
+
+`scan` runs all configured queries and upserts unique papers into the existing SQLite database. It writes a run summary to `research_runs`. A digest preview does not mark papers as delivered. A successful Telegram delivery is recorded separately; future Telegram digests start from the last successful delivery to avoid repeatedly sending the same newly stored papers. `--since 2026-10-01` overrides the period window.
+
+The overlap section has two sources: high-overlap flags already stored by an optional LLM triage run, and local TF-IDF-style lexical similarity against the existing library. Thresholds and maximum candidate count are in `digest_config.json`. These warnings are pointers for human review, not a finding that a topic lacks novelty.
+
+### Windows Task Scheduler
+
+Run `run_litradar.bat` once to create `.venv` and install dependencies, then use either `install_schedule.bat` for the default daily scan + weekly digest, or install jobs individually:
+
+```powershell
+python cli.py schedule install --job scan --frequency daily --time 07:30
+python cli.py schedule install --job digest --frequency weekly --time 09:00
+python cli.py schedule status --job all
+python cli.py schedule remove --job all
+```
+
+Times are local to Windows. Weekly jobs run on Sunday. Scheduled tasks use the current user's interactive session, start when an expected run was missed, and write logs under `logs/`. The computer must be powered on and the user logged in for the task to execute; if it was off/asleep, a missed task can run once it is available again. A local scheduler is preferable to keeping a Python scheduler process permanently open. For an always-on/server setup, use cron/launchd/systemd or a server/VPS; running the digest on GitHub Actions requires a separate decision about how to persist/sync the SQLite library.
+
+### Optional Telegram delivery
+
+1. Create a bot with Telegram's `@BotFather` and copy its token into `.env` as `LITRADAR_TELEGRAM_BOT_TOKEN`.
+2. Open the bot and press **Start** or send `/start`.
+3. Run `python cli.py telegram-chats`; choose the displayed chat ID and put it in `.env` as `LITRADAR_TELEGRAM_CHAT_ID`. Message contents from updates are not printed by this command.
+4. Preview first; then send with `python cli.py digest --period weekly --send`. Never commit `.env` or share the bot token.
+
+If Telegram is not configured, scheduled digest jobs save a Markdown report locally rather than failing or silently claiming delivery. No ChatGPT plugin/connector is required; LitRadar calls the Telegram Bot API directly.
+
+### Cross-platform schedule entry point
+
+The native installer in `python cli.py schedule ...` currently configures Windows Task Scheduler. On Linux/macOS, use the OS scheduler to invoke:
+
+```cron
+30 7 * * * /absolute/path/to/.venv/bin/python /absolute/path/to/LitRadar/cli.py scheduled-run --job scan
+0 9 * * 0 /absolute/path/to/.venv/bin/python /absolute/path/to/LitRadar/cli.py scheduled-run --job digest --period weekly
+```
+
+Keep the project `.env` readable by the user running the scheduled job.

@@ -2,7 +2,7 @@ $ErrorActionPreference = 'Stop'
 Set-Location $PSScriptRoot
 $venv = Join-Path $PSScriptRoot '.venv'
 $python = Join-Path $venv 'Scripts/python.exe'
-$marker = Join-Path $venv '.litradar-deps-0.6.0'
+$marker = Join-Path $venv '.litradar-deps-0.7.0'
 if (-not (Test-Path $python)) {
     if (Get-Command py -ErrorAction SilentlyContinue) { & py -3 -m venv $venv }
     else { & python -m venv $venv }
@@ -11,7 +11,7 @@ if (-not (Test-Path $python)) {
 if (-not (Test-Path $marker)) {
     & $python -m pip install --upgrade pip
     if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-    & $python -m pip install -r requirements.txt -r requirements-ui.txt
+    & $python -m pip install -r requirements.txt -r requirements-ui.txt -r requirements-dev.txt -r requirements-llm.txt
     if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
     Set-Content -Path $marker -Value 'ready'
 }

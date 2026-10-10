@@ -114,6 +114,8 @@ class RadarConfig:
             "citation_cache_ttl": self.citation_cache_ttl,
             "openalex_api_key": bool(self.openalex_api_key),
             "semantic_scholar_api_key": bool(self.semantic_scholar_api_key),
+            "telegram_bot_token_configured": bool(os.getenv("LITRADAR_TELEGRAM_BOT_TOKEN")),
+            "telegram_chat_id_configured": bool(os.getenv("LITRADAR_TELEGRAM_CHAT_ID")),
             "openalex_mailto_legacy": bool(self.openalex_mailto),
             "unpaywall_email_configured": bool(self.unpaywall_email),
             "personalized_weight": self.personalized_weight,

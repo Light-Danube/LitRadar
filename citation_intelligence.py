@@ -1,11 +1,14 @@
 from __future__ import annotations
 
 from collections import defaultdict
+import json
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Callable
 
 from config import RadarConfig
+from ranking.keywords import KeywordProfile
+from ranking.scoring import rank_papers
 from sources import openalex, semantic_scholar
 from sources.base import Paper
 from storage.sqlite import PaperStore
@@ -25,6 +28,9 @@ class ExploredPaper:
     citation_count: int = 0
     graph_links: int = 0
     url: str = ""
+    relevance_score: float = 0.0
+    keyword_score: float = 0.0
+    matched_groups: list[str] = field(default_factory=list)
 
 
 @dataclass(slots=True)
@@ -124,6 +130,7 @@ def explore_citation_graph(
     max_nodes: int = 50,
     config: RadarConfig | None = None,
     refresh: bool = False,
+    profile_path: str | Path | None = None,
     progress: Progress | None = None,
 ) -> ExploreResult:
     """Fetch and persist a bounded citation neighborhood rooted at ``paper_id``.
@@ -146,6 +153,12 @@ def explore_citation_graph(
         raise ValueError(f"Paper id {paper_id} was not found in this library")
     config = config or RadarConfig.load()
     ttl = int(getattr(config, "citation_cache_ttl", 604800))
+    profile_file = Path(profile_path) if profile_path else Path(__file__).resolve().parent / "research_profile.json"
+    try:
+        profile = KeywordProfile.from_json(profile_file)
+    except (OSError, ValueError, KeyError, TypeError):
+        # Citation discovery stays usable if the optional ranking profile is damaged.
+        profile = None
     root_id = int(root["id"])
 
     # Root at distance zero. A paper is only expanded once even if several
@@ -211,13 +224,45 @@ def explore_citation_graph(
                             if existing_id is not None and existing_id not in reserved_ids and len(reserved_ids) >= int(max_nodes):
                                 stopped_at_cap = True
                                 continue
+                            # Score new discoveries against the same keyword profile as
+                            # normal searches. Existing entries retain their prior score;
+                            # revisiting a node must never reset semantic ranking to zero.
+                            if existing_id is None:
+                                if profile is not None:
+                                    candidate_score = rank_papers([neighbor], profile)[0][1]
+                                    score_total = candidate_score.total
+                                    score_keyword = candidate_score.keyword_score
+                                    score_semantic = None
+                                    group_hits = candidate_score.group_hits
+                                    scoring_version = "citation-keyword-v0.7"
+                                else:
+                                    score_total = score_keyword = 0.0
+                                    score_semantic = None
+                                    group_hits = {}
+                                    scoring_version = "citation-unscored-v0.7"
+                            else:
+                                existing_row = store.get(existing_id)
+                                if existing_row is None:
+                                    score_total = score_keyword = 0.0
+                                    score_semantic = None
+                                    group_hits = {}
+                                    scoring_version = "citation-keyword-v0.7"
+                                else:
+                                    score_total = float(existing_row["relevance_score"] or 0.0)
+                                    score_keyword = float(existing_row["keyword_score"] or 0.0)
+                                    score_semantic = existing_row["semantic_score"]
+                                    try:
+                                        group_hits = json.loads(existing_row["matched_groups_json"] or "{}")
+                                    except (json.JSONDecodeError, TypeError):
+                                        group_hits = {}
+                                    scoring_version = str(existing_row["scoring_version"] or "keyword-v0.1")
                             neighbor_id = store.upsert_paper(
                                 neighbor,
-                                relevance_score=0.0,
-                                matched_groups={},
-                                keyword_score=0.0,
-                                semantic_score=None,
-                                scoring_version="citation-discovery-v0.6",
+                                relevance_score=score_total,
+                                matched_groups=group_hits,
+                                keyword_score=score_keyword,
+                                semantic_score=score_semantic,
+                                scoring_version=scoring_version,
                             )
                             if neighbor_id == current_id:
                                 continue
@@ -292,6 +337,9 @@ def explore_citation_graph(
                 citation_count=int(row["citation_count"] or 0),
                 graph_links=graph_degrees.get(found_id, 0),
                 url=str(row["url"] or ""),
+                relevance_score=float(row["relevance_score"] or 0.0),
+                keyword_score=float(row["keyword_score"] or 0.0),
+                matched_groups=list(json.loads(row["matched_groups_json"] or "{}")),
             )
         )
     papers.sort(key=lambda item: (item.depth, -item.graph_links, -item.citation_count, item.title.casefold()))

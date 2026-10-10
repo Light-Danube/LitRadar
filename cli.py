@@ -2,10 +2,13 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 import subprocess
 import textwrap
 import webbrowser
+from contextlib import redirect_stderr, redirect_stdout
+from datetime import datetime, timezone
 from pathlib import Path
 
 from config import RadarConfig
@@ -18,6 +21,9 @@ from sources.base import Paper
 from pipeline import search_and_ingest
 from citation_intelligence import explore_citation_graph
 from notes import edit_note, export_notes_markdown
+from research_digest import (
+    DEFAULT_SCAN_CONFIG, build_digest, run_scheduled_scan, send_telegram, telegram_chat_ids,
+)
 from storage.sqlite import PaperStore, SORT_CHOICES, STATUSES
 
 ROOT = Path(__file__).resolve().parent
@@ -634,6 +640,7 @@ def cmd_explore(args: argparse.Namespace) -> int:
             max_nodes=args.max_nodes,
             config=config,
             refresh=args.refresh,
+            profile_path=args.profile,
             progress=report,
         )
         print(f"Citation exploration: {result.root_title} (library id={result.root_id})")
@@ -648,7 +655,8 @@ def cmd_explore(args: argparse.Namespace) -> int:
                 rel = ", ".join(item.via) or "citation graph"
                 year = item.year or "year n/a"
                 doi = f" | DOI {item.doi}" if item.doi else ""
-                print(f"  id={item.paper_id} | depth={item.depth} | links={item.graph_links} | {rel} | {year} | citations={item.citation_count} | {item.title}{doi}")
+                groups = f" | profile={','.join(item.matched_groups[:4])}" if item.matched_groups else ""
+                print(f"  id={item.paper_id} | score={item.relevance_score:.3f} (keyword={item.keyword_score:.3f}) | depth={item.depth} | links={item.graph_links} | {rel} | {year} | citations={item.citation_count} | {item.title}{doi}{groups}")
                 if item.url:
                     print(f"      {item.url}")
         for warning in result.warnings:
@@ -673,6 +681,173 @@ def cmd_config(args: argparse.Namespace) -> int:
     return 0
 
 
+def _report_progress(event: str, message: str) -> None:
+    label = {"started": "START", "completed": "DONE", "cache-hit": "CACHE", "error": "ERROR", "warning": "WARN"}.get(event, event.upper())
+    print(f"[{label}] {message}", flush=True)
+
+
+def cmd_scan(args: argparse.Namespace) -> int:
+    try:
+        result = run_scheduled_scan(
+            db_path=args.db,
+            profile_path=args.profile,
+            config_path=args.config,
+            semantic=args.semantic,
+            progress=_report_progress,
+        )
+    except (ValueError, OSError) as exc:
+        print(f"Scheduled scan could not start: {exc}", file=sys.stderr)
+        return 2
+    print(
+        f"Scan run #{result.run_id}: {result.query_count} query/queries; fetched {result.fetched}; "
+        f"new papers {result.newly_stored}; library total {result.library_total}."
+    )
+    for error in result.errors:
+        print(f"WARNING: {error}", file=sys.stderr)
+    # A partial provider failure should be visible, but does not discard the
+    # successful source results. Return failure only if every scan failed.
+    return 1 if result.errors and result.fetched == 0 else 0
+
+
+def cmd_digest(args: argparse.Namespace) -> int:
+    try:
+        # Manual --send must load the local .env too; scheduled-run does this
+        # before entering cmd_digest, but direct CLI calls do not.
+        if args.send:
+            RadarConfig.load()
+        config_path = args.config
+        output_path: Path | None = Path(args.output) if args.output else None
+        config = json.loads(Path(config_path).read_text(encoding="utf-8"))
+        digest_settings = config.get("digest", {}) if isinstance(config, dict) else {}
+        limit = args.limit if args.limit is not None else int(digest_settings.get("limit", 15))
+        queue_limit = args.queue_limit if args.queue_limit is not None else int(digest_settings.get("queue_limit", 5))
+        channel = "telegram" if args.send else "preview"
+        result = build_digest(
+            db_path=args.db,
+            period=args.period,
+            since=args.since,
+            limit=limit,
+            queue_limit=queue_limit,
+            config_path=config_path,
+            channel=channel,
+        )
+        if output_path:
+            if not output_path.is_absolute():
+                output_path = (ROOT / output_path).resolve()
+            output_path.parent.mkdir(parents=True, exist_ok=True)
+            output_path.write_text(result.text, encoding="utf-8")
+            print(f"Digest written to: {output_path}")
+        elif not args.send:
+            print(result.text)
+
+        status = "preview"
+        sent_at = None
+        error_message = ""
+        if args.send:
+            try:
+                message_count = send_telegram(result.text)
+                status = "sent"
+                sent_at = datetime.now(timezone.utc).replace(microsecond=0).isoformat()
+                print(f"Telegram delivery succeeded ({message_count} message(s)).")
+            except (ValueError, RuntimeError) as exc:
+                status = "failed"
+                error_message = str(exc)
+                print(f"Telegram delivery failed: {error_message}", file=sys.stderr)
+        store = PaperStore(args.db)
+        try:
+            store.record_digest_delivery(
+                channel="telegram" if args.send else "preview",
+                period=args.period,
+                generated_at=result.generated_at,
+                sent_at=sent_at,
+                since_at=result.since,
+                paper_ids=result.paper_ids,
+                output_path=str(output_path or ""),
+                status=status,
+                error_message=error_message,
+            )
+        finally:
+            store.close()
+        if args.send and status != "sent":
+            return 1
+        print(f"Digest covers {len(result.paper_ids)} paper(s); possible-overlap signals: {result.warnings_count}.")
+        return 0
+    except (ValueError, OSError, json.JSONDecodeError) as exc:
+        print(f"Could not generate digest: {exc}", file=sys.stderr)
+        return 2
+
+
+def cmd_scheduled_run(args: argparse.Namespace) -> int:
+    log_dir = ROOT / "logs"
+    log_dir.mkdir(parents=True, exist_ok=True)
+    log_path = log_dir / f"scheduled-{args.job}.log"
+    exit_code = 0
+    with log_path.open("a", encoding="utf-8") as log:
+        with redirect_stdout(log), redirect_stderr(log):
+            print("\n" + "=" * 72)
+            print(f"Scheduled LitRadar job={args.job} at {datetime.now(timezone.utc).isoformat()}")
+            try:
+                if args.job == "scan":
+                    nested = argparse.Namespace(
+                        db=args.db, profile=args.profile, config=args.config, semantic=None,
+                    )
+                    exit_code = cmd_scan(nested)
+                else:
+                    # RadarConfig.load() loads this installation's .env without
+                    # overriding environment variables set by the OS scheduler.
+                    RadarConfig.load()
+                    configured = bool(os.getenv("LITRADAR_TELEGRAM_BOT_TOKEN") and os.getenv("LITRADAR_TELEGRAM_CHAT_ID"))
+                    report_name = f"digest-{args.period}-{datetime.now().strftime('%Y-%m-%d')}.md"
+                    nested = argparse.Namespace(
+                        db=args.db, profile=args.profile, config=args.config, period=args.period,
+                        since=None, limit=None, queue_limit=None,
+                        output=str(Path("reports") / report_name), send=configured,
+                    )
+                    exit_code = cmd_digest(nested)
+                    if not configured:
+                        print("Telegram is not configured; the digest was saved locally only.")
+                print(f"Job exit code: {exit_code}")
+            except Exception as exc:
+                print(f"Scheduled job crashed: {type(exc).__name__}: {exc}")
+                exit_code = 1
+    print(f"Scheduled {args.job} job finished with exit code {exit_code}. Log: {log_path}")
+    return exit_code
+
+
+def cmd_schedule(args: argparse.Namespace) -> int:
+    if os.name != "nt":
+        print("Automatic schedule installation in this command is Windows-only. On Linux/macOS, use cron/launchd to run `python cli.py scheduled-run --job scan` and `python cli.py scheduled-run --job digest --period weekly`.", file=sys.stderr)
+        return 2
+    script = ROOT / "schedule_litradar.ps1"
+    command = [
+        "powershell.exe", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", str(script),
+        "-Action", args.action, "-TaskSet", args.job, "-Frequency", args.frequency, "-Time", args.time,
+    ]
+    try:
+        return subprocess.run(command, cwd=ROOT, check=False).returncode
+    except OSError as exc:
+        print(f"Could not invoke Windows Task Scheduler helper: {exc}", file=sys.stderr)
+        return 1
+
+
+def cmd_telegram_chats(args: argparse.Namespace) -> int:
+    try:
+        # telegram_chat_ids reads os.environ, so load the project .env first.
+        RadarConfig.load()
+        chats = telegram_chat_ids()
+    except (ValueError, RuntimeError) as exc:
+        print(str(exc), file=sys.stderr)
+        return 1
+    if not chats:
+        print("No chats found. Open your bot in Telegram, press Start or send /start, then run this command again.")
+        return 0
+    print("Recent chats that have sent an update to this bot:")
+    for item in chats:
+        print(f"chat_id={item['chat_id']} | type={item['type']} | label={item['label']}")
+    print("Put the intended chat_id into LITRADAR_TELEGRAM_CHAT_ID in .env. Message content is not displayed.")
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     epilog = """
 Examples:
@@ -684,6 +859,11 @@ Examples:
   python cli.py list --query "context selection" --min-score 0.80
   python cli.py show 42
   python cli.py explore 42 --direction all --depth 1
+  python cli.py scan
+  python cli.py digest --period weekly --output reports/weekly.md
+  python cli.py schedule install --job scan --frequency daily --time 08:00
+  python cli.py schedule install --job digest --frequency weekly --time 09:00
+  python cli.py telegram-chats
   python cli.py set-status 42 to-read
   python cli.py dismiss 42 --reason irrelevant
   python cli.py feedback 42 positive --reason useful
@@ -704,6 +884,9 @@ Most commands have their own help page, e.g.:
   python cli.py search --help
   python cli.py ui --help
   python cli.py explore --help
+  python cli.py scan --help
+  python cli.py digest --help
+  python cli.py schedule --help
 """
     parser = argparse.ArgumentParser(
         description=f"LitRadar {VERSION} — personal literature radar and research inbox",
@@ -719,6 +902,39 @@ Most commands have their own help page, e.g.:
 
     p_config = sub.add_parser("config", help="show effective runtime configuration (secrets are masked)")
     p_config.set_defaults(func=cmd_config)
+
+    p_scan = sub.add_parser("scan", help="run all configured scheduled topic searches and store new papers")
+    p_scan.add_argument("--config", default=str(DEFAULT_SCAN_CONFIG), help="digest/scheduled scan JSON configuration")
+    p_scan.add_argument("--profile", default=str(DEFAULT_PROFILE), help="research ranking profile JSON")
+    p_scan.add_argument("--semantic", action=argparse.BooleanOptionalAction, default=None, help="override scan.semantic in config; default is keyword-only for lightweight background scans")
+    p_scan.set_defaults(func=cmd_scan)
+
+    p_digest = sub.add_parser("digest", help="preview or deliver a daily/weekly research digest")
+    p_digest.add_argument("--period", choices=["daily", "weekly"], default="weekly")
+    p_digest.add_argument("--since", help="explicit inclusive ISO date/time start; otherwise uses last successful Telegram delivery or period window")
+    p_digest.add_argument("--limit", type=int, help="maximum new papers to include; defaults to digest.limit in config")
+    p_digest.add_argument("--queue-limit", type=int, help="reading-queue items to include; defaults to digest.queue_limit in config")
+    p_digest.add_argument("--config", default=str(DEFAULT_SCAN_CONFIG), help="digest/scheduled scan JSON configuration")
+    p_digest.add_argument("--output", help="write a Markdown digest to this path")
+    p_digest.add_argument("--send", action="store_true", help="send the digest through Telegram (requires token and chat id in .env)")
+    p_digest.set_defaults(func=cmd_digest)
+
+    p_scheduled = sub.add_parser("scheduled-run", help="one-shot entry point used by Windows Task Scheduler/cron")
+    p_scheduled.add_argument("--job", choices=["scan", "digest"], required=True)
+    p_scheduled.add_argument("--period", choices=["daily", "weekly"], default="weekly")
+    p_scheduled.add_argument("--profile", default=str(DEFAULT_PROFILE))
+    p_scheduled.add_argument("--config", default=str(DEFAULT_SCAN_CONFIG))
+    p_scheduled.set_defaults(func=cmd_scheduled_run)
+
+    p_schedule = sub.add_parser("schedule", help="install/remove/check Windows Task Scheduler jobs")
+    p_schedule.add_argument("action", choices=["install", "remove", "status"])
+    p_schedule.add_argument("--job", choices=["scan", "digest", "all"], default="all")
+    p_schedule.add_argument("--frequency", choices=["daily", "weekly"], default="daily")
+    p_schedule.add_argument("--time", default="08:00", help="local 24-hour time HH:MM")
+    p_schedule.set_defaults(func=cmd_schedule)
+
+    p_telegram = sub.add_parser("telegram-chats", help="list chat IDs from recent Telegram bot updates; message contents are not shown")
+    p_telegram.set_defaults(func=cmd_telegram_chats)
 
     p_search = sub.add_parser("search", help="search sources, score papers, and store results")
     p_search.add_argument("query", nargs="?", help="search query")
@@ -768,6 +984,7 @@ Most commands have their own help page, e.g.:
     p_explore.add_argument("--limit", type=int, default=20, help="maximum papers per direction and provider (1-100)")
     p_explore.add_argument("--max-nodes", type=int, default=50, help="maximum unique nodes in this traversal (1-200)")
     p_explore.add_argument("--refresh", action="store_true", help="bypass the local citation cache")
+    p_explore.add_argument("--profile", default=str(DEFAULT_PROFILE), help="research ranking profile for newly discovered papers")
     p_explore.set_defaults(func=cmd_explore)
 
     p_status = sub.add_parser("set-status", help="change a paper's workflow status")

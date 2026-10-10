@@ -4,7 +4,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 def test_cross_platform_launchers_and_updaters_exist():
-    for name in ("run_litradar.bat", "run_litradar.ps1", "run_litradar.sh", "update_litradar.bat", "update_litradar.ps1", "update_litradar.sh"):
+    for name in ("run_litradar.bat", "run_litradar.ps1", "run_litradar.sh", "update_litradar.bat", "update_litradar.ps1", "update_litradar.sh", "schedule_litradar.ps1", "install_schedule.bat"):
         path = ROOT / name
         assert path.exists(), name
         assert path.stat().st_size > 50
@@ -31,3 +31,16 @@ def test_windows_launcher_checks_errors_inside_parenthesized_blocks_safely():
     # code for failures detected inside parenthesized sections.
     assert "if errorlevel 1 exit /b 1" in text
     assert "if errorlevel 1 exit /b %errorlevel%" not in text
+
+
+def test_schedule_installer_uses_task_scheduler_and_safe_user_context():
+    root = Path(__file__).resolve().parents[1]
+    script = (root / "schedule_litradar.ps1").read_text(encoding="utf-8")
+    assert "Register-ScheduledTask" in script
+    assert "-StartWhenAvailable" in script
+    assert "-MultipleInstances IgnoreNew" in script
+    assert "LitRadar-Scan" in script and "LitRadar-Digest" in script
+    assert "-LogonType Interactive" in script
+    batch = (root / "install_schedule.bat").read_text(encoding="utf-8")
+    assert "--job scan --frequency daily" in batch
+    assert "--job digest --frequency weekly" in batch

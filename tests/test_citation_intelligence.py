@@ -303,3 +303,46 @@ def test_citation_cache_ttl_is_configurable(monkeypatch):
     config = RadarConfig.load()
     assert config.citation_cache_ttl == 120
     assert config.masked_dict()["citation_cache_ttl"] == 120
+
+
+def test_new_citation_discoveries_get_keyword_scores_without_zeroing_existing_scores(monkeypatch, tmp_path: Path):
+    store = PaperStore(tmp_path / "library.sqlite3")
+    try:
+        root_id = store.upsert_paper(
+            _paper("openalex", "Seed paper", external_id="https://openalex.org/W101", identifiers={"openalex_id": "W101"}),
+            relevance_score=0.6, matched_groups={"adaptive_context": ["adaptive context"]},
+            keyword_score=0.6, scoring_version="semantic-existing",
+        )
+        existing_id = store.upsert_paper(
+            _paper("openalex", "Previously stored emotion recognition work", external_id="https://openalex.org/W202", identifiers={"openalex_id": "W202"}),
+            relevance_score=0.87, matched_groups={"emotion": ["emotion recognition"]},
+            keyword_score=0.82, semantic_score=0.91, scoring_version="semantic-test",
+        )
+        new_candidate = _paper(
+            "openalex",
+            "Adaptive context selection for emotion recognition in conversation",
+            doi="10.1234/context-emotion",
+            external_id="https://openalex.org/W303",
+            identifiers={"openalex_id": "W303"},
+        )
+        monkeypatch.setattr(openalex, "fetch_neighbors", lambda identifier, direction, **kwargs: [new_candidate] if direction == "references" else [])
+        cfg = RadarConfig(source_timeout=1, source_retries=0, source_backoff=0, citation_cache_ttl=3600)
+        profile_path = tmp_path / "profile.json"
+        profile_path.write_text(json.dumps({
+            "name": "test profile",
+            "description": "adaptive context for emotion recognition",
+            "groups": [{"name": "emotion", "weight": 1, "terms": ["emotion recognition", "adaptive context selection"]}],
+        }), encoding="utf-8")
+        result = explore_citation_graph(
+            store, root_id, direction="references", max_nodes=10, config=cfg, profile_path=profile_path,
+        )
+        assert len(result.papers) == 1
+        discovered = store.get(result.papers[0].paper_id)
+        assert discovered["relevance_score"] > 0
+        assert discovered["scoring_version"] == "citation-keyword-v0.7"
+        still_existing = store.get(existing_id)
+        assert still_existing["relevance_score"] == pytest.approx(0.87)
+        assert still_existing["semantic_score"] == pytest.approx(0.91)
+        assert still_existing["scoring_version"] == "semantic-test"
+    finally:
+        store.close()

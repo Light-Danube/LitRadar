@@ -1,0 +1,36 @@
+{
+  "name": "Affective and pragmatic context modelling",
+  "description": "Scheduled search queries and delivery settings for LitRadar.",
+  "queries": [
+    {
+      "name": "adaptive-context",
+      "query": "task-dependent context selection emotion recognition conversation",
+      "sources": ["openalex", "semantic_scholar", "arxiv"],
+      "per_source": 20
+    },
+    {
+      "name": "sarcasm-and-irony",
+      "query": "context-aware sarcasm irony detection online conversation",
+      "sources": ["openalex", "semantic_scholar", "arxiv"],
+      "per_source": 15
+    },
+    {
+      "name": "affective-pragmatics",
+      "query": "affective computing pragmatic inference conversational context",
+      "sources": ["openalex", "semantic_scholar", "arxiv"],
+      "per_source": 15
+    }
+  ],
+  "scan": {
+    "semantic": false
+  },
+  "digest": {
+    "limit": 15,
+    "queue_limit": 5
+  },
+  "overlap": {
+    "candidates": 500,
+    "min_similarity": 0.24,
+    "title_similarity": 0.42
+  }
+}

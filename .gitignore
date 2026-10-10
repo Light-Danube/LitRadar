@@ -2,8 +2,6 @@ __pycache__/
 *.py[cod]
 .pytest_cache/
 .venv/
-venv/
-venv/Lib
 data/*.sqlite3
 data/*.sqlite3-shm
 data/*.sqlite3-wal
@@ -20,3 +18,7 @@ data/oa_cache/
 build/
 dist/
 *.egg-info/
+
+# Scheduled task logs and generated research digests
+logs/
+reports/

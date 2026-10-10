@@ -188,7 +188,7 @@ def test_successful_pdf_download_clears_stale_retrieval_errors(tmp_path: Path):
     assert not (folder / "download_error.txt").exists()
     assert not (folder / "retrieval_status.txt").exists()
     metadata = json.loads((folder / "metadata.json").read_text(encoding="utf-8"))
-    assert metadata["saved_from_litradar"] == "0.6.0"
+    assert metadata["saved_from_litradar"] == "0.7.0"
 
 
 def test_bibtex_citekey_is_lowercase_and_handles_surname_comma_form(tmp_path: Path):

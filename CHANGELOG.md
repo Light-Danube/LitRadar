@@ -1,5 +1,28 @@
 # Changelog
 
+## 0.7.0 — research digest and scheduled scanning — 2026-10-10
+
+### Added
+- Added editable `digest_config.json` with named topic queries, per-source limits, source selection, keyword-only default for background scans, digest/queue limits, and overlap-warning thresholds.
+- Added `python cli.py scan` to run configured topics through the shared search/ingest pipeline and record each run in SQLite `research_runs`. Uses the local library/database and dedup layer rather than a separate cloud database.
+- Added `python cli.py digest --period daily|weekly` with new-paper summaries, ranking/profile signals, DOI/URL links, possible overlap alerts, and to-read queue summary; writes Markdown when `--output` is supplied.
+- Added local heuristic overlap warnings using weighted lexical/TF-IDF cosine similarity against existing catalog records plus already-stored high-overlap LLM assessments. Warnings are explicitly advisory and do not assert lack of novelty.
+- Added optional direct Telegram delivery through the official Bot API using Python standard-library HTTPS; messages are split below the API size limit, sent results are recorded in `digest_deliveries`, and `python cli.py telegram-chats` lists recent chat identifiers without printing message contents.
+- Added Windows Task Scheduler installation/status/removal commands, a PowerShell task helper and a one-click installer for daily scan + weekly digest. Each one-shot task logs to `logs/`; scheduled digest output is saved to `reports/` when Telegram is not configured.
+- Added schema tables `research_runs`, `digest_deliveries`, and `digest_delivery_papers`; migrations are additive and retain the existing paper database, offline files, API caches, and `.env`.
+- Citation-discovered new papers now receive a keyword relevance score based on `research_profile.json`; known records retain their previous semantic score when seen via citation traversal or a keyword-only scheduled scan. The TUI citation activity shows this score.
+
+### Design decisions
+- Use Windows Task Scheduler (and cron/launchd on Unix-like systems) rather than an in-process APScheduler service. LitRadar is a local CLI/TUI app, so a native OS scheduler runs jobs while the TUI is closed and requires no new mandatory package or permanently running process.
+- Default scheduled scans to keyword ranking. This avoids expensive model downloads and minimizes unattended-job failure modes. Semantic scoring can be enabled explicitly in `digest_config.json` when the environment is prepared for it.
+- Telegram is optional and sends only after the user configures their own bot token and chat ID in `.env`; secrets are not stored in `digest_config.json`, logs, or the database. No ChatGPT integration plugin is required.
+- Digest previews never count as a successful delivery. Only successful Telegram sends advance the per-channel digest cursor, so a failed send can be retried. Local-only scheduled reports do not pretend to have been delivered.
+
+### Validation
+- Offline tests cover scan config validation, per-query scheduling, run-history persistence, digest content/reading queue, overlap heuristics, Telegram chunking/delivery requests, loading `.env` for manual Telegram commands, scheduler command discoverability, and preservation of semantic scores.
+- Final local result, including tests after applying the patch to clean v0.6.0 and running the full ZIP: **91 passed, 4 skipped**. Four skipped tests are optional Textual UI tests because Textual is unavailable in this environment. No live scholarly API, Telegram send, Windows Task Scheduler registration, or remote GitHub Actions run was performed.
+- First Windows installation should be smoke-tested with `python cli.py schedule status --job all`, a manual `python cli.py scan`, and `python cli.py digest --period weekly --output reports/smoke.md` before enabling automatic Telegram sends.
+
 ## 0.6.0 — citation intelligence — 2026-10-09
 
 ### Added
