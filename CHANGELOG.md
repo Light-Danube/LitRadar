@@ -1,5 +1,25 @@
 # Changelog
 
+## Unreleased — v0.8.x citation-map usability
+
+### Added
+- Native SVG pan by background drag, bounded zoom/reset controls, and node selection via click, Enter, or Space. Selection shows directional neighbor labels and provider observation timestamps, with separate open-paper and explore-neighborhood actions.
+- Relation type, edge provider, and depth controls, plus filter reset. Edge filters apply at every traversal depth and in the returned graph.
+
+### Fixed
+- Citation arrows now point from citing to cited paper; undirected related links remain dashed.
+- Duplicate provider observations are displayed as one relationship with complete provenance. API edges keep the legacy `provider` field and add `providers`/`provenance`.
+- Bounded results are deterministic; `truncated` reports actual omissions rather than simply reaching exactly the node limit. Unseeded graph requests honor the requested maximum up to 200 nodes.
+
+### Compatibility and limits
+- No SQLite migration, mandatory dependency, or CLI/TUI/Telegram interface change. Released version remains v0.8.0 until a release is prepared.
+- User/imported/generated annotation provenance, year filters, exports, and improved layout remain future work. Screenshots use a disposable fixture database.
+
+### Validation
+- Windows local run: **117 passed**, no skips; one existing Starlette/httpx TestClient deprecation warning. Local `.venv` uses Python 3.10.11; supported Python 3.11/3.12 validation remains with CI.
+- Repository `compileall` (excluding `.venv`), JavaScript syntax check, and `git diff --check` passed.
+- In-app browser smoke test on loopback with a disposable SQLite fixture verified arrows, merged provenance, Enter/Space selection, recenter/open-paper navigation, filters/reset/empty results, zoom, and background pan/reset. No browser console errors were observed. Screenshot: `docs/screenshots/citation-map-provenance.png`.
+
 ## 0.8.0 — LitBeacon browser research workspace — 2026-10-12
 
 ### Added

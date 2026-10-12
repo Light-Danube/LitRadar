@@ -1,4 +1,6 @@
 const state = { page: 'overview', papers: [], selected: null, query: '', status: 'all', sort: 'relevance_score', graphSeed: null, clusterData: null };
+state.graphFilters = { relation: 'all', provider: '', depth: '1' };
+state.graphRequest = 0;
 const $ = (selector, root = document) => root.querySelector(selector);
 const esc = (value) => String(value ?? '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
 const titleOf = (paper) => paper?.title || `Paper #${paper?.id ?? '?'}`;
@@ -61,11 +63,37 @@ function renderDetail(paper, panel) {
   $('#open-graph',panel).addEventListener('click',()=>{state.graphSeed=paper.id;switchPage('graph');});
 }
 async function renderGraph(container) {
+  const request=++state.graphRequest;
   const seed=state.graphSeed || state.selected?.id || null;
-  const params=new URLSearchParams({depth:'1',max_nodes:'80'}); if(seed)params.set('seed_id',seed);
+  const params=new URLSearchParams({depth:state.graphFilters.depth,max_nodes:'80',relation:state.graphFilters.relation}); if(seed)params.set('seed_id',seed);
+  if(state.graphFilters.provider)params.set('provider',state.graphFilters.provider);
   const graph=await api(`/api/graph?${params}`);
-  container.innerHTML=`<section class="panel"><div class="panel-head"><div><h2>Citation & related-work map</h2><p class="muted">Stored local relationships only · click a node to open the paper</p></div><button class="btn" id="refresh-graph">↻ Refresh map</button></div><div class="legend"><span><i class="dot seed"></i>Selected paper</span><span><i class="dot"></i>New / untriaged</span><span><i class="dot related"></i>Related work</span><span>→ citations are directed; dashed lines mean “related”</span></div><div class="svg-wrap"><svg id="graph-svg" class="graph-svg" viewBox="0 0 900 510" role="img" aria-label="Citation relationship graph"></svg></div><p class="muted">${graph.nodes.length} nodes · ${graph.edges.length} stored relationships${graph.truncated?' · node limit reached':''}. An empty map means this neighborhood has not been fetched into the local database yet; use Citation Discovery in CLI/TUI.</p><div id="graph-paper-list" class="paper-list">${graph.nodes.slice(0,8).map(paperRow).join('')}</div></section>`;
-  $('#refresh-graph',container).addEventListener('click',()=>renderGraph(container)); bindPaperClicks(container); drawGraph(graph, $('#graph-svg',container));
+  if(request!==state.graphRequest||state.page!=='graph')return;
+  container.innerHTML=`<section class="panel"><div class="panel-head"><div><h2>Citation & related-work map</h2><p class="muted">Stored local relationships only · select a node to inspect its links</p></div><button class="btn" id="refresh-graph">↻ Refresh map</button></div>
+  <div class="toolbar"><label>Relation <select class="field" id="graph-relation">${[['all','All relations'],['cites','Citations'],['related','Related work']].map(([v,l])=>`<option value="${v}" ${state.graphFilters.relation===v?'selected':''}>${l}</option>`).join('')}</select></label><label>Edge provider <select class="field" id="graph-provider"><option value="">All providers</option>${graph.providers.map(v=>`<option value="${esc(v)}" ${state.graphFilters.provider===v?'selected':''}>${esc(v)}</option>`).join('')}</select></label><label>Depth <select class="field" id="graph-depth">${['1','2'].map(v=>`<option ${state.graphFilters.depth===v?'selected':''}>${v}</option>`).join('')}</select></label><button class="btn" id="reset-graph-filters">Reset filters</button></div>
+  <div class="legend"><span><i class="dot seed"></i>Neighborhood seed</span><span><i class="dot"></i>New / untriaged</span><span>→ citing paper to cited paper (reference)</span><span>← incoming citation (cited by)</span><span>Dashed — related work (undirected)</span></div><div class="toolbar"><button class="btn" id="graph-zoom-in" aria-label="Zoom in">+</button><button class="btn" id="graph-zoom-out" aria-label="Zoom out">−</button><button class="btn" id="graph-reset-view">Reset view</button><span class="muted">Drag background to pan</span></div><div class="svg-wrap"><svg id="graph-svg" class="graph-svg" viewBox="0 0 900 510" role="group" aria-label="Citation relationship graph"></svg></div><p class="muted">${graph.nodes.length} nodes · ${graph.edges.length} unique relationships${graph.truncated?' · node limit reached':''}. Only matching edges are traversed. Missing links may not have been fetched; use Citation Discovery in CLI/TUI.</p><div id="graph-selection" aria-live="polite"><p class="muted">Select a node with click, Enter or Space.</p></div><div id="graph-paper-list" class="paper-list">${graph.nodes.slice(0,8).map(paperRow).join('')}</div></section>`;
+  for(const key of ['relation','provider','depth']) $(`#graph-${key}`,container).addEventListener('change',event=>{state.graphFilters[key]=event.target.value;renderGraph(container).catch(e=>toast(e.message,true));});
+  $('#reset-graph-filters',container).addEventListener('click',()=>{state.graphFilters={relation:'all',provider:'',depth:'1'};renderGraph(container).catch(e=>toast(e.message,true));});
+  $('#refresh-graph',container).addEventListener('click',()=>renderGraph(container).catch(e=>toast(e.message,true))); bindPaperClicks(container); drawGraph(graph, $('#graph-svg',container));
+  const svg=$('#graph-svg',container), view={x:0,y:0,w:900,h:510};
+  const update=()=>svg.setAttribute('viewBox',`${view.x} ${view.y} ${view.w} ${view.h}`);
+  const zoom=factor=>{const w=Math.max(225,Math.min(1800,view.w*factor)),h=w*510/900;view.x+=(view.w-w)/2;view.y+=(view.h-h)/2;view.w=w;view.h=h;update();};
+  $('#graph-zoom-in',container).addEventListener('click',()=>zoom(.8));
+  $('#graph-zoom-out',container).addEventListener('click',()=>zoom(1.25));
+  $('#graph-reset-view',container).addEventListener('click',()=>{Object.assign(view,{x:0,y:0,w:900,h:510});update();});
+  let drag=null;
+  svg.addEventListener('pointerdown',event=>{if(event.button!==0||event.target.closest('[data-node]'))return;const point=new DOMPoint(event.clientX,event.clientY).matrixTransform(svg.getScreenCTM().inverse());drag={point,id:event.pointerId};svg.setPointerCapture(event.pointerId);});
+  svg.addEventListener('pointermove',event=>{if(!drag||event.pointerId!==drag.id)return;const point=new DOMPoint(event.clientX,event.clientY).matrixTransform(svg.getScreenCTM().inverse());view.x+=drag.point.x-point.x;view.y+=drag.point.y-point.y;update();});
+  svg.addEventListener('pointerup',()=>{drag=null;});svg.addEventListener('pointercancel',()=>{drag=null;});svg.addEventListener('lostpointercapture',()=>{drag=null;});
+}
+function selectGraphNode(paper, graph, svg) {
+  svg.querySelectorAll('[data-node]').forEach(el=>el.classList.toggle('selected',Number(el.dataset.node)===paper.id));
+  const nodes=new Map(graph.nodes.map(p=>[String(p.id),p]));
+  const links=graph.edges.filter(e=>Number(e.source)===paper.id||Number(e.target)===paper.id);
+  const panel=$('#graph-selection');
+  panel.innerHTML=`<h3>${esc(titleOf(paper))}</h3><div class="detail-actions"><button class="btn" id="graph-open-paper">Open paper</button><button class="btn" id="graph-recenter">Explore this neighborhood</button></div><ul class="graph-links">${links.map(e=>{const outgoing=Number(e.source)===paper.id;const other=nodes.get(outgoing?e.target:e.source);return `<li>${e.type==='related'?'Related work':outgoing?'References':'Cited by'}: ${esc(titleOf(other))}<br><small class="muted">${e.provenance.map(p=>`${esc(p.provider)} · observed ${esc(p.observed_at)}`).join('; ')}</small></li>`;}).join('')||'<li>No matching stored links for this paper.</li>'}</ul>`;
+  $('#graph-open-paper',panel).addEventListener('click',async()=>{try{await loadDetail(paper.id);switchPage('inbox');}catch(e){toast(e.message,true);}});
+  $('#graph-recenter',panel).addEventListener('click',()=>{state.graphSeed=paper.id;renderGraph($('#page-content')).catch(e=>toast(e.message,true));});
 }
 function drawGraph(graph, svg) {
   const ns='http://www.w3.org/2000/svg', width=900, height=510; svg.innerHTML='';
@@ -73,8 +101,16 @@ function drawGraph(graph, svg) {
   if(!graph.nodes.length){const text=make('text',{x:450,y:245,'text-anchor':'middle',class:'node-label'});text.textContent='No papers in this graph yet';svg.append(text);return;}
   const centerIndex=graph.nodes.findIndex(p=>p.id===graph.seed_id); const center=Math.max(0,centerIndex); const positions=new Map(); positions.set(graph.nodes[center].id,{x:450,y:255});
   const others=graph.nodes.filter((_,i)=>i!==center); others.forEach((paper,i)=>{const angle=2*Math.PI*i/Math.max(others.length,1)-Math.PI/2;const radius=others.length<8?115:Math.min(210,100+others.length*3);positions.set(paper.id,{x:450+Math.cos(angle)*radius,y:255+Math.sin(angle)*radius*.78});});
-  const edges=graph.edges; for(const edge of edges){const a=positions.get(Number(edge.source)),b=positions.get(Number(edge.target));if(!a||!b)continue;const line=make('line',{x1:a.x,y1:a.y,x2:b.x,y2:b.y,class:`edge ${edge.type==='related'?'related':''}`});svg.append(line);if(edge.type==='cites'){const midX=(a.x+b.x)/2,midY=(a.y+b.y)/2;const mark=make('circle',{cx:midX,cy:midY,r:2,fill:'#8cc8f2'});svg.append(mark);}}
-  for(const paper of graph.nodes){const pos=positions.get(paper.id);const group=make('g',{'data-node':paper.id,tabindex:0,role:'button','aria-label':titleOf(paper)});const classes=['node',paper.id===graph.seed_id?'seed':paper.status==='to-read'?'todo':paper.status==='read'?'read':'new'].join(' ');const circle=make('circle',{cx:pos.x,cy:pos.y,r:paper.id===graph.seed_id?16:scoreOf(paper)>.75?11:8,class:classes});group.append(circle);const label=make('text',{x:pos.x+14,y:pos.y+3,class:'node-label'});label.textContent=titleOf(paper).length>33?titleOf(paper).slice(0,31)+'…':titleOf(paper);group.append(label);group.addEventListener('click',()=>{state.graphSeed=paper.id;state.selected=paper;renderGraph($('#page-content'));});group.addEventListener('keydown',event=>{if(event.key==='Enter')group.dispatchEvent(new Event('click'));});svg.append(group);}
+  const defs=make('defs'),marker=make('marker',{id:'citation-arrow',viewBox:'0 0 10 10',refX:9,refY:5,markerWidth:8,markerHeight:8,orient:'auto',markerUnits:'userSpaceOnUse'});
+  marker.append(make('path',{d:'M 0 0 L 10 5 L 0 10 z',fill:'#8cc8f2'}));defs.append(marker);svg.append(defs);
+  const radius=paper=>paper.id===graph.seed_id?16:scoreOf(paper)>.75?11:8;
+  const papers=new Map(graph.nodes.map(p=>[p.id,p]));
+  for(const edge of graph.edges){const source=Number(edge.source),target=Number(edge.target),a=positions.get(source),b=positions.get(target);if(!a||!b||source===target)continue;const distance=Math.hypot(b.x-a.x,b.y-a.y),ux=(b.x-a.x)/distance,uy=(b.y-a.y)/distance;
+    const line=make('line',{x1:a.x+ux*(radius(papers.get(source))+3),y1:a.y+uy*(radius(papers.get(source))+3),x2:b.x-ux*(radius(papers.get(target))+4),y2:b.y-uy*(radius(papers.get(target))+4),class:`edge ${edge.type==='related'?'related':''}`});
+    if(edge.type==='cites')line.setAttribute('marker-end','url(#citation-arrow)');
+    const title=make('title');title.textContent=`${titleOf(papers.get(source))} ${edge.type==='cites'?'cites':'is related to'} ${titleOf(papers.get(target))} · ${edge.provenance.map(p=>`${p.provider} (${p.observed_at})`).join('; ')}`;line.append(title);svg.append(line);
+  }
+  for(const paper of graph.nodes){const pos=positions.get(paper.id);const group=make('g',{'data-node':paper.id,tabindex:0,role:'button','aria-label':titleOf(paper)});const classes=['node',paper.id===graph.seed_id?'seed':paper.status==='to-read'?'todo':paper.status==='read'?'read':'new'].join(' ');const circle=make('circle',{cx:pos.x,cy:pos.y,r:radius(paper),class:classes});group.append(circle);const label=make('text',{x:pos.x+14,y:pos.y+3,class:'node-label'});label.textContent=titleOf(paper).length>33?titleOf(paper).slice(0,31)+'…':titleOf(paper);group.append(label);group.addEventListener('click',()=>selectGraphNode(paper,graph,svg));group.addEventListener('keydown',event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();selectGraphNode(paper,graph,svg);}});svg.append(group);}
 }
 async function renderClusters(container) {
   const data=await api('/api/clusters?limit=400'); state.clusterData=data;

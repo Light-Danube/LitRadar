@@ -221,20 +221,40 @@ def create_app(db_path: str | Path = DEFAULT_DB) -> FastAPI:
         seed_id: int | None = None,
         depth: int = Query(default=1, ge=1, le=2),
         max_nodes: int = Query(default=80, ge=2, le=200),
+        relation: Literal["all", "cites", "related"] = "all",
+        provider: str | None = Query(default=None, min_length=1, max_length=80),
     ) -> dict[str, Any]:
         with _with_store(app.state.db_path) as store:
+            # Apply edge filters during traversal as well as during serialization.
+            filters, filter_params = [], []
+            if relation != "all":
+                filters.append("relation_type=?")
+                filter_params.append(relation)
+            if provider is not None:
+                filters.append("provider=?")
+                filter_params.append(provider)
+            suffix = (" AND " + " AND ".join(filters)) if filters else ""
+
+            def relations_for(ids, *, induced=False):
+                ordered = sorted(ids)
+                marks = ",".join("?" for _ in ordered)
+                operator = "AND" if induced else "OR"
+                return store.conn.execute(
+                    f"SELECT * FROM paper_relations WHERE (source_paper_id IN ({marks}) "
+                    f"{operator} target_paper_id IN ({marks})){suffix} "
+                    "ORDER BY source_paper_id, target_paper_id, relation_type, provider",
+                    (*ordered, *ordered, *filter_params),
+                ).fetchall()
+
+            providers = [row[0] for row in store.conn.execute(
+                "SELECT DISTINCT provider FROM paper_relations ORDER BY provider"
+            )]
+            truncated = False
             if seed_id is None:
-                rows = store.list_papers(limit=min(max_nodes, 80), sort="relevance_score")
+                rows = store.list_papers(limit=max_nodes + 1, sort="relevance_score")
+                truncated = len(rows) > max_nodes
+                rows = rows[:max_nodes]
                 ids = {int(row["id"]) for row in rows}
-                if ids:
-                    marks = ",".join("?" for _ in ids)
-                    relation_rows = store.conn.execute(
-                        f"SELECT * FROM paper_relations WHERE source_paper_id IN ({marks}) OR target_paper_id IN ({marks})",
-                        (*ids, *ids),
-                    ).fetchall()
-                    edges = [dict(row) for row in relation_rows if int(row["source_paper_id"]) in ids and int(row["target_paper_id"]) in ids]
-                else:
-                    edges = []
             else:
                 seed = store.get(seed_id)
                 if seed is None:
@@ -242,42 +262,46 @@ def create_app(db_path: str | Path = DEFAULT_DB) -> FastAPI:
                 ids: set[int] = {seed_id}
                 frontier = {seed_id}
                 for _ in range(depth):
-                    if not frontier or len(ids) >= max_nodes:
+                    if not frontier:
                         break
-                    marks = ",".join("?" for _ in frontier)
-                    params = (*frontier, *frontier)
-                    relations = store.conn.execute(
-                        f"SELECT * FROM paper_relations WHERE source_paper_id IN ({marks}) OR target_paper_id IN ({marks})",
-                        params,
-                    ).fetchall()
+                    relations = relations_for(frontier)
                     next_frontier: set[int] = set()
                     for edge in relations:
                         source_id, target_id = int(edge["source_paper_id"]), int(edge["target_paper_id"])
                         for neighbor in (source_id, target_id):
-                            if neighbor not in ids and len(ids) < max_nodes:
+                            if neighbor not in ids:
                                 if store.get(neighbor) is not None:
-                                    ids.add(neighbor)
-                                    next_frontier.add(neighbor)
+                                    if len(ids) < max_nodes:
+                                        ids.add(neighbor)
+                                        next_frontier.add(neighbor)
+                                    else:
+                                        truncated = True
                     frontier = next_frontier
-                marks = ",".join("?" for _ in ids)
-                relation_rows = store.conn.execute(
-                    f"SELECT * FROM paper_relations WHERE source_paper_id IN ({marks}) AND target_paper_id IN ({marks})",
-                    (*ids, *ids),
-                ).fetchall()
-                edges = [dict(row) for row in relation_rows]
+            edges = relations_for(ids, induced=True) if ids else []
             if ids:
                 marks = ",".join("?" for _ in ids)
-                paper_rows = store.conn.execute(f"SELECT * FROM papers WHERE id IN ({marks})", tuple(ids)).fetchall()
+                paper_rows = store.conn.execute(f"SELECT * FROM papers WHERE id IN ({marks}) ORDER BY id", tuple(ids)).fetchall()
             else:
                 paper_rows = []
             nodes = [_paper_dict(row) for row in paper_rows]
-            edge_payload = [{
-                "source": str(int(edge["source_paper_id"])),
-                "target": str(int(edge["target_paper_id"])),
-                "type": str(edge["relation_type"]),
-                "provider": str(edge["provider"]),
-            } for edge in edges if int(edge["source_paper_id"]) in ids and int(edge["target_paper_id"]) in ids]
-            return {"seed_id": seed_id, "depth": depth, "truncated": len(ids) >= max_nodes, "nodes": nodes, "edges": edge_payload}
+            grouped = {}
+            for edge in edges:
+                source, target = int(edge["source_paper_id"]), int(edge["target_paper_id"])
+                if edge["relation_type"] == "related":
+                    source, target = sorted((source, target))
+                key = (source, target, edge["relation_type"])
+                if key not in grouped:
+                    grouped[key] = {
+                        "source": str(source), "target": str(target), "type": edge["relation_type"],
+                        "provider": edge["provider"], "providers": [], "provenance": [],
+                    }
+                item = grouped[key]
+                if edge["provider"] not in item["providers"]:
+                    item["providers"].append(edge["provider"])
+                item["provenance"].append({"provider": edge["provider"], "observed_at": edge["observed_at"]})
+            edge_payload = [grouped[key] for key in sorted(grouped)]
+            return {"seed_id": seed_id, "depth": depth, "truncated": truncated, "nodes": nodes,
+                    "edges": edge_payload, "providers": providers, "relation": relation, "provider": provider}
 
     @app.get("/api/clusters")
     def clusters(limit: int = Query(default=400, ge=1, le=500)) -> dict[str, Any]:

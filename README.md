@@ -6,6 +6,12 @@
 
 **v0.8.0 — local browser workspace, citation map, heuristic literature clusters, editable paper annotations, and scheduled-job controls.**
 
+### Next v0.8.x increment (unreleased)
+
+The citation map now supports pan by dragging the background, bounded zoom controls, relation/provider filters, and depth 1–2. Select a node with a click, Enter, or Space to inspect references, incoming citations, related works, and each edge's provider/timestamp. Open its paper or explicitly explore its neighborhood from the selection panel. Citation arrows point from citing paper to cited paper; related links are dashed and undirected. Multiple provider observations share one displayed edge without losing provenance.
+
+Filters apply during traversal, before the 80-node browser limit. The seed remains visible even when no edges match. The map uses stored local relationships and makes no network requests to scholarly providers. Year filters, exports, layout improvements, and provenance-aware **notes** remain planned.
+
 This release builds on the working v0.7.x research digest and adds a browser workspace served locally by FastAPI/Uvicorn. It keeps the existing Textual TUI and SQLite database. The SQLite schema remains additive; no database reset is required.
 
 ### What is new
