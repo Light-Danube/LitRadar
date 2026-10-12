@@ -28,9 +28,19 @@ This file records development progress and a safe starting point for continuing 
 - Ukrainian localization for Web UI and/or TUI is added to the v0.8.x roadmap. No translation has been implemented yet.
 - Validation: 129 local tests passed without skips on Windows/Python 3.10.11; compileall excluding `.venv`, JS syntax and whitespace checks passed. Supported 3.11/3.12 validation runs in CI. Browser fixture smoke verified annotation submission/provenance, Unicode/literal markup, persistence and note/draft separation; screenshot: `docs/screenshots/annotation-provenance.png`.
 
+## Current increment: workspace workflows and Ukrainian Web UI (unreleased)
+
+- Branch `codex/workspace-v08-completion` starts from main after PR #3 merged. The four requested roadmap items are checked with the exact supported scope; follow-up items preserve remaining TUI/adapters/audit work.
+- Graph year bounds/unknown-year policy filter nodes before traversal; a seed remains visible as context. `web/static/graph-tools.js` implements deterministic BFS layers and standalone SVG/GraphML export. JSON exports the displayed API snapshot and filter metadata.
+- `web/annotation_actions.py` imports bounded JSON and extracts stored metadata with content hashes for idempotency. Opt-in generation reuses stored LLM assessment JSON or local heuristic reading prompts; it never calls a model/provider endpoint. Automatic provenance records `origin_method`; manual labels remain declarations.
+- Additive annotation columns: `origin_method`, `review_status`, `revision`, `updated_at`, `evidence_key`; `annotation_revisions` retains original/edited versions. PATCH edits require `expected_revision` and preserve original kind/source. Review values are `unreviewed|accepted|dismissed`. Existing note workflows remain unchanged.
+- New endpoints: POST `/api/papers/{id}/annotations/import`, POST `…/extract`, PATCH `…/annotations/{annotation_id}`, GET `…/notes/history` with cursor pagination.
+- Web interface strings are in `web/static/locales.js`; language selection persists in the browser. English/Ukrainian affects display only, never statuses/config identifiers or source paper content. TUI remains English.
+- Validation: 138 local Python tests and 4 Node tests passed; browser fixture covered locales/drafts, import/extraction/opt-in, edit/review/history, graph filters and all downloads. Export files parsed as matching 9-node/9-edge snapshots. Supported Python 3.11/3.12 verification runs in CI.
+
 ## Suggested next Codex task
 
-Add review/edit/history UI around stored annotations, preserving note revisions and legacy workflows. Alternatively continue graph year filters/exports or start externalizing UI strings for Ukrainian localization. Keep automatic imports and generated suggestions explicit and opt-in; never silently overwrite personal notes.
+Continue optional graph/semantic evaluation or translate Textual TUI. Extend import adapters only with bounded fixtures and preserve source evidence. Define recovery before annotation deletion/history restoration; fresh LLM inference needs explicit opt-in and tests. Perform accessibility/assistive-technology QA without assuming the current contrast/focus improvements imply full compliance.
 
 ## Development workflow
 

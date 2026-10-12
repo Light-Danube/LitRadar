@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="uk">
+<html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -8,35 +8,38 @@
   <link rel="stylesheet" href="/static/styles.css">
 </head>
 <body>
+  <a id="skip-link" class="skip-link" href="#page-content">Skip to workspace</a>
   <div class="shell">
     <aside class="sidebar">
       <a class="brand" href="#overview" aria-label="LitBeacon home">
         <span class="brand-icon">◈</span>
-        <span><strong>LitBeacon</strong><small>Research workspace</small></span>
+        <span><strong>LitBeacon</strong><small data-brand>Research workspace</small></span>
       </a>
       <div class="legacy-note">formerly LitRadar · local-first</div>
       <nav id="nav" aria-label="Main navigation">
-        <button class="nav-item active" data-page="overview"><span>⌂</span> Overview</button>
-        <button class="nav-item" data-page="inbox"><span>▤</span> Literature inbox</button>
-        <button class="nav-item" data-page="graph"><span>◎</span> Citation map</button>
-        <button class="nav-item" data-page="clusters"><span>◌</span> Literature clusters</button>
-        <button class="nav-item" data-page="jobs"><span>◷</span> Scheduled jobs</button>
+        <button class="nav-item active" data-page="overview" data-icon="⌂">Overview</button>
+        <button class="nav-item" data-page="inbox" data-icon="▤">Literature inbox</button>
+        <button class="nav-item" data-page="graph" data-icon="◎">Citation map</button>
+        <button class="nav-item" data-page="clusters" data-icon="◌">Literature clusters</button>
+        <button class="nav-item" data-page="jobs" data-icon="◷">Scheduled jobs</button>
       </nav>
       <div class="sidebar-bottom">
-        <span class="local-dot"></span><span>Local database</span>
+        <span class="local-dot"></span><span id="local-label">Local database</span>
         <small id="connection">Connecting…</small>
       </div>
     </aside>
     <main class="main">
       <header class="topbar">
         <div><p class="eyebrow">PERSONAL RESEARCH INBOX</p><h1 id="page-title">Overview</h1></div>
-        <div class="topbar-actions"><span class="version">v0.8.0</span><button id="refresh" class="btn ghost">↻ Refresh</button></div>
+        <div class="topbar-actions"><label id="language-label" for="language">Interface language</label><select id="language" class="field"><option value="en">English</option><option value="uk">Українська</option></select><span class="version">v0.8.0</span><button id="refresh" class="btn ghost">↻ Refresh</button></div>
       </header>
-      <section id="page-content" aria-live="polite"><div class="loading">Loading your library…</div></section>
+      <section id="page-content" aria-live="polite" tabindex="-1"><div class="loading">Loading your library…</div></section>
       <footer>LitBeacon stores your papers, tags, notes and citation links locally. Relevance and cluster labels are advisory, not novelty claims.</footer>
     </main>
   </div>
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <script src="/static/locales.js" defer></script>
+  <script src="/static/graph-tools.js" defer></script>
   <script src="/static/app.js" defer></script>
 </body>
 </html>

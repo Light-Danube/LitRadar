@@ -15,14 +15,16 @@ This roadmap separates implemented behavior from research ideas that still need 
 ## v0.8.x — Research-map usability and annotations
 
 - [x] Add graph pan/zoom, keyboard/click node selection, directional arrows/legend, relation/provider filters applied before bounded traversal, and merged edge provenance (unreleased).
-- [ ] Improve graph layout, add year filters, and export to SVG/GraphML/JSON.
+- [x] Improve graph layout with deterministic BFS layers and separated labels; apply year-range/unknown-year filters before traversal; export the displayed graph to standalone SVG, GraphML and JSON (unreleased).
 - [x] Add the provenance foundation: user/imported/extracted/generated supplemental annotations, recording timestamps and optional source references, research-note revisions, and explicit unknown provenance for legacy notes (unreleased).
-- [ ] Integrate automatic annotation import/extraction and opt-in generated suggestions; add annotation review/edit and note-history UI. Origin labels currently reflect user declarations.
+- [x] Integrate bounded, repeat-safe JSON annotation import and stored-metadata extraction, opt-in suggestions from stored assessments/local reading prompts, review/edit with revision-conflict checks, and paginated research-note history UI (unreleased). Automatic entries record the adapter; manual origin labels remain declarations.
+- [ ] Extend annotation adapters to PDF/RIS/BibTeX sources and opt-in fresh LLM inference; add history restoration and annotation deletion after defining recovery behavior.
 - [ ] Add semantic-similarity edges and embedding-based clustering only behind an explicit optional dependency/feature flag, with fixtures and evaluation against real-but-shareable small corpora.
 - [ ] Test graph edge direction and deduplication more extensively against mixed OpenAlex/Semantic Scholar records.
 - [ ] Add UI workflow smoke tests for inbox editing, clusters, and graph navigation; verify on Windows.
-- [ ] Refine onboarding, keyboard navigation, empty/loading/error states, and accessibility contrast.
-- [ ] Add Ukrainian localization for Web UI and/or Textual TUI to support a wider audience: externalize interface strings, add an English/Ukrainian language selector, and verify Unicode display and localized workflows while preserving CLI/config identifiers.
+- [x] Refine Web UI onboarding, semantic paper buttons/labels, skip link, Alt+1–5 / search / save shortcuts, empty/loading/error/retry states, visible focus and contrast (unreleased; no claim of a complete accessibility audit).
+- [x] Add Ukrainian Web UI localization with externalized English/Ukrainian strings, a persisted language selector, localized statuses/help/actions, and Unicode workflow checks; preserve CLI/config identifiers (unreleased).
+- [ ] Extend Ukrainian localization to Textual TUI and perform a full accessibility audit with assistive technology.
 
 ## v0.9 — Research projects and reading workflow
 
