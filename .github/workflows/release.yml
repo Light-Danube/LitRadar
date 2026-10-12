@@ -18,8 +18,8 @@ jobs:
         env:
           RELEASE_TAG: ${{ github.event.release.tag_name }}
         run: |
-          git archive --format=zip --prefix="LitRadar-${RELEASE_TAG}/" HEAD -o "LitRadar-${RELEASE_TAG}.zip"
+          git archive --format=zip --prefix="LitBeacon-${RELEASE_TAG}/" HEAD -o "LitBeacon-${RELEASE_TAG}.zip"
       - name: Attach ZIP to release
         uses: softprops/action-gh-release@v2
         with:
-          files: LitRadar-${{ github.event.release.tag_name }}.zip
+          files: LitBeacon-${{ github.event.release.tag_name }}.zip

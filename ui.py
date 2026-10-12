@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import json
 import re
+import subprocess
+import sys
 import webbrowser
 from pathlib import Path
 
@@ -56,7 +58,7 @@ class HelpScreen(ModalScreen[None]):
 
     def compose(self) -> ComposeResult:
         yield Static(
-            "[b]LitRadar — keyboard help[/b]\n\n"
+            "[b]LitBeacon (formerly LitRadar) — keyboard help[/b]\n\n"
             "[b]Navigation[/b]\n"
             "↑ / ↓   select paper\n"
             "Enter   select row\n"
@@ -77,6 +79,7 @@ class HelpScreen(ModalScreen[None]):
             "L       save current paper offline\n"
             "O       open local PDF or paper URL\n"
             "C       explore citations/references for selected paper\n"
+            "J       manage scheduled scan/digest jobs (install/remove)\n"
             "S       includes Personalized sort\n\n"
             "?       this help\n"
             "Q / Esc close help / quit\n",
@@ -130,11 +133,85 @@ class TagScreen(ModalScreen[None]):
         self.dismiss()
 
 
-class LitRadarApp(App[None]):
-    """Interactive research inbox for LitRadar."""
+class ScheduleScreen(ModalScreen[None]):
+    """Small OS-scheduler manager: install or remove scan/digest jobs deliberately."""
 
-    TITLE = "LitRadar"
-    SUB_TITLE = "Research Inbox"
+    BINDINGS = [Binding("escape", "close", "Close", show=False), Binding("q", "close", "Close", show=False)]
+
+    def __init__(self, config_path: str | Path | None = None) -> None:
+        super().__init__()
+        self.config_path = Path(config_path or (Path(__file__).resolve().parent / "digest_config.json"))
+
+    def compose(self) -> ComposeResult:
+        with Vertical(id="schedule_dialog"):
+            yield Static("[b]Scheduled jobs[/b]", id="schedule_title")
+            yield Static(
+                "Scan fills the local library. Digest sends the configured daily/weekly report.\n"
+                "Remove only the job you do not want; removing a job does not delete papers or settings.\n"
+                "The built-in manager supports Windows Task Scheduler. On Linux/macOS, remove disables LitBeacon's scheduled-run config; remove the matching cron/launchd entry too.",
+                id="schedule_help",
+            )
+            yield Static("Checking scheduler status…", id="schedule_status", markup=False)
+            with Horizontal(id="schedule_action_row"):
+                yield Button("Refresh status", id="schedule_status_btn")
+                yield Button("Install scan · daily 07:30", id="schedule_install_scan")
+                yield Button("Install digest · weekly 09:00", id="schedule_install_digest")
+            with Horizontal(id="schedule_remove_row"):
+                yield Button("Remove scan", id="schedule_remove_scan", variant="warning")
+                yield Button("Remove digest", id="schedule_remove_digest", variant="warning")
+                yield Button("Remove all", id="schedule_remove_all", variant="error")
+                yield Button("Close", id="schedule_close")
+
+    def on_mount(self) -> None:
+        self._run_schedule("status", "all")
+
+    def on_button_pressed(self, event: Button.Pressed) -> None:
+        actions = {
+            "schedule_status_btn": ("status", "all", "daily", "08:00"),
+            "schedule_install_scan": ("install", "scan", "daily", "07:30"),
+            "schedule_install_digest": ("install", "digest", "weekly", "09:00"),
+            "schedule_remove_scan": ("remove", "scan", "daily", "08:00"),
+            "schedule_remove_digest": ("remove", "digest", "daily", "08:00"),
+            "schedule_remove_all": ("remove", "all", "daily", "08:00"),
+        }
+        if event.button.id == "schedule_close":
+            self.dismiss()
+            return
+        values = actions.get(event.button.id)
+        if values:
+            self._run_schedule(*values)
+
+    @work(exclusive=True, thread=True)
+    def _run_schedule(self, action: str, job: str, frequency: str = "daily", when: str = "08:00") -> None:
+        command = [
+            sys.executable, str(Path(__file__).resolve().parent / "cli.py"), "schedule", action,
+            "--job", job, "--frequency", frequency, "--time", when, "--config", str(self.config_path),
+        ]
+        try:
+            completed = subprocess.run(command, cwd=Path(__file__).resolve().parent, capture_output=True, text=True, timeout=60, check=False)
+            message = (completed.stdout or "").strip()
+            if completed.stderr:
+                message = (message + "\n" + completed.stderr.strip()).strip()
+            if not message:
+                message = f"Schedule command finished with exit code {completed.returncode}."
+            if completed.returncode:
+                message = f"Command exit code {completed.returncode}.\n{message}"
+        except (OSError, subprocess.TimeoutExpired) as exc:
+            message = f"Could not run scheduler command: {type(exc).__name__}: {exc}"
+        self.call_from_thread(self._display_status, message)
+
+    def _display_status(self, message: str) -> None:
+        self.query_one("#schedule_status", Static).update(message)
+
+    def action_close(self) -> None:
+        self.dismiss()
+
+
+class LitRadarApp(App[None]):
+    """Interactive research inbox for LitBeacon (formerly LitRadar)."""
+
+    TITLE = "LitBeacon"
+    SUB_TITLE = "Research Workspace · formerly LitRadar"
     CSS_PATH = "ui.tcss"
 
     BINDINGS = [
@@ -156,6 +233,7 @@ class LitRadarApp(App[None]):
         Binding("k", "focus_tag", "Tag"),
         Binding("ctrl+enter", "search_sources", "Fetch papers"),
         Binding("c", "explore_citations", "Citation graph"),
+        Binding("j", "manage_jobs", "Scheduled jobs"),
     ]
 
     def __init__(self, db_path: str | Path) -> None:
@@ -519,6 +597,9 @@ class LitRadarApp(App[None]):
     def on_select_changed(self, event: Select.Changed) -> None:
         if event.select.id in {"status", "sort", "tag"}:
             self.refresh_rows()
+
+    def action_manage_jobs(self) -> None:
+        self.push_screen(ScheduleScreen())
 
     def action_help(self) -> None:
         self.push_screen(HelpScreen())

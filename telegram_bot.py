@@ -1,4 +1,4 @@
-"""Interactive, single-user Telegram command loop for LitBeacon.
+"""Interactive, single-user Telegram command loop for LitBeacon (legacy module name: LitRadar).
 
 The loop uses Telegram long polling. Scheduled digests do not depend on this
 process; commands and inline buttons do. Only the configured chat ID is allowed.
@@ -40,7 +40,8 @@ BOT_COMMANDS = [
     {"command": "start", "description": "Show LitBeacon menu"},
     {"command": "help", "description": "Show available commands"},
     {"command": "digest", "description": "Send a daily or weekly digest"},
-    {"command": "schedule", "description": "View/change digest schedule"},
+    {"command": "schedule", "description": "View/change/remove scheduled jobs"},
+    {"command": "jobs", "description": "See or remove scan/digest jobs"},
     {"command": "settings", "description": "Show digest settings"},
     {"command": "scan", "description": "Run configured searches now"},
     {"command": "topics", "description": "List saved search topics"},
@@ -131,6 +132,7 @@ def _make_keyboard() -> dict[str, Any]:
         ],
         [
             {"text": "⚙ Settings", "callback_data": "settings"},
+            {"text": "🗓 Scheduled jobs", "callback_data": "jobs"},
             {"text": "📊 Library stats", "callback_data": "stats"},
         ],
     ]}
@@ -148,18 +150,20 @@ class LitRadarTelegramBot:
         state_path: str | Path = DEFAULT_STATE,
         api: Callable[..., dict[str, Any]] = telegram_api,
         schedule_runner: Callable[[str, str], tuple[bool, str]] | None = None,
+        schedule_remover: Callable[[str], tuple[bool, str]] | None = None,
         scan_runner: Callable[..., Any] = run_scheduled_scan,
     ) -> None:
         self.token = token.strip()
         self.chat_id = str(chat_id).strip()
         if not self.token or not self.chat_id:
-            raise ValueError("Set LitBeacon_TELEGRAM_BOT_TOKEN and LitBeacon_TELEGRAM_CHAT_ID in .env first")
+            raise ValueError("Set LITRADAR_TELEGRAM_BOT_TOKEN and LITRADAR_TELEGRAM_CHAT_ID in .env first")
         self.config_path = Path(config_path)
         self.db_path = Path(db_path)
         self.profile_path = Path(profile_path)
         self.state_path = Path(state_path)
         self.api = api
         self.schedule_runner = schedule_runner
+        self.schedule_remover = schedule_remover
         self.scan_runner = scan_runner
         self.offset = self._load_offset()
 
@@ -283,20 +287,23 @@ class LitRadarTelegramBot:
             self._show_settings()
         elif data == "stats":
             self._show_stats()
+        elif data == "jobs":
+            self._set_or_show_schedule("")
 
     def _dispatch_command(self, command: str, argument: str) -> None:
         if command in {"start", "menu"}:
             self._send(
-                "Вітаю! 👋\nЯ LitBeacon — твій локальний маяк у морі науки.\n\n"
+                "Вітаю! 👋\nЯ LitBeacon — твій локальний науковий помічник (раніше LitRadar).\n\n"
                 "Можу надсилати дайджести, запускати пошук і допомагати керувати чергою читання.\n"
-                "Вибери дію або надішли /help.",
+                "Вибери дію або надішли /help. Для керування фоновими завданнями — /jobs.",
                 keyboard=_make_keyboard(),
             )
         elif command in {"help", "commands"}:
             self._send(
-                "Команди LitBeacon\n"
+                "Команди LitBeacon (раніше LitRadar)\n"
                 "/digest [daily|weekly] — сформувати й надіслати дайджест\n"
-                "/schedule — показати розклад; /schedule daily 08:00 або /schedule weekly 09:00 — змінити його\n"
+                "/schedule або /jobs — переглянути стан; /schedule daily 08:00 або /schedule weekly 09:00 — змінити час\n"
+                "/schedule remove scan|digest|all — вимкнути вибрані автоматичні завдання\n"
                 "/settings — налаштування дайджесту\n"
                 "/scan — запустити налаштовані пошуки зараз\n"
                 "/topics — список пошукових тем\n"
@@ -311,7 +318,7 @@ class LitRadarTelegramBot:
             )
         elif command in {"settings", "config"}:
             self._show_settings()
-        elif command == "schedule":
+        elif command in {"schedule", "jobs"}:
             self._set_or_show_schedule(argument)
         elif command == "digest":
             config = _read_config(self.config_path)
@@ -375,6 +382,7 @@ class LitRadarTelegramBot:
             f"Попередження про перетини: {'on' if overlap else 'off'}\n"
             f"Пошукових тем: {len(queries) if isinstance(queries, list) else 0}\n\n"
             "Змінити розклад: /schedule daily 08:00 або /schedule weekly 09:00\n"
+            "Вимкнути job: /schedule remove scan|digest|all\n"
             "Інші параметри: /limit 10, /queue 5, /overlap off, /topics",
             keyboard=_make_keyboard(),
         )
@@ -383,11 +391,38 @@ class LitRadarTelegramBot:
         config = _read_config(self.config_path)
         current = _delivery_settings(config)
         if not argument:
-            self._send(f"Поточний дайджест: {current['frequency']} о {current['time']} (weekly — щонеділі).\nЗміна: /schedule daily 08:00 або /schedule weekly 09:00")
+            delivery_enabled = config.get("delivery", {}).get("enabled", True)
+            scan_enabled = config.get("scan", {}).get("enabled", True)
+            self._send(
+                f"Автоматичне сканування: {'увімкнено' if scan_enabled else 'вимкнено'}\n"
+                f"Автоматичний дайджест: {'увімкнено' if delivery_enabled else 'вимкнено'}; "
+                f"{current['frequency']} о {current['time']} (weekly — щонеділі).\n\n"
+                "Змінити час: /schedule daily 08:00 або /schedule weekly 09:00\n"
+                "Вимкнути завдання: /schedule remove scan, /schedule remove digest або /schedule remove all"
+            )
             return
         parts = argument.split()
+        if len(parts) == 2 and parts[0].casefold() in {"remove", "delete", "disable"}:
+            job = parts[1].casefold()
+            if job not in {"scan", "digest", "all"}:
+                self._send("Використання: /schedule remove scan|digest|all")
+                return
+            success, message = self._remove_scheduled_jobs(job)
+            if not success:
+                self._send(f"Не вдалося вимкнути завдання: {message}")
+                return
+            if job in {"scan", "all"}:
+                config.setdefault("scan", {})["enabled"] = False
+            if job in {"digest", "all"}:
+                config.setdefault("delivery", {})["enabled"] = False
+            _write_config(self.config_path, config)
+            self._send(f"✅ Завдання вимкнено: {job}. {message}")
+            return
         if len(parts) != 2 or parts[0].casefold() not in {"daily", "weekly"} or not re.fullmatch(r"(?:[01]\d|2[0-3]):[0-5]\d", parts[1]):
-            self._send("Використання: /schedule daily 08:00 або /schedule weekly 09:00. Час — локальний час Windows, формат HH:MM.")
+            self._send(
+                "Використання:\n/schedule daily 08:00\n/schedule weekly 09:00\n"
+                "/schedule remove scan|digest|all\nЧас — локальний час Windows, формат HH:MM."
+            )
             return
         frequency, when = parts[0].casefold(), parts[1]
         success, message = self._reschedule(frequency, when)
@@ -395,7 +430,7 @@ class LitRadarTelegramBot:
             self._send(f"Не вдалося оновити Windows Task Scheduler: {message}")
             return
         config.setdefault("delivery", {})
-        config["delivery"].update({"frequency": frequency, "time": when})
+        config["delivery"].update({"frequency": frequency, "time": when, "enabled": True})
         _write_config(self.config_path, config)
         if os.name == "nt" or self.schedule_runner is not None:
             extra = message or "Windows Task Scheduler оновлено."
@@ -417,6 +452,19 @@ class LitRadarTelegramBot:
             detail = (completed.stderr or completed.stdout or "scheduler rejected the request").strip()
             return False, detail[-500:]
         detail = (completed.stdout or "").strip()
+        return True, detail[-350:]
+
+    def _remove_scheduled_jobs(self, job: str) -> tuple[bool, str]:
+        if self.schedule_remover is not None:
+            return self.schedule_remover(job)
+        command = [sys.executable, str(ROOT / "cli.py"), "schedule", "remove", "--job", job]
+        try:
+            completed = subprocess.run(command, cwd=ROOT, capture_output=True, text=True, timeout=45, check=False)
+        except (OSError, subprocess.TimeoutExpired) as exc:
+            return False, type(exc).__name__
+        detail = (completed.stdout or completed.stderr or "").strip()
+        if completed.returncode:
+            return False, detail[-500:] or f"exit code {completed.returncode}"
         return True, detail[-350:]
 
     def _set_numeric_setting(self, key: str, value: int, lower: int, upper: int) -> None:

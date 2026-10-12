@@ -1,6 +1,6 @@
 {
   "name": "Affective and pragmatic context modelling",
-  "description": "Scheduled search queries and delivery settings for LitRadar.",
+  "description": "Scheduled search queries and delivery settings for LitBeacon (legacy project name: LitRadar).",
   "queries": [
     {
       "name": "adaptive-context",
@@ -34,6 +34,7 @@
     }
   ],
   "scan": {
+    "enabled": true,
     "semantic": false
   },
   "digest": {
@@ -47,7 +48,8 @@
     "title_similarity": 0.42
   },
   "delivery": {
+    "enabled": true,
     "frequency": "weekly",
-    "time": "15:00"
+    "time": "09:00"
   }
 }

@@ -58,7 +58,7 @@ def edit_note(initial: str = "", *, editor_command: list[str] | None = None) -> 
 
 def export_notes_markdown(rows: Iterable, output_path: str | Path) -> int:
     """Export paper metadata, abstract, and user notes as a readable Markdown file."""
-    sections = ["# LitRadar — Literature Notes", ""]
+    sections = ["# LitBeacon — Literature Notes", ""]
     count = 0
     for row in rows:
         count += 1

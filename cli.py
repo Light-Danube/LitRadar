@@ -539,6 +539,25 @@ def cmd_review(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_web(args: argparse.Namespace) -> int:
+    try:
+        import uvicorn
+        from workspace_web import create_app
+    except ImportError as exc:
+        print("Web workspace dependencies are missing. Run setup_litradar.bat or install requirements-web.txt.", file=sys.stderr)
+        return 2
+    host = args.host
+    if host not in {"127.0.0.1", "localhost"}:
+        print("For safety, the first web workspace release only binds to localhost.", file=sys.stderr)
+        return 2
+    url = f"http://127.0.0.1:{args.port}"
+    print(f"LitBeacon workspace is available at {url} (local-only). Press Ctrl+C to stop.", flush=True)
+    if args.open_browser:
+        webbrowser.open(url)
+    uvicorn.run(create_app(args.db), host=host, port=args.port, log_level="info")
+    return 0
+
+
 def cmd_ui(args: argparse.Namespace) -> int:
     try:
         from ui import LitRadarApp
@@ -778,7 +797,37 @@ def cmd_digest(args: argparse.Namespace) -> int:
         return 2
 
 
+def _write_job_enablement(config_path: str | Path, action: str, job: str, *, frequency: str = "daily", when: str = "08:00") -> None:
+    """Persist whether a scheduled job is desired, even on OSes with manual cron setup."""
+    path = Path(config_path)
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return
+    if not isinstance(payload, dict):
+        return
+    selected = ("scan", "digest") if job == "all" else (job,)
+    for selected_job in selected:
+        if selected_job == "scan":
+            payload.setdefault("scan", {})["enabled"] = action == "install"
+        elif selected_job == "digest":
+            delivery = payload.setdefault("delivery", {})
+            delivery["enabled"] = action == "install"
+            if action == "install":
+                delivery["frequency"] = frequency
+                delivery["time"] = when
+    path.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+
+
 def cmd_scheduled_run(args: argparse.Namespace) -> int:
+    try:
+        schedule_config = json.loads(Path(args.config).read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        schedule_config = {}
+    job_settings = schedule_config.get("scan" if args.job == "scan" else "delivery", {})
+    if isinstance(job_settings, dict) and job_settings.get("enabled", True) is False:
+        print(f"Scheduled job '{args.job}' is disabled in {args.config}; skipping.")
+        return 0
     log_dir = ROOT / "logs"
     log_dir.mkdir(parents=True, exist_ok=True)
     log_path = log_dir / f"scheduled-{args.job}.log"
@@ -786,7 +835,7 @@ def cmd_scheduled_run(args: argparse.Namespace) -> int:
     with log_path.open("a", encoding="utf-8") as log:
         with redirect_stdout(log), redirect_stderr(log):
             print("\n" + "=" * 72)
-            print(f"Scheduled LitRadar job={args.job} at {datetime.now(timezone.utc).isoformat()}")
+            print(f"Scheduled LitBeacon job={args.job} at {datetime.now(timezone.utc).isoformat()}")
             try:
                 if args.job == "scan":
                     nested = argparse.Namespace(
@@ -816,8 +865,14 @@ def cmd_scheduled_run(args: argparse.Namespace) -> int:
 
 
 def cmd_schedule(args: argparse.Namespace) -> int:
+    if args.action == "remove":
+        # Disable at application level too: stale cron/launchd entries become harmless.
+        _write_job_enablement(args.config, "remove", args.job, frequency=args.frequency, when=args.time)
+        if os.name != "nt":
+            print(f"Disabled scheduled-run configuration for {args.job}. Remove the corresponding cron/launchd entry manually if one exists.")
+            return 0
     if os.name != "nt":
-        print("Automatic schedule installation in this command is Windows-only. On Linux/macOS, use cron/launchd to run `python cli.py scheduled-run --job scan` and `python cli.py scheduled-run --job digest --period weekly`.", file=sys.stderr)
+        print("Windows Task Scheduler install/status is only available on Windows. On Linux/macOS, use cron/launchd and `python cli.py schedule remove --job scan|digest|all` to disable stale jobs safely.", file=sys.stderr)
         return 2
     script = ROOT / "schedule_litradar.ps1"
     command = [
@@ -825,7 +880,10 @@ def cmd_schedule(args: argparse.Namespace) -> int:
         "-Action", args.action, "-TaskSet", args.job, "-Frequency", args.frequency, "-Time", args.time,
     ]
     try:
-        return subprocess.run(command, cwd=ROOT, check=False).returncode
+        code = subprocess.run(command, cwd=ROOT, check=False).returncode
+        if code == 0 and args.action == "install":
+            _write_job_enablement(args.config, "install", args.job, frequency=args.frequency, when=args.time)
+        return code
     except OSError as exc:
         print(f"Could not invoke Windows Task Scheduler helper: {exc}", file=sys.stderr)
         return 1
@@ -884,6 +942,9 @@ Examples:
   python cli.py digest --period weekly --output reports/weekly.md
   python cli.py schedule install --job scan --frequency daily --time 08:00
   python cli.py schedule install --job digest --frequency weekly --time 09:00
+  python cli.py schedule remove --job digest   # remove only digest; scan remains
+  python cli.py schedule remove --job all      # remove both scheduled jobs
+  python cli.py web                          # start browser workspace on localhost
   python cli.py telegram-chats
   python cli.py telegram-run
   python cli.py set-status 42 to-read
@@ -911,11 +972,11 @@ Most commands have their own help page, e.g.:
   python cli.py schedule --help
 """
     parser = argparse.ArgumentParser(
-        description=f"LitRadar {VERSION} — personal literature radar and research inbox",
+        description=f"LitBeacon {VERSION} (formerly LitRadar) — personal literature research workspace",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog=textwrap.dedent(epilog),
     )
-    parser.add_argument("--version", action="version", version=f"LitRadar {VERSION}")
+    parser.add_argument("--version", action="version", version=f"LitBeacon {VERSION} (formerly LitRadar)")
     parser.add_argument("--db", default=str(DEFAULT_DB), help="SQLite database path")
     sub = parser.add_subparsers(dest="command", required=True, metavar="COMMAND")
 
@@ -953,6 +1014,7 @@ Most commands have their own help page, e.g.:
     p_schedule.add_argument("--job", choices=["scan", "digest", "all"], default="all")
     p_schedule.add_argument("--frequency", choices=["daily", "weekly"], default="daily")
     p_schedule.add_argument("--time", default="08:00", help="local 24-hour time HH:MM")
+    p_schedule.add_argument("--config", default=str(DEFAULT_SCAN_CONFIG), help="persist desired scan/digest state in config")
     p_schedule.set_defaults(func=cmd_schedule)
 
     p_telegram = sub.add_parser("telegram-chats", help="list chat IDs from recent Telegram bot updates; message contents are not shown")
@@ -1078,6 +1140,12 @@ Most commands have their own help page, e.g.:
 
     p_ui = sub.add_parser("ui", help="launch the optional Textual terminal UI")
     p_ui.set_defaults(func=cmd_ui)
+
+    p_web = sub.add_parser("web", help="launch the optional browser research workspace (localhost only)")
+    p_web.add_argument("--host", default="127.0.0.1", choices=["127.0.0.1", "localhost"], help="bind address; external interfaces are intentionally disabled")
+    p_web.add_argument("--port", type=int, default=8765, help="local web port")
+    p_web.add_argument("--open-browser", action=argparse.BooleanOptionalAction, default=True, help="open the workspace in the default browser")
+    p_web.set_defaults(func=cmd_web)
 
     p_fixture = sub.add_parser("ingest-fixture", help="ingest local JSON fixture papers")
     p_fixture.add_argument("file")

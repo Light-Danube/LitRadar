@@ -125,3 +125,38 @@ TagScreen {
     border: round $primary;
     overflow-y: auto;
 }
+
+#schedule_dialog {
+    width: 90%;
+    max-width: 100;
+    height: auto;
+    max-height: 90%;
+    border: round $accent;
+    background: $surface;
+    padding: 1 2;
+}
+
+#schedule_title {
+    text-style: bold;
+    color: $accent;
+    margin-bottom: 1;
+}
+
+#schedule_help {
+    height: auto;
+    margin-bottom: 1;
+}
+
+#schedule_status {
+    height: 8;
+    border: round $panel;
+    padding: 1;
+    overflow-y: auto;
+    margin-bottom: 1;
+}
+
+#schedule_action_row, #schedule_remove_row {
+    height: auto;
+    align: center middle;
+    margin-top: 1;
+}

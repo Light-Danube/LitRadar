@@ -60,7 +60,7 @@ def test_command_updates_schedule_and_persists_safe_config(tmp_path: Path):
     bot = _bot(tmp_path, api=api, schedule_runner=schedule_runner)
     bot.process_update(_message("/schedule daily 08:15"))
     config = json.loads((tmp_path / "digest_config.json").read_text(encoding="utf-8"))
-    assert config["delivery"] == {"frequency": "daily", "time": "08:15"}
+    assert config["delivery"] == {"frequency": "daily", "time": "08:15", "enabled": True}
     assert schedule_calls == [("daily", "08:15")]
     sent = [payload["text"] for method, payload, _ in api.calls if method == "sendMessage"]
     assert any("Розклад оновлено" in text for text in sent)
@@ -117,7 +117,7 @@ def test_poller_persists_offset_and_sends_menu_response(tmp_path: Path):
     state = json.loads((tmp_path / "data" / "telegram_bot_state.json").read_text(encoding="utf-8"))
     assert state["next_update_offset"] == 25
     messages = [payload for method, payload, _ in api.calls if method == "sendMessage"]
-    assert messages and "LitBeacon" in messages[0]["text"]
+    assert messages and "LitRadar" in messages[0]["text"]
     assert "reply_markup" in messages[0]
 
 
@@ -127,4 +127,4 @@ def test_commands_are_available_in_telegram_menu(tmp_path: Path):
     bot._set_commands()
     method, payload, _ = api.calls[0]
     assert method == "setMyCommands"
-    assert {item["command"] for item in payload["commands"]} >= {"digest", "schedule", "topic", "search"}
+    assert {item["command"] for item in payload["commands"]} >= {"digest", "schedule", "topic", "search", "jobs"}

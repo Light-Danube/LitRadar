@@ -2,7 +2,7 @@
 setlocal
 cd /d "%~dp0"
 echo.
-echo LitRadar updater / dependency refresh
+echo LitBeacon updater / dependency refresh
 echo ------------------------------------
 if not exist "%~dp0.git" goto zip_install
 
@@ -20,7 +20,7 @@ if errorlevel 1 (
   goto finish
 )
 echo Dependencies refreshed successfully; source files were NOT updated.
-echo Apply the next LitRadar patch or full ZIP manually to update the code.
+echo Apply the next LitBeacon patch or full ZIP manually to update the code.
 set "UPDATE_EXIT_CODE=2"
 
 :finish

@@ -38,7 +38,7 @@ def test_export_notes_markdown_contains_metadata_abstract_and_notes(tmp_path: Pa
         rows = store.list_papers(status="all")
         assert export_notes_markdown(rows, output) == 1
         content = output.read_text(encoding="utf-8")
-        assert "# LitRadar — Literature Notes" in content
+        assert "# LitBeacon — Literature Notes" in content
         assert "Task-Dependent Context Selection" in content
         assert "Jane Doe, John Smith" in content
         assert "10.1000/example" in content

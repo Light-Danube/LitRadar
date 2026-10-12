@@ -5,7 +5,7 @@ call "%~dp0setup_litradar.bat"
 if errorlevel 1 goto failed
 set "PYTHON=%~dp0.venv\Scripts\python.exe"
 echo.
-echo LitRadar Telegram command listener
+echo LitBeacon Telegram command listener
 echo Keep this window open to receive Telegram commands and inline-button actions.
 echo Scheduled digests still work independently via Windows Task Scheduler.
 echo Press Ctrl+C to stop the listener.
@@ -18,6 +18,6 @@ pause
 endlocal & exit /b %EXIT_CODE%
 
 :failed
-echo LitRadar setup could not be completed.
+echo LitBeacon setup could not be completed.
 pause
 endlocal & exit /b 1

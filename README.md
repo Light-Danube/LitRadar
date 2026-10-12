@@ -1,15 +1,19 @@
-# LitRadar v0.7.1
+# LitBeacon Research Workspace (formerly LitRadar)
 
-Personal literature radar and research inbox for discovering, ranking, triaging, and keeping academic papers locally.
+**LitBeacon** is a local-first literature discovery and research inbox for discovering, ranking, organizing and exploring academic papers. The code, existing SQLite database, `LITRADAR_*` environment variables, CLI module names, and Windows task names intentionally retain their legacy identifiers during the rebrand so upgrades do not break existing installations.
 
 ## Current release
 
-**v0.7.1 — interactive Telegram bot, adjustable digest settings, and simpler Windows launchers.**
+**v0.8.0 — local browser workspace, citation map, heuristic literature clusters, editable paper annotations, and scheduled-job controls.**
 
-This release builds on v0.7.0 Research Digest and adds a private interactive Telegram command interface, buttons, configurable schedules, custom search topics, library queries, and simpler Windows dependency/CLI launchers. The SQLite schema remains additive; no database reset is required.
+This release builds on the working v0.7.x research digest and adds a browser workspace served locally by FastAPI/Uvicorn. It keeps the existing Textual TUI and SQLite database. The SQLite schema remains additive; no database reset is required.
 
 ### What is new
 
+- **Browser workspace:** local-only `python cli.py web` / `run_web.bat`, with overview, searchable inbox, paper details, editable notes/tags/status, bounded citation/related-work map, and local heuristic clusters.
+- **Scheduled-job control:** `python cli.py schedule remove --job scan|digest|all`, Telegram `/schedule remove …` or `/jobs`, and TUI `J` opens the schedule manager. Removing jobs disables the stored job flag as well as removing Windows Task Scheduler entries; on Linux/macOS any cron/launchd line must also be removed manually.
+- **Brand transition:** user-facing name is now **LitBeacon** (the Telegram bot's current name). Legacy `LitRadar` package/module paths, database path, environment variable prefix and Task Scheduler identifiers are retained for backward compatibility.
+- **Windows web shortcut:** `run_web.bat` installs the optional web dependencies through the shared setup helper, initializes the existing database, and starts the browser workspace.
 - **Search workflow:** visible per-source progress in CLI/TUI, online source search from inside TUI, and a summary of fetched/new/library totals.
 - **Personalization:** optional feedback-based ranking, explicit Useful/Not relevant feedback, and explanations of which research-profile groups influenced the recommendation.
 - **Configuration:** `.env`, registered providers, API keys, timeouts/retries/backoff, and cached source-query results.
@@ -24,7 +28,7 @@ The LLM assessment remains experimental/advisory; it does not override the prima
 
 ## Start here
 
-For the quickest first launch on Windows, run `run_litradar.bat`. It creates `.venv`, installs `requirements.txt`, `requirements-ui.txt`, `requirements-dev.txt`, and `requirements-llm.txt`, initializes the database, and opens the TUI. Use `run_cli.bat` for a persistent CLI shell, or `run_telegram_bot.bat` to handle interactive Telegram commands. Scheduled digest delivery works independently of the Telegram listener. Use `run_litradar.ps1` in PowerShell or `./run_litradar.sh` on Linux/macOS.
+For the quickest first launch on Windows, run `run_litradar.bat`. It creates `.venv`, installs `requirements.txt`, `requirements-ui.txt`, `requirements-dev.txt`, `requirements-llm.txt`, and `requirements-web.txt`, initializes the database, and opens the TUI. Use `run_cli.bat` for a persistent CLI shell, `run_web.bat` for the browser workspace, or `run_telegram_bot.bat` to handle interactive Telegram commands. Scheduled digest delivery works independently of the Telegram listener. Use `run_litradar.ps1` in PowerShell or `./run_litradar.sh` on Linux/macOS.
 
 To run a single CLI command through the launcher, pass arguments, for example `run_litradar.bat list --status to-read`.
 
@@ -89,6 +93,13 @@ For optional LLM providers:
 
 ```bash
 python -m pip install -r requirements-llm.txt
+```
+
+For the browser workspace (FastAPI/Uvicorn):
+
+```bash
+python -m pip install -r requirements-web.txt
+python cli.py web
 ```
 
 ## Configuration
@@ -351,7 +362,7 @@ Run:
 python -m pytest -q
 ```
 
-GitHub Actions contains a core test job and an optional Textual UI job. The tests are configured through `pyproject.toml` so imports do not depend on the directory from which pytest was started.
+GitHub Actions contains core, Textual UI, and browser-workspace test jobs. The web job installs `requirements-web.txt` and checks the JavaScript bundle syntax with Node. The tests are configured through `pyproject.toml` so imports do not depend on the directory from which pytest was started.
 
 ## Architecture
 
@@ -385,35 +396,28 @@ GitHub Actions contains a core test job and an optional Textual UI job. The test
 
 ## Roadmap
 
-### v0.6 — citation intelligence — implemented in this release
+See [`ROADMAP.md`](ROADMAP.md) for the active roadmap and release boundaries.
 
-- query and store references, cited-by edges, and curated related-work links;
-- discover prior and derivative work using bounded breadth-first traversal;
-- cache graph fetches and preserve provider provenance in SQLite;
-- cross-source DOI/arXiv/OpenAlex/Semantic Scholar/PMID/PMCID/corpus ID linking;
-- CLI `explore` command, TUI `C` action, and offline citation-graph regression tests.
+### v0.8.0 — browser workspace (current)
 
-### v0.7 — research digest
+- local-only FastAPI/Uvicorn API, no cloud service or account required;
+- web literature inbox and paper-detail view with editing for status, notes and tags;
+- bounded visual map for citations and related-work edges already stored in SQLite;
+- heuristic clusters using existing tags, repeated venues and shared title/abstract terms;
+- scheduled scan/digest job removal from CLI, TUI and Telegram bot;
+- all existing CLI/TUI/digest/Telegram workflows preserved.
 
-- scheduled new-paper scans;
-- weekly/daily digest;
-- possible-overlap warnings;
-- reading-queue summaries.
+### Planned v0.8.x
 
-### v0.8+ — research map/workspace
-
-- citation/semantic graph;
-- richer annotations;
-- literature clusters;
-- eventually a browser-based workspace after the TUI workflow is proven.
+- real semantic-similarity edges and embedding-based clusters behind an explicit optional feature flag;
+- graph pan/zoom, filters and export; richer provenance-aware annotations;
+- smoke testing on Windows and stronger graph visual tests.
 
 ### Longer-term
 
-- persistent vector indexing for large libraries;
-- richer source adapters and provider-specific pagination/bulk endpoints;
-- evidence-grounded LLM assessment with inspectable evidence;
-- import/export interoperability with reference managers;
-- browser-based UI only after the TUI workflow is stable.
+- workspace collections/projects, citation gap exploration, reference-manager interoperability;
+- optional remote/server deployment after defining database sync, authentication and secret management;
+- deeper semantic clustering only after tests against real research corpora show value.
 
 ## Changelog
 
@@ -440,13 +444,15 @@ The overlap section has two sources: high-overlap flags already stored by an opt
 
 ### Windows Task Scheduler
 
-Run `run_litradar.bat` once to create `.venv` and install all four requirement sets, then use `install_schedule.bat` for the default daily scan + weekly digest, or install jobs individually:
+Run `run_litradar.bat` once to create `.venv` and install all five requirement sets, then use `install_schedule.bat` for the default daily scan + weekly digest, or install jobs individually:
 
 ```powershell
 python cli.py schedule install --job scan --frequency daily --time 07:30
 python cli.py schedule install --job digest --frequency weekly --time 09:00
 python cli.py schedule status --job all
-python cli.py schedule remove --job all
+python cli.py schedule remove --job digest  # keep scan; disable only the digest job
+python cli.py schedule remove --job scan    # keep digest; disable only the scan job
+python cli.py schedule remove --job all     # disable both
 ```
 
 Times are local to Windows. Weekly jobs run on Sunday. Scheduled tasks use the current user's interactive session, start when an expected run was missed, and write logs under `logs/`. The computer must be powered on and the user logged in for the task to execute; if it was off/asleep, a missed task can run once it is available again. A local scheduler is preferable to keeping a Python scheduler process permanently open. For an always-on/server setup, use cron/launchd/systemd or a server/VPS; running the digest on GitHub Actions requires a separate decision about how to persist/sync the SQLite library.
@@ -460,7 +466,7 @@ Times are local to Windows. Weekly jobs run on Sunday. Scheduled tasks use the c
 
 If Telegram is not configured, scheduled digest jobs save a Markdown report locally rather than failing or silently claiming delivery. No ChatGPT plugin/connector is required; LitRadar calls the Telegram Bot API directly.
 
-#### Interactive Telegram command bot (v0.7.1)
+#### Interactive Telegram command bot
 
 The scheduled Task Scheduler job sends digests without a permanently running bot process. To use slash commands and inline menu buttons, configure both `LITRADAR_TELEGRAM_BOT_TOKEN` and `LITRADAR_TELEGRAM_CHAT_ID`, then run `run_telegram_bot.bat` and keep that window open. The polling process receives commands only from the configured chat ID and saves its update offset under `data/telegram_bot_state.json`. Do not run multiple `telegram-run` instances or use `telegram-chats` concurrently with the listener; Telegram allows only one active `getUpdates` poller per bot token.
 
@@ -472,6 +478,10 @@ Useful commands:
 /digest weekly
 /schedule daily 08:00         # change scheduled delivery time
 /schedule weekly 09:00        # weekly jobs run on Sunday
+/jobs                         # show which job types are enabled
+/schedule remove digest      # stop only scheduled digests
+/schedule remove scan        # stop only scheduled scans
+/schedule remove all         # stop both jobs
 /limit 10                    # 1–30 new papers per digest
 /queue 5                     # 0–10 queue items included in digest
 /overlap off                 # suppress overlap section
@@ -482,7 +492,7 @@ Useful commands:
 /recent /stats
 ```
 
-`/schedule` updates the digest's Windows Task Scheduler job as well as the configuration. On Linux/macOS it records the setting and reminds you that cron/launchd must be updated separately. Search-topic commands are intentionally bounded: at most 10 configured topics, a maximum of 200 query characters, and a conservative default of 10 results per provider per topic.
+`/schedule` updates the digest's Windows Task Scheduler job as well as the configuration. `/schedule remove scan|digest|all` removes only the selected task(s), sets the matching enabled flag to false, and leaves papers/topics/notes untouched. In the TUI press `J` to open the same scheduled-job manager. CLI removal works on all platforms; on Linux/macOS, remove the corresponding cron/launchd entry manually too. On Linux/macOS it records the setting and reminds you that cron/launchd must be updated separately. Search-topic commands are intentionally bounded: at most 10 configured topics, a maximum of 200 query characters, and a conservative default of 10 results per provider per topic.
 
 ### Cross-platform schedule entry point
 
@@ -494,3 +504,14 @@ The native installer in `python cli.py schedule ...` currently configures Window
 ```
 
 Keep the project `.env` readable by the user running the scheduled job.
+
+
+## v0.8 browser workspace
+
+Run `run_web.bat` on Windows or `python cli.py web` from the prepared virtual environment, then open `http://127.0.0.1:8765`. Use `--port 8787` if the default port is occupied. The server binds only to localhost; do not expose it to your LAN or the public internet because this first release has no account/auth layer. The shipped UI uses HTML/CSS, vanilla JavaScript and native SVG; API routes use FastAPI and Uvicorn and read/write through the existing `PaperStore` layer. No Node/npm, CDN, React, or new database is required at runtime.
+
+Install only the web dependencies manually with `python -m pip install -r requirements-web.txt` if needed. The shared Windows setup helper installs core, UI, development, LLM and web requirement sets. The UI can edit status, notes and tags; it can visualise citation/related edges that are already stored locally. If a map is empty, run Citation Discovery using the CLI/TUI first. Cluster labels are explicitly heuristic (tags, repeated venues, shared title/abstract terms), not embedding-based semantic similarity or evidence of research novelty.
+
+### Brand name note
+
+The user-facing product name is now LitBeacon Research Workspace. Internal paths and configuration prefixes retain `LitRadar` until a dedicated compatibility migration is warranted. See [`BRANDING.md`](BRANDING.md) for the name research and caveats.

@@ -67,7 +67,7 @@ def _get_json(url: str, *, api_key: str | None, timeout: float, retries: int, ba
         if delay > 0:
             time.sleep(delay)
         _LAST_REQUEST_AT = time.monotonic()
-    headers = {"User-Agent": "LitRadar/0.6 (citation intelligence)"}
+    headers = {"User-Agent": "LitBeacon/0.8.0 (formerly LitRadar; citation intelligence)"}
     if api_key:
         headers["x-api-key"] = api_key
     return json.loads(fetch_bytes(url, headers=headers, timeout=timeout, retries=retries, backoff=backoff))

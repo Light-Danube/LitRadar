@@ -1,5 +1,38 @@
 # Changelog
 
+## 0.8.0 — LitBeacon browser research workspace — 2026-10-12
+
+### Added
+- Added the first local browser workspace, served by FastAPI/Uvicorn, with overview, searchable/filterable literature inbox, paper details, and editable status/tags/notes.
+- Added a bounded native-SVG graph view for citation and related-work relations already stored in SQLite. Relation direction is preserved; graph depth and node count are limited.
+- Added exploratory literature-cluster cards using existing tags, repeated venues, and shared title/abstract terms. These groups are explicitly labeled heuristic and are not presented as semantic findings.
+- Added local workspace endpoints for library summaries, paper search/editing, graph traversal, clusters, job status, default job installation, and per-job removal.
+- Added `requirements-web.txt`, optional `web` package extra, packaged HTML/CSS/JS assets, and a dedicated CI job for web tests plus JavaScript syntax checking.
+- Added browser launcher `run_web.bat`; the shared Windows setup and update scripts now install core, UI, development, LLM, and web requirements.
+- Added persistent CLI shell launcher `run_cli.bat` and safer helper behavior for running the optional web server.
+- Added `ROADMAP.md`, `BRANDING.md`, and a v0.8 UI/stack review. Updated the GitHub release workflow to produce `LitBeacon-<tag>.zip` archives.
+- Recommended LitBeacon Research Workspace as the visible product name after finding exact/near-exact LitRadar uses in the scholarly-literature tooling space.
+
+### Changed
+- Updated visible CLI, TUI, web, scheduler-helper and README branding to **LitBeacon Research Workspace (formerly LitRadar)**.
+- Retained legacy Python package/module/file names, `LITRADAR_*` variables, database path, and scheduled-task identifiers so upgrades do not orphan local data or existing Windows jobs.
+- Added per-job scheduling removal/disable controls in CLI, TUI and Telegram: removing scan need not remove digest, and vice versa. Disabled jobs are skipped even if a stale cron/launchd entry still invokes the scheduled command.
+- Updated README and roadmap to distinguish implemented citation graph/heuristic grouping from planned embedding-based semantic edges and evaluated clusters.
+- Kept the web workspace loopback-only. No authentication is provided in this release, so it must not be exposed to LAN or public hosts.
+
+### Design decisions
+- Choose FastAPI + Uvicorn over a new Node/React deployment for the first browser UI. Existing Python services and SQLite remain the source of truth; HTML/CSS/vanilla JavaScript/native SVG minimize runtime dependencies and work from the packaged wheel.
+- Do not label heuristic tag/venue/term clusters as semantic clusters. Embedding-based edges remain an optional future feature gated by evaluation and opt-in dependencies.
+- Keep the rebrand compatibility-aware. `LitRadar` remains in package/file/config/task identifiers for now; a public GitHub repository rename or legal trademark clearance is a separate decision.
+
+### Validation
+- Local result: **110 passed, 4 skipped**. The four skips are optional Textual UI tests because Textual is absent in the build environment. An attempted install was blocked by this environment’s DNS/PyPI access, so those optional tests could not be enabled here.
+- `node --check web/static/app.js` and `python -m compileall -q .` passed.
+- Test suite includes disposable SQLite/FastAPI checks for page/API serving, annotation updates/validation, bounded graph traversal and edge direction, plus job removal semantics and Telegram commands.
+- Full GitHub Actions was not run remotely. Live Telegram polling, real Windows Task Scheduler changes, and manual Windows UI smoke tests remain to be verified on the user's machine.
+- Name review identifies real product-name collisions but is not legal trademark clearance.
+
+
 ## 0.7.1 — interactive Telegram and launchers — 2026-10-10
 
 ### Added

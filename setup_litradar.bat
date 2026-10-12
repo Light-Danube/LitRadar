@@ -3,7 +3,7 @@ setlocal
 cd /d "%~dp0"
 set "VENV=%~dp0.venv"
 set "PYTHON=%VENV%\Scripts\python.exe"
-set "MARKER=%VENV%\.litradar-deps-0.7.1-full"
+set "MARKER=%VENV%\.litbeacon-deps-0.8.0-full"
 
 if not exist "%PYTHON%" (
   where py >nul 2>nul
@@ -16,10 +16,10 @@ if not exist "%PYTHON%" (
 )
 
 if not exist "%MARKER%" (
-  echo Installing LitRadar core, UI, development, and LLM dependencies...
+  echo Installing LitBeacon core, UI, development, LLM and web workspace dependencies...
   "%PYTHON%" -m pip install --upgrade pip
   if errorlevel 1 goto failed
-  "%PYTHON%" -m pip install -r requirements.txt -r requirements-ui.txt -r requirements-dev.txt -r requirements-llm.txt
+  "%PYTHON%" -m pip install -r requirements.txt -r requirements-ui.txt -r requirements-dev.txt -r requirements-llm.txt -r requirements-web.txt
   if errorlevel 1 goto failed
   echo ready>"%MARKER%"
 )
@@ -30,6 +30,6 @@ endlocal & exit /b 0
 
 :failed
 echo.
-echo LitRadar setup failed. Read the error above and check Python/internet access.
+echo LitBeacon setup failed. Read the error above and check Python/internet access.
 echo No local database or offline papers were deleted.
 endlocal & exit /b 1

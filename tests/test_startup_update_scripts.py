@@ -4,7 +4,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 def test_cross_platform_launchers_and_updaters_exist():
-    for name in ("setup_litradar.bat", "run_litradar.bat", "run_cli.bat", "run_telegram_bot.bat", "run_litradar.ps1", "run_litradar.sh", "update_litradar.bat", "update_litradar.ps1", "update_litradar.sh", "schedule_litradar.ps1", "install_schedule.bat"):
+    for name in ("setup_litradar.bat", "run_litradar.bat", "run_cli.bat", "run_telegram_bot.bat", "run_web.bat", "run_litradar.ps1", "run_litradar.sh", "update_litradar.bat", "update_litradar.ps1", "update_litradar.sh", "schedule_litradar.ps1", "install_schedule.bat"):
         path = ROOT / name
         assert path.exists(), name
         assert path.stat().st_size > 50
@@ -22,6 +22,7 @@ def test_release_workflow_attaches_a_clean_zip():
     assert "release:" in workflow
     assert "git archive" in workflow
     assert "softprops/action-gh-release" in workflow
+    assert "LitBeacon-${{ github.event.release.tag_name }}.zip" in workflow
 
 
 def test_windows_launcher_checks_errors_inside_parenthesized_blocks_safely():
@@ -37,12 +38,15 @@ def test_windows_helpers_install_all_requirement_sets():
     root = Path(__file__).resolve().parents[1]
     for name in ("setup_litradar.bat", "run_litradar.ps1", "update_litradar.ps1", "run_litradar.sh", "update_litradar.sh"):
         text = (root / name).read_text(encoding="utf-8")
-        for requirement in ("requirements.txt", "requirements-ui.txt", "requirements-dev.txt", "requirements-llm.txt"):
+        for requirement in ("requirements.txt", "requirements-ui.txt", "requirements-dev.txt", "requirements-llm.txt", "requirements-web.txt"):
             assert requirement in text, (name, requirement)
     cli = (root / "run_cli.bat").read_text(encoding="utf-8")
     assert "cmd /k" in cli
     bot = (root / "run_telegram_bot.bat").read_text(encoding="utf-8")
     assert "telegram-run" in bot
+    web = (root / "run_web.bat").read_text(encoding="utf-8")
+    assert 'call "%~dp0setup_litradar.bat"' in web
+    assert "cli.py web" in web
 
 
 def test_schedule_installer_uses_task_scheduler_and_safe_user_context():

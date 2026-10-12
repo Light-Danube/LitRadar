@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="uk">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <title>LitBeacon · Research Workspace</title>
+  <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+  <div class="shell">
+    <aside class="sidebar">
+      <a class="brand" href="#overview" aria-label="LitBeacon home">
+        <span class="brand-icon">◈</span>
+        <span><strong>LitBeacon</strong><small>Research workspace</small></span>
+      </a>
+      <div class="legacy-note">formerly LitRadar · local-first</div>
+      <nav id="nav" aria-label="Main navigation">
+        <button class="nav-item active" data-page="overview"><span>⌂</span> Overview</button>
+        <button class="nav-item" data-page="inbox"><span>▤</span> Literature inbox</button>
+        <button class="nav-item" data-page="graph"><span>◎</span> Citation map</button>
+        <button class="nav-item" data-page="clusters"><span>◌</span> Literature clusters</button>
+        <button class="nav-item" data-page="jobs"><span>◷</span> Scheduled jobs</button>
+      </nav>
+      <div class="sidebar-bottom">
+        <span class="local-dot"></span><span>Local database</span>
+        <small id="connection">Connecting…</small>
+      </div>
+    </aside>
+    <main class="main">
+      <header class="topbar">
+        <div><p class="eyebrow">PERSONAL RESEARCH INBOX</p><h1 id="page-title">Overview</h1></div>
+        <div class="topbar-actions"><span class="version">v0.8.0</span><button id="refresh" class="btn ghost">↻ Refresh</button></div>
+      </header>
+      <section id="page-content" aria-live="polite"><div class="loading">Loading your library…</div></section>
+      <footer>LitBeacon stores your papers, tags, notes and citation links locally. Relevance and cluster labels are advisory, not novelty claims.</footer>
+    </main>
+  </div>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <script src="/static/app.js" defer></script>
+</body>
+</html>

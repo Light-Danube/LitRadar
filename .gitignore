@@ -25,5 +25,7 @@ reports/
 # Telegram polling state is local per bot installation
 data/telegram_bot_state.json
 data/telegram_bot_state.json.tmp
-UI-REVIEW-v0.7.1.md
-PATCH-INSTRUCTIONS.txt
+
+# LitBeacon web workspace build/cache (the shipped web/ files are source assets)
+node_modules/
+frontend/dist/

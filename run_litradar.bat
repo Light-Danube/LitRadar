@@ -15,6 +15,6 @@ set "EXIT_CODE=%ERRORLEVEL%"
 endlocal & exit /b %EXIT_CODE%
 
 :failed
-echo LitRadar setup could not be completed.
+echo LitBeacon setup could not be completed.
 pause
 endlocal & exit /b 1

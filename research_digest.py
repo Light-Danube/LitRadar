@@ -140,7 +140,7 @@ def load_scan_config(path: str | Path = DEFAULT_SCAN_CONFIG) -> dict[str, Any]:
     if not isinstance(scan_settings, dict) or not isinstance(digest_settings, dict) or not isinstance(overlap_settings, dict):
         raise ValueError("'scan', 'digest', and 'overlap' settings must be JSON objects")
     return {
-        "name": str(payload.get("name") or "LitRadar scheduled scan"),
+        "name": str(payload.get("name") or "LitBeacon scheduled scan"),
         "queries": parsed,
         "semantic": bool(scan_settings.get("semantic", False)),
         "digest_limit": _bounded_int(digest_settings.get("limit", 15), 15, 1, 100),
@@ -457,7 +457,7 @@ def build_digest(
         ) if payload["include_overlap"] else []
 
         lines = [
-            f"LitRadar {period.capitalize()} Research Digest",
+            f"LitBeacon {period.capitalize()} Research Digest",
             f"Generated: {generated_at.strftime('%Y-%m-%d %H:%M UTC')}",
             f"Period start: {since_dt.strftime('%Y-%m-%d %H:%M UTC')}",
             "",
@@ -530,7 +530,7 @@ def build_digest(
         else:
             for row in queue_rows:
                 lines.append(f"- #{int(row['id'])} **{_truncate(row['title'], 150)}** — score {float(row['relevance_score']):.3f}; added {str(row['created_at'])[:10]}")
-        lines.extend(["", "---", "Generated locally by LitRadar. Do not treat ranking scores or overlap alerts as a substitute for reading the paper.", ""])
+        lines.extend(["", "---", "Generated locally by LitBeacon. Do not treat ranking scores or overlap alerts as a substitute for reading the paper.", ""])
         return DigestResult(text="\n".join(lines), paper_ids=new_ids, since=since_iso, generated_at=_iso(generated_at), warnings_count=len(overlap_warnings))
     finally:
         store.close()
@@ -612,7 +612,7 @@ def _split_message(text: str, max_chars: int) -> list[str]:
                 current = proposed
     if current:
         chunks.append(current)
-    return chunks or ["LitRadar digest: no content."]
+    return chunks or ["LitBeacon digest: no content."]
 
 
 def telegram_chat_ids(token: str | None = None) -> list[dict[str, str]]:
@@ -621,7 +621,7 @@ def telegram_chat_ids(token: str | None = None) -> list[dict[str, str]]:
     if not token:
         raise ValueError("Set LITRADAR_TELEGRAM_BOT_TOKEN in .env first")
     url = f"https://api.telegram.org/bot{token}/getUpdates?allowed_updates=%5B%22message%22%2C%22channel_post%22%5D&limit=100"
-    request = urllib.request.Request(url, headers={"User-Agent": "LitRadar/0.7.1"})
+    request = urllib.request.Request(url, headers={"User-Agent": "LitBeacon/0.8.0 (formerly LitRadar)"})
     try:
         with urllib.request.urlopen(request, timeout=20) as response:
             payload = json.loads(response.read().decode("utf-8"))

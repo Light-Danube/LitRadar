@@ -17,8 +17,9 @@ jobs:
           python-version: ${{ matrix.python-version }}
           cache: pip
       - run: python -m pip install --upgrade pip
-      - run: python -m pip install numpy pytest pytest-asyncio python-dotenv
+      - run: python -m pip install -r requirements-dev.txt
       - run: python -m pytest -q
+
   ui:
     runs-on: ubuntu-latest
     strategy:
@@ -33,3 +34,22 @@ jobs:
       - run: python -m pip install --upgrade pip
       - run: python -m pip install -r requirements-dev.txt -r requirements-ui.txt
       - run: python -m pytest -q
+
+  web:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.11", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - run: python -m pip install --upgrade pip
+      - run: python -m pip install -r requirements-dev.txt -r requirements-web.txt
+      - run: python -m pytest -q
+      - run: node --check web/static/app.js

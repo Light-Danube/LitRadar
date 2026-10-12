@@ -34,7 +34,7 @@ async def test_ui_mounts_expected_controls(tmp_path):
         assert app.query_one("#details")
 
         bindings = {binding.key for binding in app.BINDINGS}
-        assert {"?", "g", "k", "l", "s", "y", "n", "i", "c", "ctrl+enter"}.issubset(bindings)
+        assert {"?", "g", "k", "l", "s", "y", "n", "i", "c", "j", "ctrl+enter"}.issubset(bindings)
 
 
 @pytest.mark.skipif(importlib.util.find_spec("textual") is None, reason="Textual UI dependency is optional")

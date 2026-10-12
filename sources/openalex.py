@@ -136,7 +136,7 @@ def _get_json(
 ) -> dict:
     if params:
         url = f"{url}?{urllib.parse.urlencode(params)}"
-    headers = {"User-Agent": "LitRadar/0.6 (citation intelligence)"}
+    headers = {"User-Agent": "LitBeacon/0.8.0 (formerly LitRadar; citation intelligence)"}
     return json.loads(fetch_bytes(url, headers=headers, timeout=timeout, retries=retries, backoff=backoff))
 
 

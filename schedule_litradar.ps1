@@ -49,7 +49,7 @@ if ($Action -eq 'remove') {
 
 $Python = Join-Path $Root '.venv\Scripts\python.exe'
 if (-not (Test-Path $Python)) {
-    Write-Error "Project virtual environment not found. Run run_litradar.bat once first so LitRadar creates .venv and installs dependencies."
+    Write-Error "Project virtual environment not found. Run run_litradar.bat once first so LitBeacon creates .venv and installs dependencies."
     exit 2
 }
 $Cli = Join-Path $Root 'cli.py'
@@ -66,7 +66,7 @@ foreach ($Job in $Selected) {
     } else {
         $Trigger = New-ScheduledTaskTrigger -Daily -At $At
     }
-    Register-ScheduledTask -TaskName $Name -Action $TaskAction -Trigger $Trigger -Settings $Settings -Principal $Principal -Description "LitRadar v0.7 scheduled $Job; runs only under the current user's interactive session and logs to $Root\logs." -Force | Out-Null
+    Register-ScheduledTask -TaskName $Name -Action $TaskAction -Trigger $Trigger -Settings $Settings -Principal $Principal -Description "LitBeacon v0.8 scheduled $Job; runs only under the current user's interactive session and logs to $Root\logs." -Force | Out-Null
     Write-Output "Installed $Name ($Frequency at $Time local time)."
 }
 Write-Output "Tasks start when available if a scheduled time is missed, but the computer must be on and the user logged in. Check with: python cli.py schedule status --job all"
