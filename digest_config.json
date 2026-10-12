@@ -34,7 +34,7 @@
     }
   ],
   "scan": {
-    "enabled": true,
+    "enabled": false,
     "semantic": false
   },
   "digest": {
