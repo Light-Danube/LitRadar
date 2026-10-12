@@ -1,5 +1,23 @@
 # Changelog
 
+## Unreleased — v0.8.x workspace workflows and Ukrainian Web UI
+
+### Added
+- Deterministic layered graph layout, inclusive year filters with unknown-year handling before traversal, and client-side standalone SVG/GraphML/JSON exports of the displayed snapshot.
+- Atomic, bounded, idempotent JSON annotation import and stored-metadata extraction; generated suggestions require opt-in and reuse stored assessments or local heuristic reading prompts, with adapter/source provenance and no network inference.
+- Annotation accept/dismiss/reopen/edit actions with optimistic revision checks and retained edit history; paginated research-note history UI including cleared/legacy notes.
+- Externalized English/Ukrainian Web UI strings, persisted language selector, localized help/status/actions and preserved unsaved note/form drafts.
+- Onboarding instructions, semantic paper buttons and form labels, skip link, keyboard shortcuts, visible focus, improved muted-text contrast, loading/empty/retry states and stale page-response guards.
+
+### Compatibility and limits
+- SQLite migrations only add annotation metadata columns, an evidence index and `annotation_revisions`; existing primary notes and CLI/TUI/Telegram identifiers/workflows remain intact. No mandatory dependency or release-version change.
+- Supported import is JSON; extraction uses metadata already stored in SQLite. No automatic PDF parsing, new LLM calls, annotation deletion or history restoration. Textual TUI localization and a full assistive-technology audit remain planned.
+
+### Validation
+- Windows/Python 3.10.11: **138 Python tests passed**, no skips; **4 Node tests passed**. One existing Starlette/httpx TestClient deprecation warning. Supported Python 3.11/3.12 runs are verified in CI.
+- Tests cover migration, import atomicity/idempotency, opt-in/adapters, edits/conflicts/provenance retention, note-history pagination, year filters/traversal and XML/Unicode export validity. Node checks cover dense layout and locale-key/interpolation coverage.
+- Browser fixture smoke verified English/Українська and draft preservation, JSON file import, metadata extraction with/without generation, edit/review/history, filtered graph keyboard selection and all three downloads. Downloaded SVG/GraphML/JSON parsed with matching 9 nodes/9 edges and 2020–2023 bounds. An initial stale cached HTML load needed reload; the HTML response now disables caching.
+
 ## Unreleased — v0.8.x annotation provenance
 
 ### Added

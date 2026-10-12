@@ -40,6 +40,31 @@ class AnnotationCreate(BaseModel):
     source_ref: str | None = Field(default=None, max_length=2000)
 
 
+class AnnotationEdit(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    expected_revision: int = Field(ge=1)
+    content: str | None = Field(default=None, min_length=1, max_length=50_000)
+    review_status: Literal["unreviewed", "accepted", "dismissed"] | None = None
+
+
+class ImportedEntry(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    content: str = Field(min_length=1, max_length=50_000)
+    source_ref: str | None = Field(default=None, max_length=1700)
+
+
+class AnnotationImport(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    filename: str = Field(min_length=1, max_length=200)
+    items: list[ImportedEntry] = Field(min_length=1, max_length=100)
+
+
+class AnnotationExtraction(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    include_generated: bool = False
+    language: Literal["en", "uk"] = "en"
+
+
 def _load_json(value: Any, default: Any) -> Any:
     try:
         return json.loads(value) if value else default
@@ -151,7 +176,7 @@ def create_app(db_path: str | Path = DEFAULT_DB) -> FastAPI:
 
     @app.get("/", include_in_schema=False)
     def index() -> FileResponse:
-        return FileResponse(WEB_ROOT / "index.html")
+        return FileResponse(WEB_ROOT / "index.html", headers={"Cache-Control": "no-store"})
 
     @app.get("/api/health")
     def health() -> dict[str, Any]:
@@ -249,6 +274,49 @@ def create_app(db_path: str | Path = DEFAULT_DB) -> FastAPI:
             except ValueError as exc:
                 raise HTTPException(status_code=422, detail=str(exc)) from exc
 
+    @app.patch("/api/papers/{paper_id}/annotations/{annotation_id}")
+    def edit_annotation(paper_id: int, annotation_id: int, patch: AnnotationEdit):
+        with _with_store(app.state.db_path) as store:
+            try:
+                return dict(store.edit_annotation(paper_id, annotation_id, **patch.model_dump()))
+            except KeyError as exc:
+                raise HTTPException(404, "Annotation not found") from exc
+            except ValueError as exc:
+                raise HTTPException(409 if "changed" in str(exc) else 422, str(exc)) from exc
+
+    @app.get("/api/papers/{paper_id}/notes/history")
+    def note_history(paper_id: int, limit: int = Query(20, ge=1, le=200),
+                     before_id: int | None = Query(None, ge=1)):
+        with _with_store(app.state.db_path) as store:
+            try:
+                rows = store.list_annotations(paper_id, channel="research_note", limit=limit+1, before_id=before_id)
+            except KeyError as exc:
+                raise HTTPException(404, "Paper not found") from exc
+            items = [dict(row) for row in rows[:limit]]
+            return {"items": items, "next_before_id": items[-1]["id"] if len(rows)>limit else None}
+
+    @app.post("/api/papers/{paper_id}/annotations/import")
+    def import_annotations(paper_id: int, payload: AnnotationImport):
+        from web.annotation_actions import import_annotations
+        with _with_store(app.state.db_path) as store:
+            try:
+                return import_annotations(store, paper_id, [item.model_dump() for item in payload.items], payload.filename)
+            except KeyError as exc:
+                raise HTTPException(404, "Paper not found") from exc
+            except ValueError as exc:
+                raise HTTPException(422, str(exc)) from exc
+
+    @app.post("/api/papers/{paper_id}/annotations/extract")
+    def extract_annotations(paper_id: int, payload: AnnotationExtraction):
+        from web.annotation_actions import extract_annotations
+        with _with_store(app.state.db_path) as store:
+            try:
+                return extract_annotations(store, paper_id, **payload.model_dump())
+            except KeyError as exc:
+                raise HTTPException(404, "Paper not found") from exc
+            except ValueError as exc:
+                raise HTTPException(422, str(exc)) from exc
+
     @app.get("/api/graph")
     def graph(
         seed_id: int | None = None,
@@ -256,8 +324,30 @@ def create_app(db_path: str | Path = DEFAULT_DB) -> FastAPI:
         max_nodes: int = Query(default=80, ge=2, le=200),
         relation: Literal["all", "cites", "related"] = "all",
         provider: str | None = Query(default=None, min_length=1, max_length=80),
+        year_from: int | None = Query(default=None, ge=1000, le=9999),
+        year_to: int | None = Query(default=None, ge=1000, le=9999),
+        include_unknown: bool = True,
     ) -> dict[str, Any]:
+        if year_from is not None and year_to is not None and year_from > year_to:
+            raise HTTPException(422, "Year range is reversed")
         with _with_store(app.state.db_path) as store:
+            year_filters, year_params = [], []
+            known = "substr(published_at,1,4) GLOB '[0-9][0-9][0-9][0-9]'"
+            if year_from is not None:
+                year_filters.append("CAST(substr(published_at,1,4) AS INTEGER)>=?")
+                year_params.append(year_from)
+            if year_to is not None:
+                year_filters.append("CAST(substr(published_at,1,4) AS INTEGER)<=?")
+                year_params.append(year_to)
+            year_clause = "1"
+            if year_filters or not include_unknown:
+                year_clause = f"({known} AND {' AND '.join(year_filters) or '1'})"
+                if include_unknown:
+                    year_clause = f"({year_clause} OR NOT COALESCE({known},0))"
+
+            def allowed(paper_id):
+                return store.conn.execute(f"SELECT 1 FROM papers WHERE id=? AND ({year_clause})",
+                                          (paper_id, *year_params)).fetchone() is not None
             # Apply edge filters during traversal as well as during serialization.
             filters, filter_params = [], []
             if relation != "all":
@@ -284,7 +374,9 @@ def create_app(db_path: str | Path = DEFAULT_DB) -> FastAPI:
             )]
             truncated = False
             if seed_id is None:
-                rows = store.list_papers(limit=max_nodes + 1, sort="relevance_score")
+                rows = store.conn.execute(f"SELECT * FROM papers WHERE {year_clause} "
+                                          "ORDER BY relevance_score DESC, id DESC LIMIT ?",
+                                          (*year_params, max_nodes+1)).fetchall()
                 truncated = len(rows) > max_nodes
                 rows = rows[:max_nodes]
                 ids = {int(row["id"]) for row in rows}
@@ -303,7 +395,7 @@ def create_app(db_path: str | Path = DEFAULT_DB) -> FastAPI:
                         source_id, target_id = int(edge["source_paper_id"]), int(edge["target_paper_id"])
                         for neighbor in (source_id, target_id):
                             if neighbor not in ids:
-                                if store.get(neighbor) is not None:
+                                if allowed(neighbor):
                                     if len(ids) < max_nodes:
                                         ids.add(neighbor)
                                         next_frontier.add(neighbor)
@@ -334,7 +426,8 @@ def create_app(db_path: str | Path = DEFAULT_DB) -> FastAPI:
                 item["provenance"].append({"provider": edge["provider"], "observed_at": edge["observed_at"]})
             edge_payload = [grouped[key] for key in sorted(grouped)]
             return {"seed_id": seed_id, "depth": depth, "truncated": truncated, "nodes": nodes,
-                    "edges": edge_payload, "providers": providers, "relation": relation, "provider": provider}
+                    "edges": edge_payload, "providers": providers, "relation": relation, "provider": provider,
+                    "year_from": year_from, "year_to": year_to, "include_unknown": include_unknown}
 
     @app.get("/api/clusters")
     def clusters(limit: int = Query(default=400, ge=1, le=500)) -> dict[str, Any]:

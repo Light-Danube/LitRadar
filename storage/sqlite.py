@@ -4,6 +4,7 @@ import hashlib
 import json
 import re
 import sqlite3
+from contextlib import nullcontext
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Iterable
@@ -125,6 +126,14 @@ CREATE TABLE IF NOT EXISTS paper_annotations (
     recorded_at TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS idx_annotations_paper_channel ON paper_annotations(paper_id, channel, id DESC);
+CREATE TABLE IF NOT EXISTS annotation_revisions (
+    annotation_id INTEGER NOT NULL REFERENCES paper_annotations(id) ON DELETE CASCADE,
+    revision INTEGER NOT NULL,
+    content TEXT NOT NULL,
+    review_status TEXT NOT NULL,
+    recorded_at TEXT NOT NULL,
+    PRIMARY KEY(annotation_id, revision)
+);
 
 """
 
@@ -197,6 +206,23 @@ class PaperStore:
         for name, statement in migrations.items():
             if name not in columns:
                 self.conn.execute(statement)
+
+        annotation_columns = {row[1] for row in self.conn.execute("PRAGMA table_info(paper_annotations)")}
+        for name, definition in {
+            "origin_method": "TEXT NOT NULL DEFAULT 'declared'",
+            "review_status": "TEXT NOT NULL DEFAULT 'unreviewed'",
+            "revision": "INTEGER NOT NULL DEFAULT 1",
+            "updated_at": "TEXT",
+            "evidence_key": "TEXT",
+        }.items():
+            if name not in annotation_columns:
+                self.conn.execute(f"ALTER TABLE paper_annotations ADD COLUMN {name} {definition}")
+        self.conn.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_annotation_evidence "
+                          "ON paper_annotations(paper_id, evidence_key) WHERE evidence_key IS NOT NULL")
+        self.conn.execute(
+            "INSERT OR IGNORE INTO annotation_revisions SELECT id, revision, content, review_status, "
+            "COALESCE(updated_at, recorded_at) FROM paper_annotations WHERE channel='annotation'"
+        )
 
         fetch_columns = {row[1] for row in self.conn.execute("PRAGMA table_info(citation_fetches)")}
         if "requested_limit" not in fetch_columns:
@@ -1022,7 +1048,8 @@ class PaperStore:
             )
 
     def add_annotation(self, paper_id: int, content: str, *, kind: str = "user",
-                       source_ref: str | None = None) -> sqlite3.Row:
+                       source_ref: str | None = None, origin_method: str = "declared",
+                       evidence_key: str | None = None, commit: bool = True) -> sqlite3.Row:
         """Append provenance-labeled material without replacing personal notes."""
         if kind not in ANNOTATION_KINDS:
             raise ValueError("Unsupported annotation kind")
@@ -1032,13 +1059,51 @@ class PaperStore:
             raise ValueError("Source reference must be at most 2000 characters")
         if self.get(paper_id) is None:
             raise KeyError(paper_id)
-        with self.conn:
+        with self.conn if commit else nullcontext():
+            now = _now()
             cursor = self.conn.execute(
-                "INSERT INTO paper_annotations(paper_id, channel, kind, content, source_ref, recorded_at) "
-                "VALUES (?, 'annotation', ?, ?, ?, ?)",
-                (paper_id, kind, content, (source_ref.strip() or None) if source_ref else None, _now()),
+                "INSERT OR IGNORE INTO paper_annotations(paper_id, channel, kind, content, source_ref, "
+                "recorded_at, origin_method, evidence_key) VALUES (?, 'annotation', ?, ?, ?, ?, ?, ?)",
+                (paper_id, kind, content, (source_ref.strip() or None) if source_ref else None,
+                 now, origin_method, evidence_key),
             )
-        return self.conn.execute("SELECT * FROM paper_annotations WHERE id=?", (cursor.lastrowid,)).fetchone()
+            if cursor.rowcount:
+                annotation_id = cursor.lastrowid
+                self.conn.execute("INSERT INTO annotation_revisions VALUES (?, 1, ?, 'unreviewed', ?)",
+                                  (annotation_id, content, now))
+            else:
+                annotation_id = self.conn.execute(
+                    "SELECT id FROM paper_annotations WHERE paper_id=? AND evidence_key=?",
+                    (paper_id, evidence_key),
+                ).fetchone()[0]
+        return self.conn.execute("SELECT * FROM paper_annotations WHERE id=?", (annotation_id,)).fetchone()
+
+    def edit_annotation(self, paper_id: int, annotation_id: int, *, expected_revision: int,
+                        content: str | None = None, review_status: str | None = None) -> sqlite3.Row:
+        if content is not None and (not content.strip() or len(content) > 50_000):
+            raise ValueError("Invalid annotation content")
+        if review_status is not None and review_status not in {"unreviewed", "accepted", "dismissed"}:
+            raise ValueError("Invalid review status")
+        with self.conn:
+            row = self.conn.execute("SELECT * FROM paper_annotations WHERE id=? AND paper_id=? "
+                                    "AND channel='annotation'", (annotation_id, paper_id)).fetchone()
+            if row is None:
+                raise KeyError(annotation_id)
+            if row["revision"] != expected_revision:
+                raise ValueError("Annotation changed; reload before editing")
+            body = row["content"] if content is None else content
+            status = row["review_status"] if review_status is None else review_status
+            if (body, status) != (row["content"], row["review_status"]):
+                now = _now()
+                cursor = self.conn.execute(
+                    "UPDATE paper_annotations SET content=?, review_status=?, updated_at=?, revision=revision+1 "
+                    "WHERE id=? AND revision=?", (body, status, now, annotation_id, expected_revision),
+                )
+                if not cursor.rowcount:
+                    raise ValueError("Annotation changed; reload before editing")
+                self.conn.execute("INSERT INTO annotation_revisions VALUES (?, ?, ?, ?, ?)",
+                                  (annotation_id, expected_revision + 1, body, status, now))
+        return self.conn.execute("SELECT * FROM paper_annotations WHERE id=?", (annotation_id,)).fetchone()
 
     def list_annotations(self, paper_id: int, *, channel: str = "annotation", limit: int = 50,
                          before_id: int | None = None) -> list[sqlite3.Row]:
