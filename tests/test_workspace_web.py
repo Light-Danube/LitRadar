@@ -90,6 +90,88 @@ def test_workspace_graph_is_bounded_and_direction_is_preserved(tmp_path):
     assert client.get("/api/graph", params={"seed_id": 999}).status_code == 404
 
 
+@pytest.fixture
+def mixed_graph(tmp_path):
+    db = tmp_path / "mixed.sqlite3"
+    with_store = PaperStore(db)
+    ids = [_insert(with_store, title, doi=f"10.1234/{index}") for index, title in enumerate(
+        ["Seed", "Reference", "Citing paper", "Related paper", "Second hop"]
+    )]
+    seed, prior, later, related, distant = ids
+    for source, target, kind, provider in [
+        (seed, prior, "cites", "openalex"),
+        (seed, prior, "cites", "semantic_scholar"),
+        (later, seed, "cites", "semantic_scholar"),
+        (seed, related, "related", "openalex"),
+        (prior, distant, "cites", "openalex"),
+    ]:
+        with_store.conn.execute(
+            "INSERT INTO paper_relations VALUES(?,?,?,?,?)",
+            (source, target, kind, provider, "2026-10-12T12:00:00+00:00"),
+        )
+    with_store.conn.commit()
+    with_store.close()
+    return TestClient(create_app(db)), ids
+
+
+def test_graph_deduplicates_providers_preserving_direction_and_provenance(mixed_graph):
+    client, (seed, prior, later, related, _) = mixed_graph
+    graph = client.get("/api/graph", params={"seed_id": seed}).json()
+    assert len(graph["edges"]) == 3
+    edge = next(e for e in graph["edges"] if e["target"] == str(prior))
+    assert edge["source"] == str(seed)
+    assert edge["providers"] == ["openalex", "semantic_scholar"]
+    assert edge["provenance"] == [
+        {"provider": provider, "observed_at": "2026-10-12T12:00:00+00:00"}
+        for provider in edge["providers"]
+    ]
+    assert any(e["source"] == str(later) and e["target"] == str(seed) for e in graph["edges"])
+    assert any(e["type"] == "related" and e["target"] == str(related) for e in graph["edges"])
+    assert graph["providers"] == ["openalex", "semantic_scholar"]
+
+
+def test_graph_filters_traversal_and_serialization_at_each_depth(mixed_graph):
+    client, (seed, prior, later, related, distant) = mixed_graph
+    params = {"seed_id": seed, "relation": "cites", "provider": "openalex", "depth": 2}
+    graph = client.get("/api/graph", params=params).json()
+    assert {n["id"] for n in graph["nodes"]} == {seed, prior, distant}
+    assert len(graph["edges"]) == 2
+    assert all(e["providers"] == ["openalex"] for e in graph["edges"])
+    params["depth"] = 1
+    assert {n["id"] for n in client.get("/api/graph", params=params).json()["nodes"]} == {seed, prior}
+    graph = client.get("/api/graph", params={"seed_id": seed, "relation": "related", "max_nodes": 2}).json()
+    assert {n["id"] for n in graph["nodes"]} == {seed, related}
+    assert graph["truncated"] is False  # Exactly full is not necessarily truncated.
+    incoming = client.get("/api/graph", params={"seed_id": seed, "provider": "semantic_scholar"}).json()
+    assert {n["id"] for n in incoming["nodes"]} == {seed, prior, later}
+
+
+def test_graph_filter_validation_unknown_provider_and_unseeded_mode(mixed_graph):
+    client, (seed, *_) = mixed_graph
+    assert client.get("/api/graph?relation=references").status_code == 422
+    assert client.get("/api/graph?provider=").status_code == 422
+    assert client.get("/api/graph", params={"provider": "x" * 81}).status_code == 422
+    graph = client.get("/api/graph", params={"seed_id": seed, "provider": "' OR 1=1 --"}).json()
+    assert [n["id"] for n in graph["nodes"]] == [seed]
+    assert graph["edges"] == []
+    graph = client.get("/api/graph", params={"relation": "related"}).json()
+    assert len(graph["edges"]) == 1
+    assert graph["edges"][0]["type"] == "related"
+    assert graph["truncated"] is False
+    assert client.get("/api/graph?max_nodes=2").json()["truncated"] is True
+
+
+def test_graph_node_limit_is_deterministic_and_reports_omissions(mixed_graph):
+    client, (seed, *_) = mixed_graph
+    params = {"seed_id": seed, "depth": 2, "max_nodes": 2}
+    graph = client.get("/api/graph", params=params).json()
+    assert graph == client.get("/api/graph", params=params).json()
+    assert len(graph["nodes"]) == 2
+    assert graph["truncated"] is True
+    ids = {str(n["id"]) for n in graph["nodes"]}
+    assert all(e["source"] in ids and e["target"] in ids for e in graph["edges"])
+
+
 def test_workspace_clusters_are_clearly_labelled_heuristics(tmp_path):
     db = tmp_path / "library.sqlite3"
     store = PaperStore(db)

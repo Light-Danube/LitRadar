@@ -14,7 +14,8 @@ This roadmap separates implemented behavior from research ideas that still need 
 
 ## v0.8.x — Research-map usability and annotations
 
-- [ ] Improve graph layout, pan/zoom, node selection, directional legend, filters by relation type/year/provider, and export to SVG/GraphML/JSON.
+- [x] Add graph pan/zoom, keyboard/click node selection, directional arrows/legend, relation/provider filters applied before bounded traversal, and merged edge provenance (unreleased).
+- [ ] Improve graph layout, add year filters, and export to SVG/GraphML/JSON.
 - [ ] Add provenance-aware annotations: distinguish user notes, imported notes, extracted metadata, and generated suggestions; record timestamps and optional source references.
 - [ ] Add semantic-similarity edges and embedding-based clustering only behind an explicit optional dependency/feature flag, with fixtures and evaluation against real-but-shareable small corpora.
 - [ ] Test graph edge direction and deduplication more extensively against mixed OpenAlex/Semantic Scholar records.
