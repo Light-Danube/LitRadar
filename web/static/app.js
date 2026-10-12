@@ -58,9 +58,60 @@ function renderDetail(paper, panel) {
   const authors = Array.isArray(paper.authors) ? paper.authors.map(a=>typeof a==='string'?a:(a.name||'')).filter(Boolean).slice(0,6).join(', ') : '';
   const url = paper.doi ? `https://doi.org/${paper.doi.replace(/^https?:\/\/(dx\.)?doi\.org\//i,'')}` : paper.url;
   panel.innerHTML = `<div class="panel-head"><h2>Paper detail</h2><span class="badge">#${paper.id}</span></div><h2 class="detail-title">${esc(titleOf(paper))}</h2><div class="paper-meta"><span>${esc(authors || 'Authors not indexed')}</span><span>${esc(yearOf(paper))}</span><span>${esc(paper.venue || paper.source)}</span></div><div class="paper-meta" style="margin:12px 0"><span class="score">Score ${Math.round(scoreOf(paper)*100)}%</span><span>${Number(paper.citation_count||0)} citations</span>${paper.reference_count!=null?`<span>${paper.reference_count} references</span>`:''}</div><p class="abstract">${esc(paper.abstract || 'No abstract available.')}</p>${url?`<p><a class="link-button" href="${esc(url)}" target="_blank" rel="noreferrer">Open paper ↗</a></p>`:''}<div class="detail-fields"><label>Status<select id="detail-status" class="field">${['new','to-read','read','archived','dismissed'].map(v=>`<option value="${v}" ${v===paper.status?'selected':''}>${v}</option>`).join('')}</select></label><label>Tags <small class="muted">comma-separated</small><input class="field tags-input" id="detail-tags" value="${esc((paper.tags||[]).join(', '))}" placeholder="context, sarcasm, method"></label><label>Research notes<textarea class="field" id="detail-notes" placeholder="What matters for your dissertation? Key method, limitation, open question…">${esc(paper.notes||'')}</textarea></label></div><div class="detail-actions"><button id="save-annotation" class="btn primary">Save annotations</button><button id="open-graph" class="btn">Explore links</button></div>`;
-  $('#save-annotation',panel).addEventListener('click', async ()=>{try{const saved=await api(`/api/papers/${paper.id}`,{method:'PATCH',body:JSON.stringify({status:$('#detail-status',panel).value,tags:$('#detail-tags',panel).value.split(',').map(t=>t.trim()).filter(Boolean),notes:$('#detail-notes',panel).value})});state.selected=saved;toast('Annotations saved to local SQLite.');}catch(e){toast(e.message,true);}});
+  $('#save-annotation',panel).addEventListener('click', async ()=>{
+    const target=$('#note-provenance',panel),button=$('#save-annotation',panel);button.disabled=true;
+    try {
+      const saved=await api(`/api/papers/${paper.id}`,{method:'PATCH',body:JSON.stringify({status:$('#detail-status',panel).value,tags:$('#detail-tags',panel).value.split(',').map(t=>t.trim()).filter(Boolean),notes:$('#detail-notes',panel).value})});
+      if(state.selected?.id===paper.id)state.selected=saved;
+      toast('Annotations saved to local SQLite.');
+      const data=await api(`/api/papers/${paper.id}/annotations?limit=1`);
+      if(target?.isConnected)showNoteProvenance(data.note_provenance,target);
+    } catch(e) { toast(e.message,true); } finally { button.disabled=false; }
+  });
   $('#detail-status',panel).addEventListener('change',()=>$('#save-annotation',panel).classList.add('primary'));
   $('#open-graph',panel).addEventListener('click',()=>{state.graphSeed=paper.id;switchPage('graph');});
+  renderAnnotationSection(paper.id, panel);
+}
+const annotationLabels = { user: 'User annotation', imported: 'Imported note', extracted: 'Extracted metadata', generated: 'Generated suggestion', legacy: 'Legacy note (origin unknown)' };
+function showNoteProvenance(note, target) {
+  if(!target)return;
+  target.textContent=note ? `${note.kind==='user'?'User research note':annotationLabels[note.kind]} · recorded ${note.recorded_at}${note.kind==='legacy'?' during migration; original author/time unknown':''}` : 'No recorded research note yet.';
+}
+function annotationCard(item) {
+  return `<article class="annotation-card"><div class="paper-meta"><strong>${esc(annotationLabels[item.kind])}</strong><span>Recorded ${esc(item.recorded_at)}</span></div>${item.kind==='generated'?'<p class="muted">Advisory suggestion · verify against the source.</p>':''}<p class="annotation-content">${esc(item.content)}</p>${item.source_ref?`<p class="muted annotation-source">Source reference: ${esc(item.source_ref)}</p>`:''}</article>`;
+}
+function renderAnnotationSection(paperId, panel) {
+  panel.insertAdjacentHTML('beforeend', `<p id="note-provenance" class="muted" aria-live="polite">Loading note provenance…</p><section class="annotations-section"><h3>Additional annotations</h3><p class="muted">Keep imported material and generated suggestions separate from your research notes. Labels describe the declared origin; timestamps show when LitBeacon recorded the entry.</p><div id="annotation-list" aria-live="polite"></div><button class="btn" id="annotations-more" hidden>Load older annotations</button><form id="annotation-form" class="detail-fields"><label for="annotation-kind">Origin</label><select class="field" id="annotation-kind">${['user','imported','extracted','generated'].map(kind=>`<option value="${kind}">${annotationLabels[kind]}</option>`).join('')}</select><label for="annotation-content">Annotation</label><textarea class="field" id="annotation-content" required maxlength="50000" placeholder="Add an observation, imported excerpt, metadata or suggestion…"></textarea><label for="annotation-source">Source reference (optional)</label><input class="field" id="annotation-source" maxlength="2000" placeholder="DOI, URL, file/page, provider or model"><button class="btn" type="submit">Add annotation</button></form></section>`);
+  const root=$('.annotations-section',panel),list=$('#annotation-list',root),more=$('#annotations-more',root),form=$('#annotation-form',root);
+  let cursor=null;
+  async function load(append=false) {
+    if(!append)list.innerHTML='<p class="muted">Loading annotations…</p>';
+    more.disabled=true;
+    try {
+      const params=new URLSearchParams({limit:'50'});if(append&&cursor)params.set('before_id',cursor);
+      const data=await api(`/api/papers/${paperId}/annotations?${params}`);
+      if(!root.isConnected)return;
+      showNoteProvenance(data.note_provenance,$('#note-provenance',panel));
+      const cards=data.items.map(annotationCard).join('');
+      if(append)list.insertAdjacentHTML('beforeend',cards);else list.innerHTML=cards||'<p class="muted">No additional annotations yet.</p>';
+      cursor=data.next_before_id;more.hidden=!data.has_more;
+    } catch(error) {
+      if(!root.isConnected)return;
+      if(!append)list.innerHTML=`<p class="error">${esc(error.message)}</p>`;else toast(error.message,true);
+      $('#note-provenance',panel).textContent='Note provenance could not be loaded.';
+    } finally { more.disabled=false; }
+  }
+  more.addEventListener('click',()=>load(true));
+  form.addEventListener('submit',async event=>{
+    event.preventDefault();const button=$('button[type="submit"]',form);button.disabled=true;
+    try {
+      await api(`/api/papers/${paperId}/annotations`,{method:'POST',body:JSON.stringify({kind:$('#annotation-kind',form).value,content:$('#annotation-content',form).value,source_ref:$('#annotation-source',form).value||null})});
+      if(!root.isConnected)return;
+      $('#annotation-content',form).value='';$('#annotation-source',form).value='';
+      toast('Annotation recorded with provenance.');await load();
+    } catch(error) { toast(error.message,true); } finally { button.disabled=false; }
+  });
+  load();
 }
 async function renderGraph(container) {
   const request=++state.graphRequest;

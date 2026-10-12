@@ -65,6 +65,54 @@ def test_workspace_filters_and_saves_annotations(tmp_path):
     assert client.patch(f"/api/papers/{paper_id}", json={"unknown": "no"}).status_code == 422
 
 
+def test_annotation_api_separates_origins_and_supports_stable_pagination(tmp_path):
+    db = tmp_path / "library.sqlite3"
+    store = PaperStore(db)
+    paper_id = _insert(store, "Annotation test", doi="10.1234/annotations")
+    store.close()
+    client = TestClient(create_app(db))
+    url = f"/api/papers/{paper_id}/annotations"
+    assert client.get(url).json()["note_provenance"] is None
+    assert client.get(url).json()["items"] == []
+    client.patch(f"/api/papers/{paper_id}", json={"notes": "Personal note"})
+    ids = []
+    for kind in ("user", "imported", "extracted", "generated"):
+        response = client.post(url, json={"kind": kind, "content": "Текст <script>literal</script>",
+                                          "source_ref": "file.pdf / page 3"})
+        assert response.status_code == 201
+        item = response.json()
+        assert item["kind"] == kind and item["recorded_at"]
+        assert item["channel"] == "annotation"
+        ids.append(item["id"])
+    page = client.get(url, params={"limit": 2}).json()
+    assert [item["id"] for item in page["items"]] == list(reversed(ids[-2:]))
+    assert page["has_more"] is True
+    assert page["note_provenance"]["content"] == "Personal note"
+    assert page["note_provenance"]["kind"] == "user"
+    client.post(url, json={"content": "New entry between page requests"})
+    older = client.get(url, params={"limit": 2, "before_id": page["next_before_id"]}).json()
+    assert [item["id"] for item in older["items"]] == list(reversed(ids[:2]))
+    assert older["has_more"] is False and older["next_before_id"] is None
+    assert client.get(f"/api/papers/{paper_id}").json()["notes"] == "Personal note"
+
+
+def test_annotation_api_rejects_invalid_input_and_missing_papers(tmp_path):
+    db = tmp_path / "library.sqlite3"
+    store = PaperStore(db)
+    paper_id = _insert(store, "Annotation validation", doi="10.1234/validation")
+    store.close()
+    client = TestClient(create_app(db))
+    url = f"/api/papers/{paper_id}/annotations"
+    for payload in ({"content": ""}, {"content": " "}, {"content": "x", "kind": "legacy"},
+                    {"content": "x", "unexpected": True}, {"content": "x" * 50_001},
+                    {"content": "x", "source_ref": "x" * 2001}):
+        assert client.post(url, json=payload).status_code == 422
+    assert client.get(url + "?limit=201").status_code == 422
+    assert client.get(url + "?before_id=0").status_code == 422
+    assert client.get("/api/papers/999/annotations").status_code == 404
+    assert client.post("/api/papers/999/annotations", json={"content": "x"}).status_code == 404
+
+
 def test_workspace_graph_is_bounded_and_direction_is_preserved(tmp_path):
     db = tmp_path / "library.sqlite3"
     store = PaperStore(db)

@@ -16,11 +16,13 @@ This roadmap separates implemented behavior from research ideas that still need 
 
 - [x] Add graph pan/zoom, keyboard/click node selection, directional arrows/legend, relation/provider filters applied before bounded traversal, and merged edge provenance (unreleased).
 - [ ] Improve graph layout, add year filters, and export to SVG/GraphML/JSON.
-- [ ] Add provenance-aware annotations: distinguish user notes, imported notes, extracted metadata, and generated suggestions; record timestamps and optional source references.
+- [x] Add the provenance foundation: user/imported/extracted/generated supplemental annotations, recording timestamps and optional source references, research-note revisions, and explicit unknown provenance for legacy notes (unreleased).
+- [ ] Integrate automatic annotation import/extraction and opt-in generated suggestions; add annotation review/edit and note-history UI. Origin labels currently reflect user declarations.
 - [ ] Add semantic-similarity edges and embedding-based clustering only behind an explicit optional dependency/feature flag, with fixtures and evaluation against real-but-shareable small corpora.
 - [ ] Test graph edge direction and deduplication more extensively against mixed OpenAlex/Semantic Scholar records.
 - [ ] Add UI workflow smoke tests for inbox editing, clusters, and graph navigation; verify on Windows.
 - [ ] Refine onboarding, keyboard navigation, empty/loading/error states, and accessibility contrast.
+- [ ] Add Ukrainian localization for Web UI and/or Textual TUI to support a wider audience: externalize interface strings, add an English/Ukrainian language selector, and verify Unicode display and localized workflows while preserving CLI/config identifiers.
 
 ## v0.9 — Research projects and reading workflow
 

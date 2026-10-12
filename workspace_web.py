@@ -33,6 +33,13 @@ class PaperPatch(BaseModel):
     tags: list[str] | None = None
 
 
+class AnnotationCreate(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    kind: Literal["user", "imported", "extracted", "generated"] = "user"
+    content: str = Field(min_length=1, max_length=50_000)
+    source_ref: str | None = Field(default=None, max_length=2000)
+
+
 def _load_json(value: Any, default: Any) -> Any:
     try:
         return json.loads(value) if value else default
@@ -215,6 +222,32 @@ def create_app(db_path: str | Path = DEFAULT_DB) -> FastAPI:
             row = store.get(paper_id)
             assert row is not None
             return _paper_dict(row)
+
+    @app.get("/api/papers/{paper_id}/annotations")
+    def annotations(paper_id: int, limit: int = Query(default=50, ge=1, le=200),
+                    before_id: int | None = Query(default=None, ge=1)) -> dict[str, Any]:
+        with _with_store(app.state.db_path) as store:
+            try:
+                rows = store.list_annotations(paper_id, limit=limit + 1, before_id=before_id)
+                latest = store.list_annotations(paper_id, channel="research_note", limit=1)
+            except KeyError as exc:
+                raise HTTPException(status_code=404, detail="Paper not found") from exc
+            has_more = len(rows) > limit
+            items = [dict(row) for row in rows[:limit]]
+            return {"items": items, "has_more": has_more,
+                    "next_before_id": items[-1]["id"] if has_more else None,
+                    "note_provenance": dict(latest[0]) if latest else None}
+
+    @app.post("/api/papers/{paper_id}/annotations", status_code=201)
+    def add_annotation(paper_id: int, annotation: AnnotationCreate) -> dict[str, Any]:
+        with _with_store(app.state.db_path) as store:
+            try:
+                return dict(store.add_annotation(paper_id, annotation.content, kind=annotation.kind,
+                                                 source_ref=annotation.source_ref))
+            except KeyError as exc:
+                raise HTTPException(status_code=404, detail="Paper not found") from exc
+            except ValueError as exc:
+                raise HTTPException(status_code=422, detail=str(exc)) from exc
 
     @app.get("/api/graph")
     def graph(

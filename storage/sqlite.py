@@ -115,10 +115,21 @@ CREATE TABLE IF NOT EXISTS digest_delivery_papers (
     PRIMARY KEY(delivery_id, paper_id)
 );
 CREATE INDEX IF NOT EXISTS idx_digest_delivery_papers_paper ON digest_delivery_papers(paper_id);
+CREATE TABLE IF NOT EXISTS paper_annotations (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    paper_id INTEGER NOT NULL REFERENCES papers(id) ON DELETE CASCADE,
+    channel TEXT NOT NULL CHECK(channel IN ('research_note', 'annotation')),
+    kind TEXT NOT NULL CHECK(kind IN ('user', 'imported', 'extracted', 'generated', 'legacy')),
+    content TEXT NOT NULL,
+    source_ref TEXT,
+    recorded_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_annotations_paper_channel ON paper_annotations(paper_id, channel, id DESC);
 
 """
 
 STATUSES = ("new", "to-read", "read", "archived", "dismissed")
+ANNOTATION_KINDS = ("user", "imported", "extracted", "generated")
 SORT_CHOICES = (
     "relevance_score",
     "personalized",
@@ -197,6 +208,14 @@ class PaperStore:
         self.conn.execute("UPDATE papers SET created_at=? WHERE created_at=''", (now,))
         self.conn.execute("UPDATE papers SET last_seen_at=created_at WHERE last_seen_at=''")
         self.conn.execute("UPDATE papers SET status='new' WHERE status IS NULL OR status=''")
+        # Existing note authorship/time is unknown; never invent user provenance.
+        self.conn.execute(
+            "INSERT INTO paper_annotations(paper_id, channel, kind, content, recorded_at) "
+            "SELECT id, 'research_note', 'legacy', notes, ? FROM papers p "
+            "WHERE notes<>'' AND NOT EXISTS (SELECT 1 FROM paper_annotations a "
+            "WHERE a.paper_id=p.id AND a.channel='research_note')",
+            (now,),
+        )
 
         # Backfill stable dedup identifiers for legacy records.
         rows = self.conn.execute(
@@ -989,10 +1008,50 @@ class PaperStore:
             return []
 
     def set_notes(self, paper_id: int, notes: str) -> None:
+        row = self.get(paper_id)
+        if row is None:
+            raise KeyError(paper_id)
+        if row["notes"] == notes:
+            return
+        # Keep the legacy notes field and its revision in one transaction.
+        with self.conn:
+            self.conn.execute("UPDATE papers SET notes=? WHERE id=?", (notes, paper_id))
+            self.conn.execute(
+                "INSERT INTO paper_annotations(paper_id, channel, kind, content, recorded_at) "
+                "VALUES (?, 'research_note', 'user', ?, ?)", (paper_id, notes, _now()),
+            )
+
+    def add_annotation(self, paper_id: int, content: str, *, kind: str = "user",
+                       source_ref: str | None = None) -> sqlite3.Row:
+        """Append provenance-labeled material without replacing personal notes."""
+        if kind not in ANNOTATION_KINDS:
+            raise ValueError("Unsupported annotation kind")
+        if not isinstance(content, str) or not content.strip() or len(content) > 50_000:
+            raise ValueError("Annotation must contain 1–50000 characters and cannot be blank")
+        if source_ref is not None and (not isinstance(source_ref, str) or len(source_ref) > 2000):
+            raise ValueError("Source reference must be at most 2000 characters")
         if self.get(paper_id) is None:
             raise KeyError(paper_id)
-        self.conn.execute("UPDATE papers SET notes=? WHERE id=?", (notes, paper_id))
-        self.conn.commit()
+        with self.conn:
+            cursor = self.conn.execute(
+                "INSERT INTO paper_annotations(paper_id, channel, kind, content, source_ref, recorded_at) "
+                "VALUES (?, 'annotation', ?, ?, ?, ?)",
+                (paper_id, kind, content, (source_ref.strip() or None) if source_ref else None, _now()),
+            )
+        return self.conn.execute("SELECT * FROM paper_annotations WHERE id=?", (cursor.lastrowid,)).fetchone()
+
+    def list_annotations(self, paper_id: int, *, channel: str = "annotation", limit: int = 50,
+                         before_id: int | None = None) -> list[sqlite3.Row]:
+        if channel not in {"annotation", "research_note"} or not 1 <= limit <= 201:
+            raise ValueError("Invalid annotation channel or limit")
+        if self.get(paper_id) is None:
+            raise KeyError(paper_id)
+        cursor_clause = " AND id<?" if before_id is not None else ""
+        params = (paper_id, channel, before_id, limit) if before_id is not None else (paper_id, channel, limit)
+        return self.conn.execute(
+            f"SELECT * FROM paper_annotations WHERE paper_id=? AND channel=?{cursor_clause} "
+            "ORDER BY id DESC LIMIT ?", params,
+        ).fetchall()
 
     def feedback_rows(self) -> list[sqlite3.Row]:
         """Return only fields needed to build the lightweight personal preference model."""

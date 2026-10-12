@@ -10,7 +10,13 @@
 
 The citation map now supports pan by dragging the background, bounded zoom controls, relation/provider filters, and depth 1–2. Select a node with a click, Enter, or Space to inspect references, incoming citations, related works, and each edge's provider/timestamp. Open its paper or explicitly explore its neighborhood from the selection panel. Citation arrows point from citing paper to cited paper; related links are dashed and undirected. Multiple provider observations share one displayed edge without losing provenance.
 
-Filters apply during traversal, before the 80-node browser limit. The seed remains visible even when no edges match. The map uses stored local relationships and makes no network requests to scholarly providers. Year filters, exports, layout improvements, and provenance-aware **notes** remain planned.
+Filters apply during traversal, before the 80-node browser limit. The seed remains visible even when no edges match. The map uses stored local relationships and makes no network requests to scholarly providers. Year filters, exports, and layout improvements remain planned.
+
+Paper details now include **Additional annotations**, separate from the existing editable research notes. Choose user annotation, imported note, extracted metadata, or generated suggestion, with an optional DOI/URL/file-page/provider/model reference. Every entry records a UTC timestamp; origin labels are user declarations and do not independently verify the source. Generated material is labeled advisory. Entries are append-only in this increment, with paginated access to older entries; edit/delete and automatic import/extraction/generation are future work.
+
+Research notes continue to use `papers.notes`, preserving CLI/TUI commands, search, Markdown exports, and offline bundles. Each changed note also records a revision atomically; saving unchanged text does not create another revision. Existing nonempty notes are backfilled once as legacy material with unknown authorship/original time. Their timestamp records migration, not original creation. Revisions are stored for future history/review UI. Supplemental annotations are currently browsed in the web workspace/API and are not included in legacy note search or exports.
+
+Ukrainian localization for Web UI and/or TUI is now planned in `ROADMAP.md`; this increment preserves the existing English interface.
 
 This release builds on the working v0.7.x research digest and adds a browser workspace served locally by FastAPI/Uvicorn. It keeps the existing Textual TUI and SQLite database. The SQLite schema remains additive; no database reset is required.
 
