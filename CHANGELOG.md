@@ -1,5 +1,23 @@
 # Changelog
 
+## Unreleased — v0.8.x annotation provenance
+
+### Added
+- Additive SQLite `paper_annotations` table for separate user/imported/extracted/generated annotations with source references and UTC recording timestamps. Original notes are backfilled once with explicit unknown legacy provenance.
+- Atomic research-note revision recording through the existing `set_notes()` workflow, including clearing a note; unchanged saves do not create duplicate revisions. The legacy `papers.notes` field stays authoritative for CLI/TUI, search, exports and offline bundles.
+- Web paper-detail form and bounded, cursor-paginated GET/POST annotation endpoints. Imported/generated material remains separate from personal notes; generated suggestions are visibly advisory. Source references render as plain text.
+- Roadmap item for Ukrainian Web UI and/or Textual TUI localization, language selection and Unicode workflow verification.
+
+### Compatibility and limits
+- No database reset or new dependency; existing CLI/TUI/Telegram interfaces and local-only binding remain intact. Release metadata remains v0.8.0.
+- Origins are user declarations; timestamps show local recording time. Automatic import/extraction/generation, annotation edit/delete, history UI and supplemental search/export remain future work.
+
+### Validation
+- Windows/Python 3.10.11 local suite: **129 passed**, no skips; one existing Starlette/httpx TestClient deprecation warning. Supported Python 3.11/3.12 checks run in CI.
+- Tests cover idempotent legacy-note migration, note/revision rollback, unchanged and cleared notes, Unicode, provider refresh preservation, validation, cascade behavior and stable API pagination.
+- Repository compileall excluding `.venv`, JavaScript syntax and whitespace checks passed. Loopback browser fixture smoke verified origin labels, source references, advisory suggestions, Unicode/literal markup display, persistence after reload, and research-note saving without clearing a supplemental draft. No browser console errors observed; screenshot: `docs/screenshots/annotation-provenance.png`.
+
+
 ## Unreleased — v0.8.x citation-map usability
 
 ### Added

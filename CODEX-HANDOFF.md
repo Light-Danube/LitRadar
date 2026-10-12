@@ -9,7 +9,7 @@ This file records development progress and a safe starting point for continuing 
 - Read `README.md`, `ROADMAP.md`, `CHANGELOG.md`, `BRANDING.md`, and `UI-REVIEW-v0.8.md` before planning the next version.
 - The local-first Python CLI, Textual TUI, Telegram bot, digest/scheduler, and FastAPI browser workspace share the existing SQLite database. Preserve compatibility with legacy `LITRADAR_*` configuration, `data/litradar.sqlite3`, and Windows launchers.
 
-## Current increment (unreleased)
+## Completed increment: citation-map usability (unreleased)
 
 - Feature branch: `codex/citation-map-provenance-filters`, based on the merged v0.8.0 handoff.
 - Citation map now has pan/zoom/reset, relation/provider/depth controls, explicit selection and recentering, real citation arrows, and merged edge provenance with observation timestamps.
@@ -18,9 +18,19 @@ This file records development progress and a safe starting point for continuing 
 - Validation: 117 tests passed without skips on Windows/Python 3.10.11, plus compileall (excluding `.venv`), JS syntax and diff whitespace checks. Supported Python 3.11/3.12 runs require CI. Browser fixture smoke covered filters, selection/provenance, recenter/open-paper, zoom and pan/reset; screenshot is in `docs/screenshots/citation-map-provenance.png`.
 - `BRANDING.md` and `UI-REVIEW-v0.8.md` referenced below are absent from the current checkout/remote tree; consult README and ROADMAP for current scope.
 
+## Current increment: annotation provenance (unreleased)
+
+- Branch `codex/annotation-provenance` starts from main after PR #2 merged.
+- Additive `paper_annotations` table stores research-note revisions and separate supplemental annotations. The existing `papers.notes` field remains authoritative for old workflows; `set_notes()` updates it and records a revision in one transaction. Unchanged saves do not add a revision.
+- Nonempty existing notes backfill once with `kind=legacy`; authorship/original time is unknown. `recorded_at` is UTC ingestion/migration time, not a claimed original authoring timestamp.
+- GET/POST `/api/papers/{id}/annotations` lists/adds supplemental entries of user/imported/extracted/generated origin, optional source references and server timestamps. GET uses `limit` (1–200) and `before_id` for stable descending pagination and returns the latest primary note's provenance.
+- Web details show the latest research-note provenance, separate annotation cards and an append form. Sources display as plain text and generated suggestions are advisory. Labels describe declared origins; the app does not automatically import/extract/generate material in this increment.
+- Ukrainian localization for Web UI and/or TUI is added to the v0.8.x roadmap. No translation has been implemented yet.
+- Validation: 129 local tests passed without skips on Windows/Python 3.10.11; compileall excluding `.venv`, JS syntax and whitespace checks passed. Supported 3.11/3.12 validation runs in CI. Browser fixture smoke verified annotation submission/provenance, Unicode/literal markup, persistence and note/draft separation; screenshot: `docs/screenshots/annotation-provenance.png`.
+
 ## Suggested next Codex task
 
-Add provenance-aware annotations incrementally: preserve existing `papers.notes` and CLI/TUI/Telegram behavior while distinguishing user notes, imported notes, and generated suggestions, with timestamps and optional references. Alternatively improve dense-graph layout or add year filters/exports. Keep each PR small and reviewable.
+Add review/edit/history UI around stored annotations, preserving note revisions and legacy workflows. Alternatively continue graph year filters/exports or start externalizing UI strings for Ukrainian localization. Keep automatic imports and generated suggestions explicit and opt-in; never silently overwrite personal notes.
 
 ## Development workflow
 
