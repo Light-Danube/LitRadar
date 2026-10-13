@@ -1,0 +1,12 @@
+# Isolated test runner: no runtime secrets, no host mounts, no network by default.
+FROM python:3.11-slim
+ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 PIP_NO_CACHE_DIR=1 HOME=/tmp
+WORKDIR /app
+COPY requirements.txt requirements-web.txt requirements-dev.txt ./
+RUN python -m pip install --no-cache-dir -r requirements.txt -r requirements-web.txt -r requirements-dev.txt
+COPY . /app
+RUN mkdir -p /app/data /app/reports /app/logs \
+    && useradd --uid 10001 --create-home --shell /usr/sbin/nologin litbeacon \
+    && chown -R 10001:10001 /app/data /app/reports /app/logs
+USER 10001:10001
+CMD ["python", "-m", "pytest", "-q"]
