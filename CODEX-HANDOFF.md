@@ -2,6 +2,14 @@
 
 This file records development progress and a safe starting point for continuing with Codex. The repository is still named `LitRadar` on GitHub, while the public-facing application name is **LitBeacon**.
 
+## Quiet Research Phase 1 (unreleased)
+
+- Branch `codex/web-redesign-shell`, based on merged research PR #8 / main `3df12b79`. Shared tokens, light/dark/system themes, responsive shell and localized appearance control are implemented. Theme updates do not rebuild content.
+- Existing APIs, schema, workflows, five destinations and 48 feature contracts are retained. `theme.js` loads before CSS; graph exports retain standalone fallback colors.
+- Reproduce: Python `python -m pytest -q -ra`; JS `npm ci --prefix tests/web --ignore-scripts` then `npm test --prefix tests/web`. Local results: 144 Python and 11 JS passed, 0 failed, 0 skipped. jsdom is test-only.
+- Secure Chromium failed before rendering due to sandbox helper configuration. No new screenshots, browser reflow or full accessibility claim. GitHub PR-list API is Forbidden; do not broaden permissions or create tokens.
+- Read [Phase 1 verification and remaining review](docs/ux-research/phase-1.md) and [current public competitor evidence](docs/ux-research/live-review-2026-10-13.md). Finish real-browser visual acceptance before treating the design as accepted; Phase 2 remains proposals.
+
 ## Starting point
 
 - Repository: `Light-Danube/LitRadar`, default branch `main`.

@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased — Quiet Research Web UI, Phase 1
+
+- Introduced shared semantic design tokens, light/dark palettes, responsive navigation and grouped controls, readable typography and visible keyboard focus.
+- Added localized System/Light/Dark appearance selection, applied before CSS and persisted locally; appearance changes preserve editor DOM, unsaved inputs and graph viewport.
+- Kept the five sections, existing API/database contracts, EN/UK, shortcuts and all documented feature contracts; standalone graph exports retain their self-contained palette.
+- Added locked test-only DOM regressions and palette/graph checks to web CI. Local validation: Python **144 passed, 0 failed, 0 skipped**; JavaScript **11 passed, 0 failed, 0 skipped**.
+- Read current public competitor sources and documented their evidence limits. Secure Chromium rendering remains blocked by the environment sandbox configuration; visual acceptance/screenshots and GitHub CI status are unverified. See [Phase 1 notes](docs/ux-research/phase-1.md).
+
 ## Documentation draft — web readability research
 
 - Added a Ukrainian UX audit, provisional competitor comparison with an explicit source-access ledger, paired light/dark visual direction, a standalone synthetic-data HTML concept, and an incremental implementation/usability-testing plan.

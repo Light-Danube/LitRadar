@@ -33,7 +33,7 @@
     const circles=graph.nodes.map(n=>{
       const p=positions.get(n.id),fill=n.id===graph.seed_id?'#42cfb1':n.status==='to-read'?'#e2bd7c':'#63b3ff';
       const short=n.title.length>28?n.title.slice(0,26)+'…':n.title;
-      return `<g data-node="${n.id}" tabindex="0" role="button" aria-label="${xml(n.title)}"><title>${xml(n.title)}</title><circle class="node" cx="${p.x}" cy="${p.y}" r="11" fill="${fill}" stroke="#eaf2ff" stroke-width="2"/><text x="${p.x+18}" y="${p.y-17}" fill="#eaf2ff" font-family="sans-serif" font-size="11">${xml(short)}</text></g>`;
+      return `<g data-node="${n.id}" tabindex="0" role="button" aria-label="${xml(n.title)}"><title>${xml(n.title)}</title><circle class="node${n.id===graph.seed_id?' seed':n.status==='to-read'?' todo':''}" cx="${p.x}" cy="${p.y}" r="11" fill="${fill}" stroke="#eaf2ff" stroke-width="2"/><text x="${p.x+18}" y="${p.y-17}" fill="#eaf2ff" font-family="sans-serif" font-size="11">${xml(short)}</text></g>`;
     }).join('');
     return `<svg xmlns="http://www.w3.org/2000/svg" id="graph-svg" class="graph-svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" role="group" aria-label="${xml(title)}"><title>${xml(title)}</title><rect width="100%" height="100%" fill="#091726"/><defs><marker id="citation-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto" markerUnits="userSpaceOnUse"><path d="M0 0 L10 5 L0 10z" fill="#8cc8f2"/></marker></defs>${lines}${circles}${graph.nodes.length?'':`<text x="40" y="80" fill="#eaf2ff" font-family="sans-serif">${xml(empty)}</text>`}</svg>`;
   }

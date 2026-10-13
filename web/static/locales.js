@@ -1,6 +1,7 @@
 (function(root) {
   'use strict';
   const messages = {
+    theme:['Appearance','Оформлення'], themeSystem:['System','Системне'], themeLight:['Light','Світле'], themeDark:['Dark','Темне'],
     workspace:['Research workspace','Дослідницький простір'], home:['LitBeacon home','На головну LitBeacon'],
     overview:['Overview','Огляд'], inbox:['Literature inbox','Бібліотека'], graph:['Citation map','Граф цитувань'], clusters:['Literature clusters','Групи публікацій'], jobs:['Scheduled jobs','Заплановані завдання'],
     nav:['Main navigation','Головна навігація'], legacy:['formerly LitRadar · local-first','раніше LitRadar · локальне зберігання'], local:['Local database','Локальна база'], connecting:['Connecting…','З’єднання…'], connected:['{{name}} · connected','{{name}} · підключено'], connectionError:['Connection error','Помилка з’єднання'],

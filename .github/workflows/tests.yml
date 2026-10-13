@@ -52,7 +52,9 @@ jobs:
       - run: python -m pip install --upgrade pip
       - run: python -m pip install -r requirements-dev.txt -r requirements-web.txt
       - run: python -m pytest -q
+      - run: node --check web/static/theme.js
       - run: node --check web/static/app.js
       - run: node --check web/static/locales.js
       - run: node --check web/static/graph-tools.js
-      - run: node --test tests/test_web_frontend.cjs
+      - run: npm ci --prefix tests/web --ignore-scripts
+      - run: npm test --prefix tests/web

@@ -33,3 +33,21 @@ test('both locales cover every static interface key and preserve interpolation',
     assert.deepEqual(i18n.dictionaries.en[key].match(/\{\{\w+\}\}/g),i18n.dictionaries.uk[key].match(/\{\{\w+\}\}/g),key);}
   assert.equal(i18n.translate('uk','count',{count:12}),'Публікацій: 12');
 });
+test('graph theme hooks preserve seed and reading-queue distinctions and standalone fallback colors',()=>{
+  const svg=graphTools.svg({...sample,nodes:[sample.nodes[0],{...sample.nodes[1],status:'to-read'}]});
+  assert.match(svg,/class="node seed"[^>]*fill="#42cfb1"/);
+  assert.match(svg,/class="node todo"[^>]*fill="#e2bd7c"/);
+});
+test('both semantic palettes meet AA text and control contrast on their intended surfaces',()=>{
+  const css=fs.readFileSync(require.resolve('../web/static/styles.css'),'utf8');
+  const palettes=[...css.matchAll(/:root(?:\[data-theme="dark"\])?\s*\{([^}]+)\}/g)].map(match=>
+    Object.fromEntries([...match[1].matchAll(/--([\w-]+):\s*(#[\da-f]{6})/g)].map(m=>[m[1],m[2]])));
+  assert.equal(palettes.length,2);
+  const luminance=hex=>hex.slice(1).match(/../g).map(c=>parseInt(c,16)/255).map(v=>v<=.04045?v/12.92:((v+.055)/1.055)**2.4).reduce((sum,v,i)=>sum+v*[.2126,.7152,.0722][i],0);
+  const contrast=(a,b)=>{const x=luminance(a),y=luminance(b);return (Math.max(x,y)+.05)/(Math.min(x,y)+.05);};
+  for(const p of palettes) {
+    for(const bg of ['canvas','surface','surface2'])for(const fg of ['text','muted','accent','blue'])assert.ok(contrast(p[fg],p[bg])>=4.5,`${fg} on ${bg}`);
+    for(const [fg,bg] of [['on-accent','accent'],['amber','warning-surface'],['red','error-surface']])assert.ok(contrast(p[fg],p[bg])>=4.5,`${fg} on ${bg}`);
+    for(const fg of ['control','focus'])assert.ok(contrast(p[fg],p.surface)>=3,fg);
+  }
+});
