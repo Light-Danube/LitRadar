@@ -3,7 +3,7 @@ name: Auto Create Draft PR
 on:
   push:
     branches:
-      - 'codex/*' # Adjust if your Codex branches use a different prefix
+      - 'codex/*'
 
 jobs:
   draft-pr:
