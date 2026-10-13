@@ -49,6 +49,8 @@ The listener is optional; it shares the same persistent `data/` with the web ser
 
 ## Requirements, tests and limitations
 
+PR #5 is merged, but production-image build/run remains a release gate. The cloud audit validated the boot helper using an isolated dev image and synthetic data; Docker build networking prevented a stock production-image build. See [the audit](docs/DOCKER-AUDIT.md) for the precise scope. Production Compose intentionally mounts host research data and reads `.env`; never use it as the untrusted development test runner.
+
 The runtime image installs `requirements.txt` and `requirements-web.txt`. It does not install Textual, pytest or optional LLM extras; this keeps its footprint smaller, though `sentence-transformers` may still be large. To run regression tests on your development machine install `requirements-dev.txt` and run `python -m pytest -q`. Confirm the container with:
 
 ```powershell

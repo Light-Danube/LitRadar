@@ -1,5 +1,19 @@
 # Changelog
 
+## Unreleased — isolated Docker development audit
+
+### Fixed
+- Copy dev-image source with ownership matching UID 10001 so owner-only cloud checkouts remain readable without root tests or world-readable files.
+- Include only the two CI workflow manifests needed by offline contract tests while continuing to exclude research data and secrets from the build context.
+- Generate disposable CLI smoke-test inputs instead of reading excluded `data/fixture.json`, and explicitly use keyword scoring without model downloads.
+- Match lightweight core/web CI dependencies in the dev image and keep pytest cache in writable ephemeral `/tmp`.
+
+### Validation
+- Added a read-only-permissions GitHub Actions workflow to build and run isolated Docker tests on PRs.
+- Local Python 3.12: **144 passed, 0 failed, 0 skipped**; Node: **4 passed, 0 failed, 0 skipped**.
+- Restricted Python 3.11 container with locally downloaded wheels: **139 passed, 0 failed, 5 expected skips** (4 Textual, 1 Node). Its boot helper served a synthetic paper through the web API with no network or host mounts.
+- Stock Docker build networking and GitHub API access are unavailable in this cloud session. Production-image build and current/historical CI logs remain unverified; see `docs/DOCKER-AUDIT.md`.
+
 ## Unreleased — v0.8.x workspace workflows and Ukrainian Web UI
 
 ### Added

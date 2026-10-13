@@ -40,6 +40,8 @@ This file records development progress and a safe starting point for continuing 
 
 ## Suggested next Codex task
 
+Docker audit takes priority over new features. PRs #5 and #6 are merged in main at `7b4034d0`, including `be9b230`. The branch `codex/docker-isolation-audit` fixes offline fixture/workflow packaging, owner-only cloud file access and test-cache placement; it adds PR validation for the isolated runner. Local full-suite results are 144 Python passes and 4 Node passes, with no skips. A restricted Python 3.11 container built from local wheels passed 139 tests with 5 expected optional skips. See `docs/DOCKER-AUDIT.md`; remote CI logs and a stock production-image build remain gates before declaring Docker stable.
+
 Continue optional graph/semantic evaluation or translate Textual TUI. Extend import adapters only with bounded fixtures and preserve source evidence. Define recovery before annotation deletion/history restoration; fresh LLM inference needs explicit opt-in and tests. Perform accessibility/assistive-technology QA without assuming the current contrast/focus improvements imply full compliance.
 
 ## Development workflow

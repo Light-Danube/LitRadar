@@ -537,3 +537,5 @@ LitBeacon also supports a local-only Docker Compose deployment for the browser w
 ## Isolated development with Codex
 
 For security-conscious development, the repo includes an opt-in **offline Docker test runner**: `docker compose -f compose.isolated-dev.yaml run --build --rm dev`. It runs without network, bind mounts, host secrets, or privileged access. This protects the **test process**; it does not sandbox Codex itself or the Docker daemon. Run Codex CLI inside a dedicated Linux VM without Windows shared folders, or use Codex Cloud with narrowly scoped GitHub access. See [docs/ISOLATED-DEV.md](docs/ISOLATED-DEV.md) for the threat model, safeguards and limitations.
+
+The dev image uses lightweight core/web CI dependencies, disposable CLI fixtures, and a writable pytest cache under `/tmp`. Optional Textual/Node checks remain covered by the regular CI jobs. The `Isolated Docker tests` workflow builds and runs the restricted image on PRs. See [the Docker audit](docs/DOCKER-AUDIT.md) for executed checks and outstanding production-image/remote-CI gates.
