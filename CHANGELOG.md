@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased — automatic draft PR workflow
+
+- Open a draft PR for the pushed `codex/*` branch instead of relying on generated working-tree changes; avoid duplicate open PRs and stop when listing fails.
+- Keep repository-scoped Actions permissions; no automatic merge or primary-branch push. Add mocked-runner regression tests and include only their required workflow source in the Docker test context.
+- Local Python validation: 147 passed, 0 failed, 0 skipped. Actual GitHub Actions execution remains to be confirmed.
+
 ## Unreleased — Quiet Research Web UI, Phase 1
 
 - Introduced shared semantic design tokens, light/dark palettes, responsive navigation and grouped controls, readable typography and visible keyboard focus.
