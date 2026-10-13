@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased — annotation adapters, recovery and graph layout
+
+- Add atomic multi-file JSON/RIS/BibTeX/PDF annotation import with bounded uploaded bytes, optional local parsers and repeat-safe provenance. Existing JSON API remains compatible.
+- Add per-paper opt-in fresh OpenAI/Anthropic/Ollama inference with provider/model selection, bounded metadata input, transport limits and generated/unreviewed provenance. No personal-note overwrite or automatic inference.
+- Define reversible deletion, paginated supplemental version history and append-only annotation/research-note restoration with optimistic guards; additive migrations retain old data.
+- Add cursor-anchored wheel zoom, node dragging, keyboard movement, local layout persistence/reset and geometry-aware SVG export, with EN/UK labels.
+- Record user acceptance of the existing visual/functionality and skip the extra cloud-browser gate as requested. Local checks: Python 164/0/0, Node 19/0/0; restricted Docker with file adapters 159/0/5 expected optional skips (Textual/Node), lightweight profile 157/0/7. Live providers, Windows and new real-browser rendering are unverified. See [workflow documentation](docs/V08-ANNOTATION-WORKFLOWS.md).
+
 ## Unreleased — Beacon Blue web identity
 
 - Add a generated, transparent reader-robot/book/beacon mark inspired by the supplied Telegram icon; use it in the sidebar and favicon, and include it in Python package data.

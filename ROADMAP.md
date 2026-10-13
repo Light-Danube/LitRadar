@@ -14,17 +14,18 @@ This roadmap separates implemented behavior from research ideas that still need 
 
 ## v0.8.x — Research-map usability and annotations
 
-- [x] Refine the shell identity around the supplied Telegram mascot, add a packaged local mark/favicon and accessible Beacon Blue palettes (unreleased; browser acceptance pending).
+- [x] Refine the shell identity around the supplied Telegram mascot, add a packaged local mark/favicon and accessible Beacon Blue palettes (unreleased; visual accepted by user on 2026-10-14).
 
-- [x] Implement Phase 1 shared tokens, light/dark/system appearance and responsive shell with EN/UK and regression checks (unreleased; browser visual acceptance pending). See [verification notes](docs/ux-research/phase-1.md).
-- [ ] Complete real-browser desktop/narrow-screen and EN/UK visual acceptance, then validate Phase 2 library/detail and provenance navigation proposals.
+- [x] Implement Phase 1 shared tokens, light/dark/system appearance and responsive shell with EN/UK and regression checks (unreleased; visual accepted by user on 2026-10-14). See [verification notes](docs/ux-research/phase-1.md).
+- [x] Current WebUI visual/functionality accepted by the user (2026-10-14); skip the additional cloud-browser gate as requested. No automated browser pass is claimed. Phase 2 navigation proposals remain separate future research.
 - [ ] Review the [readability/UX design draft](docs/ux-research/README.md), extend the [public-source competitor review](docs/ux-research/live-review-2026-10-13.md) with hands-on tasks and participant testing. Preserve all 48 current web contracts; ship tokens/shell, library/detail, provenance, graph and secondary screens in separate reviewed increments.
 
 - [x] Add graph pan/zoom, keyboard/click node selection, directional arrows/legend, relation/provider filters applied before bounded traversal, and merged edge provenance (unreleased).
 - [x] Improve graph layout with deterministic BFS layers and separated labels; apply year-range/unknown-year filters before traversal; export the displayed graph to standalone SVG, GraphML and JSON (unreleased).
 - [x] Add the provenance foundation: user/imported/extracted/generated supplemental annotations, recording timestamps and optional source references, research-note revisions, and explicit unknown provenance for legacy notes (unreleased).
 - [x] Integrate bounded, repeat-safe JSON annotation import and stored-metadata extraction, opt-in suggestions from stored assessments/local reading prompts, review/edit with revision-conflict checks, and paginated research-note history UI (unreleased). Automatic entries record the adapter; manual origin labels remain declarations.
-- [ ] Extend annotation adapters to PDF/RIS/BibTeX sources and opt-in fresh LLM inference; add history restoration and annotation deletion after defining recovery behavior.
+- [x] Extend annotation adapters to PDF/RIS/BibTeX and atomic multi-file uploads; add per-paper opt-in fresh LLM inference with provider/model choice, append-only history restoration and reversible annotation deletion (unreleased). See [limits, recovery behavior and tests](docs/V08-ANNOTATION-WORKFLOWS.md). Live provider calls remain unverified.
+- [x] Add cursor-anchored wheel zoom, draggable graph nodes, Shift+arrow movement, locally saved node layouts/reset and layout-aware SVG export (unreleased).
 - [ ] Add semantic-similarity edges and embedding-based clustering only behind an explicit optional dependency/feature flag, with fixtures and evaluation against real-but-shareable small corpora.
 - [ ] Test graph edge direction and deduplication more extensively against mixed OpenAlex/Semantic Scholar records.
 - [ ] Add UI workflow smoke tests for inbox editing, clusters, and graph navigation; verify on Windows.
