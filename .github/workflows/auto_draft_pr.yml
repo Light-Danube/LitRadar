@@ -1,0 +1,22 @@
+name: Auto Create Draft PR
+
+on:
+  push:
+    branches:
+      - 'codex/*' # Adjust if your Codex branches use a different prefix
+
+jobs:
+  draft-pr:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - name: Open Draft PR
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          title: "Codex Update: ${{ github.ref_name }}"
+          body: "Automated PR from Codex Cloud branch."
+          draft: true
