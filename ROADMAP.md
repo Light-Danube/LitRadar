@@ -14,6 +14,8 @@ This roadmap separates implemented behavior from research ideas that still need 
 
 ## v0.8.x — Research-map usability and annotations
 
+- [x] Refine the shell identity around the supplied Telegram mascot, add a packaged local mark/favicon and accessible Beacon Blue palettes (unreleased; browser acceptance pending).
+
 - [x] Implement Phase 1 shared tokens, light/dark/system appearance and responsive shell with EN/UK and regression checks (unreleased; browser visual acceptance pending). See [verification notes](docs/ux-research/phase-1.md).
 - [ ] Complete real-browser desktop/narrow-screen and EN/UK visual acceptance, then validate Phase 2 library/detail and provenance navigation proposals.
 - [ ] Review the [readability/UX design draft](docs/ux-research/README.md), extend the [public-source competitor review](docs/ux-research/live-review-2026-10-13.md) with hands-on tasks and participant testing. Preserve all 48 current web contracts; ship tokens/shell, library/detail, provenance, graph and secondary screens in separate reviewed increments.

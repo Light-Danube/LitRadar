@@ -70,6 +70,11 @@ def test_localized_assets_are_served_and_html_is_not_cached(workspace):
     assert 'id="theme"' in page.text
     assert page.text.index('/static/theme.js') < page.text.index('/static/styles.css')
     assert client.get('/static/theme.js').status_code == 200
+    assert 'src="/static/brand/litbeacon-mark.png"' in page.text
+    mark = client.get('/static/brand/litbeacon-mark.png')
+    assert mark.status_code == 200
+    assert mark.headers['content-type'].startswith('image/png')
+    assert mark.content.startswith(b'\x89PNG\r\n\x1a\n')
 
 
 def test_import_is_atomic_idempotent_and_assigns_provenance(workspace):

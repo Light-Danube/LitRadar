@@ -2,6 +2,13 @@
 
 This file records development progress and a safe starting point for continuing with Codex. The repository is still named `LitRadar` on GitHub, while the public-facing application name is **LitBeacon**.
 
+## Beacon Blue refinement (unreleased)
+
+- Branch `codex/web-brand-beacon`, based on main `a9152bb1`. Generated local PNG mark/favicon and blue/cyan/gold palette reflect the supplied Telegram reference. See [brand rationale and review gates](docs/ux-research/brand-beacon.md).
+- No API/database changes or removed workflows. New package-data glob includes the image. Wordmark contrast is included in Node checks.
+- The draft-workflow fake `gh` executable failed on `/tmp:noexec`; it is now a Bash function. Isolation remains intact. Host Python: 147 passed / 0 failed / 0 skipped; Node: 11 / 0 / 0; restricted Python 3.11 Docker: 142 / 0 / 5 expected skips (Textual 4, Node 1).
+- Secure Chromium remains blocked; no rendered WebUI screenshots. Remote CI/PR state is not readable through the API. Automatic draft creation has worked according to the user; push a dedicated branch and verify the Actions-created draft through GitHub.
+
 ## Quiet Research Phase 1 (unreleased)
 
 - Branch `codex/web-redesign-shell`, based on merged research PR #8 / main `3df12b79`. Shared tokens, light/dark/system themes, responsive shell and localized appearance control are implemented. Theme updates do not rebuild content.

@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased — Beacon Blue web identity
+
+- Add a generated, transparent reader-robot/book/beacon mark inspired by the supplied Telegram icon; use it in the sidebar and favicon, and include it in Python package data.
+- Refine light/dark semantic palettes around navy, ocean blue, cyan and gold while retaining EN/UK, the five sections and existing workflow/API contracts. Palette tests include the wordmark contrast.
+- Fix isolated-runner workflow tests that tried to execute a temporary fake `gh` under `/tmp:noexec`; use a Bash function without changing Docker security settings.
+- Local checks: Python **147 passed, 0 failed, 0 skipped**; Node **11 passed, 0 failed, 0 skipped**; restricted Docker **142 passed, 0 failed, 5 expected skips** (4 Textual, 1 Node). Generated-icon inspection and wheel asset inclusion verified; application browser rendering remains blocked by Chromium sandbox configuration. See [brand notes](docs/ux-research/brand-beacon.md).
+
 ## Unreleased — automatic draft PR workflow
 
 - Open a draft PR for the pushed `codex/*` branch instead of relying on generated working-tree changes; avoid duplicate open PRs and stop when listing fails.
