@@ -35,18 +35,11 @@ The goal is to prevent an AI coding harness or untrusted repository code from di
 - Tests that intentionally use external APIs will not work in this no-network runner. Optional TUI/LLM packages are not installed; the full project test suite may have skips. Add an explicit alternate integration test workflow rather than silently re-enabling network.
 - The dev runner is intentionally **not** a replacement for the existing `compose.yaml` web + Telegram deployment or the existing Windows Scheduler.
 
-## Test a temporary fixture without real data
+## Data and offline tests
 
-```bash
-docker compose -f compose.isolated-dev.yaml run --rm dev python cli.py init
-docker compose -f compose.isolated-dev.yaml run --rm dev python cli.py ingest-fixture data/fixture.json --no-semantic
-```
+Use `docker compose -f compose.isolated-dev.yaml run --rm dev` to run the included test suite against ephemeral test fixtures. The default `.dockerignore` excludes the `data/` directory (including the repository's `data/fixture.json`), so do **not** expect the CLI fixture-ingest command to work inside this image without a separate, explicit test-only fixture packaging change.
 
-The second command populates only that invocation's temporary SQLite database, removed when the container exits. To inspect its populated data in the *same* container run:
-
-```bash
-docker compose -f compose.isolated-dev.yaml run --rm dev sh -c 'python cli.py init && python cli.py ingest-fixture data/fixture.json --no-semantic && python cli.py stats'
-```
+All per-run `/app/data` state is ephemeral and never mounted from the host. The test suite includes its own fixtures where needed.
 
 ## For the next Codex session
 
