@@ -1,6 +1,4 @@
-# Local-only LitBeacon workspace.
-# Run: docker compose up --build -d
-# UI: http://127.0.0.1:8765
+# LitBeacon: local browser workspace; state is stored on the host.
 x-litbeacon-common: &litbeacon-common
   build:
     context: .
@@ -12,16 +10,12 @@ x-litbeacon-common: &litbeacon-common
     - ./data:/app/data
     - ./reports:/app/reports
     - ./logs:/app/logs
-    - ./digest_config.json:/app/digest_config.json
   init: true
 
 services:
   web:
     <<: *litbeacon-common
-    command:
-      - sh
-      - -c
-      - python cli.py init && exec python -m uvicorn workspace_web:create_app --factory --host 0.0.0.0 --port 8765
+    command: ["sh", "/app/docker/boot.sh", "web"]
     ports:
       - "127.0.0.1:8765:8765"
     restart: unless-stopped
@@ -32,9 +26,9 @@ services:
       retries: 3
       start_period: 60s
 
-  # Opt-in only. Never run this alongside run_telegram_bot.bat using the same token.
+  # Opt-in. Stop any Windows bot listener using the same Telegram token first.
   telegram:
     <<: *litbeacon-common
     profiles: ["bot"]
-    command: ["python", "cli.py", "telegram-run"]
+    command: ["sh", "/app/docker/boot.sh", "telegram"]
     restart: unless-stopped
