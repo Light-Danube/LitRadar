@@ -1,5 +1,12 @@
 # Docker development audit — 2026-10-13
 
+## Follow-up: noexec-compatible workflow tests — 2026-10-14
+
+The newly added draft-PR tests were reproduced in the restricted runner: **3 failed** because the executable fake `gh` was placed in `/tmp`, which is mounted `noexec`. The mock is now an interpreted Bash function. No Docker security setting was changed. The full updated suite in the restricted Python 3.11 image returned **142 passed, 0 failed, 5 expected skips** (4 Textual, 1 Node). Host Python 3.12 returned **147 passed, 0 failed, 0 skipped**.
+
+Validation reused the existing local-wheel dependency image with a source-only layer built with `--network none`, then ran the existing Compose restrictions. Remote CI logs remain unavailable through the API; the failure mechanism is locally confirmed. The original audit below describes its historical state.
+
+
 ## Repository and CI evidence
 
 The checkout and remote main both point to `7b4034d0`. Git history confirms PR #5 merged as `ccbe6a68`, and PR #6 merged as `7b4034d0`, including fix `be9b230`. Remote PR-head refs agree. The only advertised branch is main; no other feature branch was assumed merged.
