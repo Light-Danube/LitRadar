@@ -1,0 +1,27 @@
+# Secrets and local research data must never enter an image build context.
+.git
+.github
+.env
+.env.*
+!.env.example
+.venv
+venv
+__pycache__
+**/__pycache__
+*.pyc
+.pytest_cache
+.mypy_cache
+.ruff_cache
+build
+dist
+*.egg-info
+data/
+logs/
+reports/
+*.sqlite3
+*.sqlite3-wal
+*.sqlite3-shm
+*.pdf
+node_modules
+frontend/dist
+.DS_Store
