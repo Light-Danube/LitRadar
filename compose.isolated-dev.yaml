@@ -21,4 +21,4 @@ services:
       - /app/data:rw,nosuid,size=256m,mode=1777
       - /app/reports:rw,nosuid,size=64m,mode=1777
       - /app/logs:rw,nosuid,size=64m,mode=1777
-    command: ["python", "-m", "pytest", "-q"]
+    command: ["python", "-m", "pytest", "-q", "-rs", "-o", "cache_dir=/tmp/pytest-cache"]

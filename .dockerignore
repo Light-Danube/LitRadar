@@ -1,6 +1,11 @@
 # Secrets and local research data must never enter an image build context.
 .git
-.github
+# Only the two source-controlled workflow manifests read by contract tests.
+.github/*
+!.github/workflows/
+.github/workflows/*
+!.github/workflows/tests.yml
+!.github/workflows/release.yml
 .env
 .env.*
 !.env.example
