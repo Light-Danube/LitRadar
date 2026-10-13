@@ -1,22 +1,27 @@
 /* Quiet Research: semantic colors are shared by every workspace section. */
 :root {
   color-scheme: light;
-  --canvas: #f5f7f6;
+  --canvas: #f4f7fc;
   --surface: #ffffff;
-  --surface2: #edf4f1;
-  --text: #172b36;
-  --muted: #52636d;
-  --line: #d6dfdc;
-  --control: #71828b;
-  --accent: #13695d;
+  --surface2: #e9f1fc;
+  --text: #132743;
+  --muted: #506079;
+  --line: #d2dceb;
+  --control: #71829c;
+  --accent: #1458a8;
   --on-accent: #ffffff;
-  --blue: #1768a0;
-  --teal: #13695d;
-  --amber: #785000;
-  --warning-surface: #fff4db;
-  --red: #a22e42;
-  --error-surface: #fff0f2;
-  --focus: #1768b2;
+  --blue: #155eab;
+  --teal: #1458a8;
+  --amber: #805800;
+  --warning-surface: #fff5d5;
+  --red: #a62f46;
+  --error-surface: #fff0f3;
+  --focus: #165eac;
+  --brand-navy: #071d49;
+  --brand-cyan: #42d9ee;
+  --brand-gold: #ffd45a;
+  --brand-ivory: #f6f4eb;
+  --brand-ink: #85600c;
   --space-1: .25rem;
   --space-2: .5rem;
   --space-3: .75rem;
@@ -33,22 +38,23 @@
 }
 :root[data-theme="dark"] {
   color-scheme: dark;
-  --canvas: #0e1920;
-  --surface: #14232c;
-  --surface2: #203a3d;
-  --text: #e7eef1;
-  --muted: #acbdc7;
-  --line: #3e535e;
-  --control: #8ea4ad;
-  --accent: #86d4c2;
-  --on-accent: #102922;
-  --blue: #9ecbff;
-  --teal: #86d4c2;
-  --amber: #f3d48f;
-  --warning-surface: #342d1e;
-  --red: #ffacbc;
-  --error-surface: #3b222c;
-  --focus: #9ecbff;
+  --canvas: #07172f;
+  --surface: #0e2343;
+  --surface2: #17385f;
+  --text: #eef4ff;
+  --muted: #b8c9e0;
+  --line: #355475;
+  --control: #88a1c1;
+  --accent: #8acbff;
+  --on-accent: #071d49;
+  --blue: #9fd4ff;
+  --amber: #ffd45a;
+  --warning-surface: #392f16;
+  --red: #ffadbc;
+  --error-surface: #3b2230;
+  --focus: #63e0ef;
+  --teal: #63e0ef;
+  --brand-ink: #ffd45a;
 }
 * { box-sizing: border-box; }
 body { margin: 0; min-height: 100vh; background: var(--canvas); color: var(--text); font-size: var(--text-body); line-height: 1.55; }
@@ -62,8 +68,10 @@ button:disabled { opacity: .6; cursor: not-allowed; }
 .skip-link:focus { top: 10px; }
 .shell { display: grid; grid-template-columns: 232px minmax(0, 1fr); min-height: 100vh; }
 .sidebar { position: sticky; top: 0; height: 100vh; overflow-y: auto; padding: var(--space-5) var(--space-4); background: var(--surface); border-right: 1px solid var(--line); display: flex; flex-direction: column; }
-.brand { display: flex; align-items: center; gap: var(--space-3); text-decoration: none; color: inherit; padding: var(--space-1); }
-.brand-icon { display: grid; place-items: center; flex-shrink: 0; width: 42px; height: 42px; border-radius: var(--radius); background: var(--surface2); font-size: 29px; color: var(--accent); }
+.brand { display: flex; align-items: center; gap: var(--space-2); text-decoration: none; color: inherit; }
+.brand > span { min-width: 0; }
+.brand-icon { display: block; flex-shrink: 0; width: 56px; height: 56px; object-fit: contain; }
+.brand-lit { color: var(--brand-ink); }
 .brand strong { display: block; font-size: 1.375rem; letter-spacing: -.03em; }
 .brand small, .legacy-note { color: var(--muted); font-size: var(--text-small); }
 .brand small { display: block; }
@@ -72,7 +80,7 @@ nav { display: grid; gap: var(--space-2); }
 .nav-item { border: 0; border-radius: var(--radius); min-height: 44px; padding: var(--space-3); display: flex; gap: var(--space-3); align-items: center; color: var(--muted); background: transparent; text-align: left; font-size: .9375rem; }
 .nav-item span { width: 18px; flex-shrink: 0; text-align: center; font-size: 1.125rem; }
 .nav-item:hover, .nav-item.active { background: var(--surface2); color: var(--accent); }
-.nav-item.active { box-shadow: inset 3px 0 var(--accent); font-weight: 650; }
+.nav-item.active { box-shadow: inset 3px 0 var(--brand-ink); font-weight: 650; }
 .sidebar-bottom { margin-top: auto; border-top: 1px solid var(--line); padding: var(--space-4) var(--space-1) 0; font-size: var(--text-small); display: grid; grid-template-columns: 9px 1fr; align-items: center; gap: var(--space-2); color: var(--text); }
 .sidebar-bottom small { grid-column: 2; color: var(--muted); overflow-wrap: anywhere; }
 .local-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--teal); }

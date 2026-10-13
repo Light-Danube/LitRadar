@@ -46,7 +46,7 @@ test('both semantic palettes meet AA text and control contrast on their intended
   const luminance=hex=>hex.slice(1).match(/../g).map(c=>parseInt(c,16)/255).map(v=>v<=.04045?v/12.92:((v+.055)/1.055)**2.4).reduce((sum,v,i)=>sum+v*[.2126,.7152,.0722][i],0);
   const contrast=(a,b)=>{const x=luminance(a),y=luminance(b);return (Math.max(x,y)+.05)/(Math.min(x,y)+.05);};
   for(const p of palettes) {
-    for(const bg of ['canvas','surface','surface2'])for(const fg of ['text','muted','accent','blue'])assert.ok(contrast(p[fg],p[bg])>=4.5,`${fg} on ${bg}`);
+    for(const bg of ['canvas','surface','surface2'])for(const fg of ['text','muted','accent','blue','brand-ink'])assert.ok(contrast(p[fg],p[bg])>=4.5,`${fg} on ${bg}`);
     for(const [fg,bg] of [['on-accent','accent'],['amber','warning-surface'],['red','error-surface']])assert.ok(contrast(p[fg],p[bg])>=4.5,`${fg} on ${bg}`);
     for(const fg of ['control','focus'])assert.ok(contrast(p[fg],p.surface)>=3,fg);
   }

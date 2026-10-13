@@ -8,6 +8,8 @@
 
 ### Next v0.8.x increment (unreleased)
 
+The [Beacon Blue refinement](docs/ux-research/brand-beacon.md) adds a reader-robot/beacon mark and aligns the palettes with the Telegram identity: navy, blue, cyan and restrained gold.
+
 Quiet Research Phase 1 adds a shared light/dark palette, responsive shell, clearer typography and keyboard focus. **Appearance** offers System, Light and Dark; the preference is stored locally and theme changes preserve open editors and graph state. English and Ukrainian remain available. See [implementation and verification notes](docs/ux-research/phase-1.md); real-browser visual acceptance is still pending.
 
 The citation map now supports pan by dragging the background, bounded zoom controls, relation/provider filters, and depth 1–2. Select a node with a click, Enter, or Space to inspect references, incoming citations, related works, and each edge's provider/timestamp. Open its paper or explicitly explore its neighborhood from the selection panel. Citation arrows point from citing paper to cited paper; related links are dashed and undirected. Multiple provider observations share one displayed edge without losing provenance.

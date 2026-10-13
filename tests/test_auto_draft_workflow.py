@@ -13,27 +13,29 @@ import pytest
 def test_draft_workflow_creates_only_when_listing_succeeds_and_no_pr_exists(tmp_path, count, list_exit, creates):
     workflow = Path(__file__).resolve().parents[1] / '.github/workflows/auto-draft-pr.yml'
     script = textwrap.dedent(workflow.read_text().split('        run: |\n', 1)[1])
-    gh = tmp_path / 'gh'
-    gh.write_text('''#!/bin/bash
-printf '%s\\n' "$@" >> "$CALL_LOG"
-if [ "$1 $2" = "pr list" ]; then
-  echo "$TEST_COUNT"
-  exit "$TEST_LIST_EXIT"
-fi
-if [ "$1 $2" = "pr create" ]; then
-  exit 0
-fi
-exit 99
-''')
-    gh.chmod(0o700)
+    # /tmp is deliberately noexec in the isolated runner. Model gh as a
+    # function interpreted by the installed Bash, never as a temp executable.
+    fake_gh = r'''gh() {
+  printf '%s\n' "$@" >> "$CALL_LOG"
+  if [ "$1 $2" = "pr list" ]; then
+    echo "$TEST_COUNT"
+    return "$TEST_LIST_EXIT"
+  fi
+  if [ "$1 $2" = "pr create" ]; then
+    return 0
+  fi
+  return 99
+}
+'''
     log = tmp_path / 'calls'
     # Metacharacters must stay data in the title and arguments.
     head = 'codex/test-$(touch SHOULD_NOT_EXIST)'
-    result = subprocess.run(['bash', '-c', script], cwd=tmp_path, capture_output=True, text=True,
-                            env={'PATH': str(tmp_path) + os.pathsep + os.defpath,
+    result = subprocess.run(['bash', '-c', fake_gh + script], cwd=tmp_path, capture_output=True, text=True,
+                            env={'PATH': os.defpath,
                                  'CALL_LOG': str(log), 'TEST_COUNT': count,
                                  'TEST_LIST_EXIT': str(list_exit), 'PR_HEAD': head,
                                  'PR_BASE': 'main', 'GH_REPO': 'fixture/repository'})
+    assert log.exists(), result.stderr
     args = log.read_text().splitlines()
     assert (result.returncode == 0) == (list_exit == 0)
     assert ('create' in args) == creates
