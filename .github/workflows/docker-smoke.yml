@@ -1,0 +1,33 @@
+name: Docker smoke (manual)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  docker-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Prepare non-secret configuration
+        run: cp .env.example .env
+      - name: Validate Compose
+        run: docker compose config --quiet
+      - name: Build image
+        run: docker compose build web
+      - name: Start local workspace
+        run: docker compose up -d web
+      - name: Wait for API and verify
+        run: |
+          for attempt in $(seq 1 40); do
+            if curl --fail --silent http://127.0.0.1:8765/api/health | grep -q '"ok":true'; then
+              docker compose run --rm --no-deps web python cli.py stats
+              exit 0
+            fi
+            sleep 3
+          done
+          docker compose logs web
+          exit 1
+      - name: Stop services
+        if: always()
+        run: docker compose down
