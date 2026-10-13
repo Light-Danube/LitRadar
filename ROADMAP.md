@@ -66,3 +66,11 @@ This roadmap separates implemented behavior from research ideas that still need 
 - [ ] Design one nonduplicating container-native scheduler if background jobs must run independently of Windows Task Scheduler.
 - [ ] Assess security hardening, smaller optional-dependency image and safe data backup for eventual VPS deployment.
 
+
+## Security track: isolated development environment (draft)
+
+- [x] Add a no-network, non-root, read-only, resource-limited Docker test runner with tmpfs test state and no host mounts.
+- [x] Document dedicated Linux VM usage and Codex Cloud/CLI separation.
+- [ ] Verify the restricted test runner with Docker Compose build/run on Linux and Docker Desktop; track dependency-related test skips.
+- [ ] Pin/audit dependencies and consider reproducible offline build inputs before treating untrusted Dockerfile changes as safe.
+- [ ] Add separate Codex devcontainer only after review of sandbox boundaries, secrets, networking and Git credentials.
