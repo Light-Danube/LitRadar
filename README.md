@@ -529,3 +529,7 @@ Install only the web dependencies manually with `python -m pip install -r requir
 ### Brand name note
 
 The user-facing product name is now LitBeacon Research Workspace. Internal paths and configuration prefixes retain `LitRadar` until a dedicated compatibility migration is warranted. See [`BRANDING.md`](BRANDING.md) for the name research and caveats.
+
+## Docker (local browser workspace)
+
+LitBeacon also supports a local-only Docker Compose deployment for the browser workspace, with persistent host data and optional Telegram bot. Copy `.env.example` to `.env` once, then run `docker compose up --build -d web` and visit `http://127.0.0.1:8765`. For the Telegram listener use `docker compose --profile bot up -d telegram` **only after stopping the Windows listener**. The container maintains its own editable digest configuration in `data/digest_config.json`. See [DOCKER.md](DOCKER.md) for data migration, CLI, backups, security constraints, and scheduling limitations.
