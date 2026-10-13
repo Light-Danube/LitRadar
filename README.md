@@ -8,6 +8,8 @@
 
 ### Next v0.8.x increment (unreleased)
 
+Quiet Research Phase 1 adds a shared light/dark palette, responsive shell, clearer typography and keyboard focus. **Appearance** offers System, Light and Dark; the preference is stored locally and theme changes preserve open editors and graph state. English and Ukrainian remain available. See [implementation and verification notes](docs/ux-research/phase-1.md); real-browser visual acceptance is still pending.
+
 The citation map now supports pan by dragging the background, bounded zoom controls, relation/provider filters, and depth 1–2. Select a node with a click, Enter, or Space to inspect references, incoming citations, related works, and each edge's provider/timestamp. Open its paper or explicitly explore its neighborhood from the selection panel. Citation arrows point from citing paper to cited paper; related links are dashed and undirected. Multiple provider observations share one displayed edge without losing provenance.
 
 Filters apply during traversal, before the 80-node browser limit. Year bounds are inclusive; unknown years can be included/excluded separately. The seed remains visible even when outside the year range or no edges match. The map uses deterministic breadth-first layers and makes no network requests to scholarly providers. Export SVG, GraphML or JSON from the current displayed snapshot: citation direction, undirected related edges and provider provenance are retained. JSON also includes the applied filters; SVG is standalone and does not need the app stylesheet.
@@ -376,7 +378,7 @@ Run:
 python -m pytest -q
 ```
 
-GitHub Actions contains core, Textual UI, and browser-workspace test jobs. The web job installs `requirements-web.txt` and checks the JavaScript bundle syntax with Node. The tests are configured through `pyproject.toml` so imports do not depend on the directory from which pytest was started.
+GitHub Actions contains core, Textual UI, and browser-workspace test jobs. The web job installs `requirements-web.txt` and checks the JavaScript bundle syntax with Node. DOM regression tests use a locked, test-only jsdom installation: `npm ci --prefix tests/web --ignore-scripts` then `npm test --prefix tests/web`. This does not add a production Node runtime or build step. Dependency-free graph/localization/palette tests can also run with `node --test tests/test_web_frontend.cjs`. The tests are configured through `pyproject.toml` so imports do not depend on the directory from which pytest was started.
 
 ## Architecture
 
@@ -410,7 +412,7 @@ GitHub Actions contains core, Textual UI, and browser-workspace test jobs. The w
 
 ## Roadmap
 
-A documentation-only [UI/UX research draft](docs/ux-research/README.md) proposes a readability-focused web refresh, with a standalone HTML concept, a 48-item feature-preservation checklist, and an incremental implementation plan. The application is unchanged. Competitor comparisons are provisional pending access to their official sites; browser and participant validation remain required.
+The [UI/UX research](docs/ux-research/README.md) includes a standalone concept, the 48-item feature-preservation checklist, and an incremental plan. [Phase 1](docs/ux-research/phase-1.md) implements the theme and responsive shell foundation. [The public-source competitor review](docs/ux-research/live-review-2026-10-13.md) now uses accessible official pages; hands-on competitor, browser and participant validation remain open.
 
 See [`ROADMAP.md`](ROADMAP.md) for the active roadmap and release boundaries.
 
