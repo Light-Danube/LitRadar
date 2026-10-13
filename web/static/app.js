@@ -8,8 +8,8 @@ const state={language,page:'overview',selected:null,query:'',status:'all',sort:'
 const t=(key,values)=>LitI18n.translate(state.language,key,values);
 const titleOf=paper=>paper?.title||`#${paper?.id??'?'}`;
 const kindLabel=kind=>t(kind==='legacy'?'legacyNote':kind);
-const button=(id,key,attrs='')=>`<button id="${id}" class="btn" ${attrs}>${t(key)}</button>`;
-const field=(id,key,html)=>`<label for="${id}">${t(key)}</label>${html}`;
+const button=(id,key,attrs='')=>`<button id="${id}" class="btn${['save-annotation','add-annotation','apply-graph'].includes(id)?' primary':''}" ${attrs}>${t(key)}</button>`;
+const field=(id,key,html)=>`<div class="input-control${id==='paper-search'?' search-control':''}"><label for="${id}">${t(key)}</label>${html}</div>`;
 function toast(message,error=false){const el=$('#toast');el.textContent=message;el.classList.toggle('is-error',error);el.classList.add('show');clearTimeout(toast.timer);toast.timer=setTimeout(()=>el.classList.remove('show'),4500);}
 async function api(url,options={}){
   const response=await fetch(url,{...options,headers:{'Content-Type':'application/json',...options.headers}});
@@ -31,6 +31,8 @@ function header(){
   $('.legacy-note').textContent=t('legacy');$('#nav').setAttribute('aria-label',t('nav'));
   document.querySelectorAll('[data-page]').forEach(el=>{el.innerHTML=`<span aria-hidden="true">${el.dataset.icon}</span> ${t(el.dataset.page)}`;el.classList.toggle('active',el.dataset.page===state.page);if(el.dataset.page===state.page)el.setAttribute('aria-current','page');else el.removeAttribute('aria-current');});
   $('#local-label').textContent=t('local');$('.eyebrow').textContent=t('eyebrow');$('#refresh').textContent=`↻ ${t('refresh')}`;
+  $('#theme-label').textContent=t('theme');
+  ['system','light','dark'].forEach((value,index)=>{ $('#theme').options[index].textContent=t({system:'themeSystem',light:'themeLight',dark:'themeDark'}[value]); });
   $('#language-label').textContent=t('language');$('#language').value=state.language;$('#skip-link').textContent=t('skip');$('footer').textContent=t('footer');
   $('#connection').textContent=state.database?t('connected',{name:state.database}):t('connecting');
 }

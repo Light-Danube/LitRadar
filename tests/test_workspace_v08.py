@@ -67,6 +67,9 @@ def test_localized_assets_are_served_and_html_is_not_cached(workspace):
     assert client.get('/static/locales.js').status_code == 200
     assert 'Дослідницький простір' in client.get('/static/locales.js').text
     assert client.get('/static/graph-tools.js').status_code == 200
+    assert 'id="theme"' in page.text
+    assert page.text.index('/static/theme.js') < page.text.index('/static/styles.css')
+    assert client.get('/static/theme.js').status_code == 200
 
 
 def test_import_is_atomic_idempotent_and_assigns_provenance(workspace):
