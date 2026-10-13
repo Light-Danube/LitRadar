@@ -56,3 +56,13 @@ This roadmap separates implemented behavior from research ideas that still need 
 4. Optional heavy dependencies (embeddings, LLMs, graph visualization libraries) must not block core CLI/TUI operation.
 5. Browser UI binds to localhost until authentication and deployment hardening are implemented.
 6. Every release updates `CHANGELOG.md`, `README.md`, this roadmap where priorities changed, and the handoff file.
+
+## Optional deployment track: Docker Compose (draft PR)
+
+- [x] Add a single-container local web runtime and opt-in Telegram bot service, sharing persistent host SQLite/offline/cache state.
+- [x] Provide a writable, persistent digest configuration separate from the packaged default.
+- [x] Bind the web interface to host localhost only; no public deployment without authentication and origin protection.
+- [ ] Verify image build, Compose validation and a real container smoke test on Docker Desktop / GitHub Actions before declaring Docker support stable.
+- [ ] Design one nonduplicating container-native scheduler if background jobs must run independently of Windows Task Scheduler.
+- [ ] Assess security hardening, smaller optional-dependency image and safe data backup for eventual VPS deployment.
+
