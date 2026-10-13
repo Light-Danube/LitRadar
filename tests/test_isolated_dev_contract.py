@@ -1,4 +1,5 @@
 """Static regression contract for isolated development configuration."""
+import re
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -6,12 +7,15 @@ ROOT = Path(__file__).resolve().parents[1]
 
 def test_isolated_runner_has_no_network_mounts_or_ports():
     source = (ROOT / "compose.isolated-dev.yaml").read_text(encoding="utf-8")
-    for line in ('network_mode: "none"', 'read_only: true', 'cap_drop: ["ALL"]', 'no-new-privileges:true', 'user: "10001:10001"', "pids_limit:", "mem_limit:", "tmpfs:"):
+    for line in ('network_mode: "none"', 'read_only: true', 'cap_drop: ["ALL"]',
+                 'no-new-privileges:true', 'user: "10001:10001"',
+                 "pids_limit:", "mem_limit:", "tmpfs:"):
         assert line in source
-    assert "volumes:" not in source
-    assert "ports:" not in source
+    # Match YAML mapping keys at line start only. For example,
+    # "/app/reports:rw" is a tmpfs item, *not* a "ports:" property.
+    for forbidden in ("volumes", "ports", "env_file"):
+        assert re.search(rf"^\s*{forbidden}\s*:", source, flags=re.MULTILINE) is None
     assert "docker.sock" not in source
-    assert "env_file:" not in source
 
 
 def test_dev_image_uses_unprivileged_user():
