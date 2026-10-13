@@ -14,6 +14,8 @@ This roadmap separates implemented behavior from research ideas that still need 
 
 ## v0.8.x — Research-map usability and annotations
 
+- [ ] Review the [readability/UX design draft](docs/ux-research/README.md), verify live competitor evidence and test the concept before implementation. Preserve all 48 current web contracts; ship tokens/shell, library/detail, provenance, graph and secondary screens in separate reviewed increments.
+
 - [x] Add graph pan/zoom, keyboard/click node selection, directional arrows/legend, relation/provider filters applied before bounded traversal, and merged edge provenance (unreleased).
 - [x] Improve graph layout with deterministic BFS layers and separated labels; apply year-range/unknown-year filters before traversal; export the displayed graph to standalone SVG, GraphML and JSON (unreleased).
 - [x] Add the provenance foundation: user/imported/extracted/generated supplemental annotations, recording timestamps and optional source references, research-note revisions, and explicit unknown provenance for legacy notes (unreleased).
