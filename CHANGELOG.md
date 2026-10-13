@@ -1,5 +1,11 @@
 # Changelog
 
+## Documentation draft — web readability research
+
+- Added a Ukrainian UX audit, provisional competitor comparison with an explicit source-access ledger, paired light/dark visual direction, a standalone synthetic-data HTML concept, and an incremental implementation/usability-testing plan.
+- Recorded 48 current web feature contracts to preserve during a future redesign. No application functionality, API, schema, or release version changes in this research draft.
+- Live competitor pages and sandboxed browser rendering were unavailable in the research environment; those validation gates remain open.
+
 ## Unreleased — isolated Docker development audit
 
 ### Fixed

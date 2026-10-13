@@ -410,6 +410,8 @@ GitHub Actions contains core, Textual UI, and browser-workspace test jobs. The w
 
 ## Roadmap
 
+A documentation-only [UI/UX research draft](docs/ux-research/README.md) proposes a readability-focused web refresh, with a standalone HTML concept, a 48-item feature-preservation checklist, and an incremental implementation plan. The application is unchanged. Competitor comparisons are provisional pending access to their official sites; browser and participant validation remain required.
+
 See [`ROADMAP.md`](ROADMAP.md) for the active roadmap and release boundaries.
 
 ### v0.8.0 — browser workspace (current)
