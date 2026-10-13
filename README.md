@@ -533,3 +533,7 @@ The user-facing product name is now LitBeacon Research Workspace. Internal paths
 ## Docker (local browser workspace)
 
 LitBeacon also supports a local-only Docker Compose deployment for the browser workspace, with persistent host data and optional Telegram bot. Copy `.env.example` to `.env` once, then run `docker compose up --build -d web` and visit `http://127.0.0.1:8765`. For the Telegram listener use `docker compose --profile bot up -d telegram` **only after stopping the Windows listener**. The container maintains its own editable digest configuration in `data/digest_config.json`. See [DOCKER.md](DOCKER.md) for data migration, CLI, backups, security constraints, and scheduling limitations.
+
+## Isolated development with Codex
+
+For security-conscious development, the repo includes an opt-in **offline Docker test runner**: `docker compose -f compose.isolated-dev.yaml run --build --rm dev`. It runs without network, bind mounts, host secrets, or privileged access. This protects the **test process**; it does not sandbox Codex itself or the Docker daemon. Run Codex CLI inside a dedicated Linux VM without Windows shared folders, or use Codex Cloud with narrowly scoped GitHub access. See [docs/ISOLATED-DEV.md](docs/ISOLATED-DEV.md) for the threat model, safeguards and limitations.
