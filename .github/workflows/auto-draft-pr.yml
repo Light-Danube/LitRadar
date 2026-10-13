@@ -5,6 +5,11 @@ on:
     branches:
       - 'codex/*'
 
+# Repeated pushes to one branch must not race to create duplicate PRs.
+concurrency:
+  group: auto-draft-pr-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   draft-pr:
     runs-on: ubuntu-latest
@@ -12,11 +17,20 @@ jobs:
       pull-requests: write
       contents: read
     steps:
-      - uses: actions/checkout@v4
-      - name: Open Draft PR
-        uses: peter-evans/create-pull-request@v6
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          title: "Codex Update: ${{ github.ref_name }}"
-          body: "Automated PR from Codex Cloud branch."
-          draft: true
+      - name: Open draft PR for the pushed branch
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          PR_HEAD: ${{ github.ref_name }}
+          PR_BASE: ${{ github.event.repository.default_branch }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          count=$(gh pr list --head "$PR_HEAD" --base "$PR_BASE" --state open --json number --jq 'length')
+          if [ "$count" -gt 0 ]; then
+            echo "An open PR already exists for this branch."
+            exit 0
+          fi
+          gh pr create --base "$PR_BASE" --head "$PR_HEAD" --draft \
+            --title "Codex update: $PR_HEAD" \
+            --body "Draft for review of branch $PR_HEAD. Inspect the commits and workflow checks before merging. Created automatically after a branch push."

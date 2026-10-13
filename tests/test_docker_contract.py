@@ -24,6 +24,7 @@ def test_image_includes_only_required_workflow_contract_inputs():
     assert ".github/workflows/*" in ignore
     assert {line for line in ignore if line.startswith("!.github/workflows/")} == {
         "!.github/workflows/", "!.github/workflows/tests.yml", "!.github/workflows/release.yml",
+        "!.github/workflows/auto-draft-pr.yml",
     }
 
 
