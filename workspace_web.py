@@ -13,10 +13,11 @@ from collections import Counter, defaultdict
 from pathlib import Path
 from typing import Any, Literal
 
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import FastAPI, HTTPException, Query, Request
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, ValidationError
+from starlette.concurrency import run_in_threadpool
 
 from storage.sqlite import PaperStore, STATUSES
 
@@ -63,6 +64,37 @@ class AnnotationExtraction(BaseModel):
     model_config = ConfigDict(extra="forbid")
     include_generated: bool = False
     language: Literal["en", "uk"] = "en"
+
+
+class AnnotationRecovery(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    expected_revision: int = Field(ge=1)
+    restore_revision: int | None = Field(default=None, ge=1)
+
+
+class NoteRestore(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    expected_note_id: int | None = Field(ge=1)
+
+
+class AnnotationFile(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    filename: str = Field(min_length=1, max_length=200)
+    format: Literal['json', 'ris', 'bibtex', 'pdf']
+    content_base64: str = Field(min_length=1, max_length=6666668)
+
+
+class AnnotationFiles(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    files: list[AnnotationFile] = Field(min_length=1, max_length=10)
+
+
+class AnnotationGeneration(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    provider: Literal['openai', 'anthropic', 'ollama']
+    model: str | None = Field(default=None, min_length=1, max_length=120, pattern=r'^[A-Za-z0-9._:/-]+$')
+    consent: bool = False
+    language: Literal['en', 'uk'] = 'en'
 
 
 def _load_json(value: Any, default: Any) -> Any:
@@ -250,10 +282,10 @@ def create_app(db_path: str | Path = DEFAULT_DB) -> FastAPI:
 
     @app.get("/api/papers/{paper_id}/annotations")
     def annotations(paper_id: int, limit: int = Query(default=50, ge=1, le=200),
-                    before_id: int | None = Query(default=None, ge=1)) -> dict[str, Any]:
+                    before_id: int | None = Query(default=None, ge=1), deleted: bool = False) -> dict[str, Any]:
         with _with_store(app.state.db_path) as store:
             try:
-                rows = store.list_annotations(paper_id, limit=limit + 1, before_id=before_id)
+                rows = store.list_annotations(paper_id, limit=limit + 1, before_id=before_id, deleted=deleted)
                 latest = store.list_annotations(paper_id, channel="research_note", limit=1)
             except KeyError as exc:
                 raise HTTPException(status_code=404, detail="Paper not found") from exc
@@ -316,6 +348,92 @@ def create_app(db_path: str | Path = DEFAULT_DB) -> FastAPI:
                 raise HTTPException(404, "Paper not found") from exc
             except ValueError as exc:
                 raise HTTPException(422, str(exc)) from exc
+
+    @app.get('/api/annotation-adapters')
+    def annotation_adapters():
+        from web.annotation_actions import adapter_capabilities, available_providers
+        return {'formats': adapter_capabilities(), 'providers': available_providers()}
+
+    @app.post('/api/papers/{paper_id}/annotations/import-files')
+    async def annotation_files(paper_id: int, request: Request):
+        # Bound the stream before JSON/base64 parsing, even without Content-Length.
+        chunks, size = [], 0
+        async for chunk in request.stream():
+            size += len(chunk)
+            if size > 7000000:
+                raise HTTPException(413, 'Upload request is too large')
+            chunks.append(chunk)
+        try:
+            payload = AnnotationFiles.model_validate_json(b''.join(chunks))
+        except ValidationError as exc:
+            raise HTTPException(422, 'Invalid file upload payload') from exc
+        def perform():
+            from web.annotation_actions import import_files
+            with _with_store(app.state.db_path) as store:
+                return import_files(store, paper_id, [f.model_dump() for f in payload.files])
+        try:
+            return await run_in_threadpool(perform)
+        except KeyError as exc:
+            raise HTTPException(404, 'Paper not found') from exc
+        except RuntimeError as exc:
+            raise HTTPException(503, str(exc)) from exc
+        except ValueError as exc:
+            raise HTTPException(422, str(exc)) from exc
+
+    @app.post('/api/papers/{paper_id}/annotations/generate')
+    def annotation_generate(paper_id: int, payload: AnnotationGeneration):
+        from web.annotation_actions import generate_annotation
+        try:
+            with _with_store(app.state.db_path) as store:
+                return generate_annotation(store, paper_id, **payload.model_dump())
+        except KeyError as exc:
+            raise HTTPException(404, 'Paper not found') from exc
+        except ValueError as exc:
+            raise HTTPException(422, str(exc)) from exc
+        except Exception as exc:
+            # Provider exceptions can contain credentials or transport details.
+            raise HTTPException(502, 'Inference failed; check provider configuration and retry') from exc
+
+    @app.delete('/api/papers/{paper_id}/annotations/{annotation_id}')
+    def annotation_delete(paper_id: int, annotation_id: int, payload: AnnotationRecovery):
+        if payload.restore_revision is not None:
+            raise HTTPException(422, 'Deletion does not accept a restoration target')
+        return recover_annotation(paper_id, annotation_id, payload, delete=True)
+
+    @app.post('/api/papers/{paper_id}/annotations/{annotation_id}/restore')
+    def annotation_restore(paper_id: int, annotation_id: int, payload: AnnotationRecovery):
+        return recover_annotation(paper_id, annotation_id, payload)
+
+    def recover_annotation(paper_id, annotation_id, payload, delete=False):
+        with _with_store(app.state.db_path) as store:
+            try:
+                return dict(store.change_annotation_recovery(paper_id, annotation_id,
+                            **payload.model_dump(), delete=delete))
+            except KeyError as exc:
+                raise HTTPException(404, 'Annotation or revision not found') from exc
+            except ValueError as exc:
+                raise HTTPException(409, str(exc)) from exc
+
+    @app.get('/api/papers/{paper_id}/annotations/{annotation_id}/history')
+    def annotation_versions(paper_id: int, annotation_id: int, limit: int = Query(20, ge=1, le=100),
+                            before_revision: int | None = Query(None, ge=1)):
+        with _with_store(app.state.db_path) as store:
+            try:
+                rows = store.annotation_history(paper_id, annotation_id, limit=limit+1, before_revision=before_revision)
+            except KeyError as exc:
+                raise HTTPException(404, 'Annotation not found') from exc
+        items = [dict(r) for r in rows[:limit]]
+        return {'items': items, 'next_before_revision': items[-1]['revision'] if len(rows)>limit else None}
+
+    @app.post('/api/papers/{paper_id}/notes/history/{revision_id}/restore')
+    def restore_research_note(paper_id: int, revision_id: int, payload: NoteRestore):
+        with _with_store(app.state.db_path) as store:
+            try:
+                return _paper_dict(store.restore_note(paper_id, revision_id, **payload.model_dump()))
+            except KeyError as exc:
+                raise HTTPException(404, 'Research-note revision not found') from exc
+            except ValueError as exc:
+                raise HTTPException(409, str(exc)) from exc
 
     @app.get("/api/graph")
     def graph(

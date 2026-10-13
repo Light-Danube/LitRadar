@@ -2,6 +2,16 @@
 
 This file records development progress and a safe starting point for continuing with Codex. The repository is still named `LitRadar` on GitHub, while the public-facing application name is **LitBeacon**.
 
+## Annotation adapters, recovery and graph layout (unreleased)
+
+- Branch `codex/annotation-adapters-graph`, base `ef5ecd06`. Read [the workflow/recovery specification](docs/V08-ANNOTATION-WORKFLOWS.md).
+- Add bounded uploaded-file adapters and optional `requirements-annotations.txt` / `[annotations]` extra. Web CI installs the extra parsers; the lightweight isolated image intentionally does not. PDF/BibTeX are parsed in timeout/resource-bounded subprocesses, without opening referenced paths.
+- Per-paper fresh inference is off by default, uses provider/model selection and explicit consent, sends only title/abstract and stores generated/unreviewed provenance. Tests mock all three providers; no live service/credential validation.
+- Add nullable tombstones to annotations/revisions through additive migrations. Soft delete/undo and paginated version history use expected revision guards. Research-note restoration writes legacy `papers.notes` plus a new `history_restore` row with latest-note guard.
+- Graph gestures are in `graph-interactions.js`; node coordinates are browser-local and SVG exports use them. Scientific graph payloads remain unchanged.
+- User accepted the baseline visual/functionality on 2026-10-14 and explicitly skipped the extra cloud browser gate. Do not translate this into a new automated browser pass.
+- Validation: Python 164 passed / 0 failed / 0 skipped; Node 19 / 0 / 0; restricted Docker with file parsers 159 / 0 / 5 expected skips (Textual 4, Node 1); lightweight profile 157 / 0 / 7 (also PDF/BibTeX). Remote CI remains unreadable through the API; Actions auto-creates draft PRs after push.
+
 ## Beacon Blue refinement (unreleased)
 
 - Branch `codex/web-brand-beacon`, based on main `a9152bb1`. Generated local PNG mark/favicon and blue/cyan/gold palette reflect the supplied Telegram reference. See [brand rationale and review gates](docs/ux-research/brand-beacon.md).
@@ -15,7 +25,7 @@ This file records development progress and a safe starting point for continuing 
 - Existing APIs, schema, workflows, five destinations and 48 feature contracts are retained. `theme.js` loads before CSS; graph exports retain standalone fallback colors.
 - Reproduce: Python `python -m pytest -q -ra`; JS `npm ci --prefix tests/web --ignore-scripts` then `npm test --prefix tests/web`. Local results: 144 Python and 11 JS passed, 0 failed, 0 skipped. jsdom is test-only.
 - Secure Chromium failed before rendering due to sandbox helper configuration. No new screenshots, browser reflow or full accessibility claim. GitHub PR-list API is Forbidden; do not broaden permissions or create tokens.
-- Read [Phase 1 verification and remaining review](docs/ux-research/phase-1.md) and [current public competitor evidence](docs/ux-research/live-review-2026-10-13.md). Finish real-browser visual acceptance before treating the design as accepted; Phase 2 remains proposals.
+- Read [Phase 1 verification and remaining review](docs/ux-research/phase-1.md) and [current public competitor evidence](docs/ux-research/live-review-2026-10-13.md). The user accepted the baseline visual/functionality on 2026-10-14 and skipped the extra cloud-browser gate; this supersedes the original visual gate. Phase 2 remains proposals.
 
 ## Starting point
 

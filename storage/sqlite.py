@@ -214,15 +214,19 @@ class PaperStore:
             "revision": "INTEGER NOT NULL DEFAULT 1",
             "updated_at": "TEXT",
             "evidence_key": "TEXT",
+            "deleted_at": "TEXT",
         }.items():
             if name not in annotation_columns:
                 self.conn.execute(f"ALTER TABLE paper_annotations ADD COLUMN {name} {definition}")
         self.conn.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_annotation_evidence "
                           "ON paper_annotations(paper_id, evidence_key) WHERE evidence_key IS NOT NULL")
         self.conn.execute(
-            "INSERT OR IGNORE INTO annotation_revisions SELECT id, revision, content, review_status, "
+            "INSERT OR IGNORE INTO annotation_revisions(annotation_id, revision, content, review_status, recorded_at) SELECT id, revision, content, review_status, "
             "COALESCE(updated_at, recorded_at) FROM paper_annotations WHERE channel='annotation'"
         )
+        revision_columns = {row[1] for row in self.conn.execute("PRAGMA table_info(annotation_revisions)")}
+        if "deleted_at" not in revision_columns:
+            self.conn.execute("ALTER TABLE annotation_revisions ADD COLUMN deleted_at TEXT")
 
         fetch_columns = {row[1] for row in self.conn.execute("PRAGMA table_info(citation_fetches)")}
         if "requested_limit" not in fetch_columns:
@@ -1069,7 +1073,7 @@ class PaperStore:
             )
             if cursor.rowcount:
                 annotation_id = cursor.lastrowid
-                self.conn.execute("INSERT INTO annotation_revisions VALUES (?, 1, ?, 'unreviewed', ?)",
+                self.conn.execute("INSERT INTO annotation_revisions(annotation_id, revision, content, review_status, recorded_at) VALUES (?, 1, ?, 'unreviewed', ?)",
                                   (annotation_id, content, now))
             else:
                 annotation_id = self.conn.execute(
@@ -1085,12 +1089,15 @@ class PaperStore:
         if review_status is not None and review_status not in {"unreviewed", "accepted", "dismissed"}:
             raise ValueError("Invalid review status")
         with self.conn:
+            self.conn.execute("BEGIN IMMEDIATE")
             row = self.conn.execute("SELECT * FROM paper_annotations WHERE id=? AND paper_id=? "
                                     "AND channel='annotation'", (annotation_id, paper_id)).fetchone()
             if row is None:
                 raise KeyError(annotation_id)
             if row["revision"] != expected_revision:
                 raise ValueError("Annotation changed; reload before editing")
+            if row["deleted_at"] is not None:
+                raise ValueError("Annotation changed; restore it before editing")
             body = row["content"] if content is None else content
             status = row["review_status"] if review_status is None else review_status
             if (body, status) != (row["content"], row["review_status"]):
@@ -1101,12 +1108,12 @@ class PaperStore:
                 )
                 if not cursor.rowcount:
                     raise ValueError("Annotation changed; reload before editing")
-                self.conn.execute("INSERT INTO annotation_revisions VALUES (?, ?, ?, ?, ?)",
+                self.conn.execute("INSERT INTO annotation_revisions(annotation_id, revision, content, review_status, recorded_at) VALUES (?, ?, ?, ?, ?)",
                                   (annotation_id, expected_revision + 1, body, status, now))
         return self.conn.execute("SELECT * FROM paper_annotations WHERE id=?", (annotation_id,)).fetchone()
 
     def list_annotations(self, paper_id: int, *, channel: str = "annotation", limit: int = 50,
-                         before_id: int | None = None) -> list[sqlite3.Row]:
+                         before_id: int | None = None, deleted: bool = False) -> list[sqlite3.Row]:
         if channel not in {"annotation", "research_note"} or not 1 <= limit <= 201:
             raise ValueError("Invalid annotation channel or limit")
         if self.get(paper_id) is None:
@@ -1115,8 +1122,71 @@ class PaperStore:
         params = (paper_id, channel, before_id, limit) if before_id is not None else (paper_id, channel, limit)
         return self.conn.execute(
             f"SELECT * FROM paper_annotations WHERE paper_id=? AND channel=?{cursor_clause} "
+            f"AND deleted_at IS {'NOT NULL' if deleted else 'NULL'} "
             "ORDER BY id DESC LIMIT ?", params,
         ).fetchall()
+
+    def change_annotation_recovery(self, paper_id: int, annotation_id: int, *, expected_revision: int,
+                                   delete: bool = False, restore_revision: int | None = None) -> sqlite3.Row:
+        """Reversible deletion or append-only restoration, guarded against stale clients."""
+        with self.conn:
+            self.conn.execute("BEGIN IMMEDIATE")
+            row = self.conn.execute("SELECT * FROM paper_annotations WHERE paper_id=? AND id=? "
+                                    "AND channel='annotation'", (paper_id, annotation_id)).fetchone()
+            if row is None:
+                raise KeyError(annotation_id)
+            if row['revision'] != expected_revision:
+                raise ValueError("Annotation changed; reload before restoring or deleting")
+            body, status = row['content'], row['review_status']
+            if restore_revision is not None:
+                old = self.conn.execute("SELECT * FROM annotation_revisions WHERE annotation_id=? AND revision=?",
+                                        (annotation_id, restore_revision)).fetchone()
+                if old is None:
+                    raise KeyError(restore_revision)
+                body, status = old['content'], old['review_status']
+            now = _now()
+            deleted_at = now if delete else None
+            if not delete and restore_revision is None and row['deleted_at'] is None:
+                return row
+            if delete and row['deleted_at'] is not None:
+                return row
+            self.conn.execute("UPDATE paper_annotations SET content=?, review_status=?, deleted_at=?, "
+                              "updated_at=?, revision=revision+1 WHERE id=?",
+                              (body, status, deleted_at, now, annotation_id))
+            self.conn.execute("INSERT INTO annotation_revisions(annotation_id, revision, content, review_status, recorded_at, deleted_at) "
+                              "VALUES (?, ?, ?, ?, ?, ?)",
+                              (annotation_id, expected_revision+1, body, status, now, deleted_at))
+        return self.conn.execute("SELECT * FROM paper_annotations WHERE id=?", (annotation_id,)).fetchone()
+
+    def annotation_history(self, paper_id: int, annotation_id: int, *, limit: int = 50,
+                           before_revision: int | None = None) -> list[sqlite3.Row]:
+        if not self.conn.execute("SELECT 1 FROM paper_annotations WHERE paper_id=? AND id=? AND channel='annotation'",
+                                 (paper_id, annotation_id)).fetchone():
+            raise KeyError(annotation_id)
+        clause = ' AND revision<?' if before_revision is not None else ''
+        params = (annotation_id, before_revision, limit) if before_revision is not None else (annotation_id, limit)
+        return self.conn.execute(f"SELECT * FROM annotation_revisions WHERE annotation_id=?{clause} "
+                                 "ORDER BY revision DESC LIMIT ?", params).fetchall()
+
+    def restore_note(self, paper_id: int, revision_id: int, *, expected_note_id: int | None) -> sqlite3.Row:
+        """Copy historical text into legacy papers.notes and append user restoration provenance."""
+        with self.conn:
+            self.conn.execute("BEGIN IMMEDIATE")
+            paper = self.get(paper_id)
+            old = self.conn.execute("SELECT * FROM paper_annotations WHERE paper_id=? AND id=? "
+                                    "AND channel='research_note'", (paper_id, revision_id)).fetchone()
+            if paper is None or old is None:
+                raise KeyError(revision_id)
+            current = self.conn.execute("SELECT id FROM paper_annotations WHERE paper_id=? AND channel='research_note' "
+                                        "ORDER BY id DESC LIMIT 1", (paper_id,)).fetchone()
+            if (current['id'] if current else None) != expected_note_id:
+                raise ValueError("Research note changed; reload before restoring")
+            if old['content'] != paper['notes']:
+                self.conn.execute("UPDATE papers SET notes=? WHERE id=?", (old['content'], paper_id))
+                self.conn.execute("INSERT INTO paper_annotations(paper_id, channel, kind, content, recorded_at, origin_method, source_ref) "
+                                  "VALUES (?, 'research_note', 'user', ?, ?, 'history_restore', ?)",
+                                  (paper_id, old['content'], _now(), f"Restored research-note revision #{revision_id}"))
+        return self.get(paper_id)
 
     def feedback_rows(self) -> list[sqlite3.Row]:
         """Return only fields needed to build the lightweight personal preference model."""
