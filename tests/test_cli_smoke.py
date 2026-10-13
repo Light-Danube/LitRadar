@@ -1,14 +1,31 @@
 from pathlib import Path
+import json
 import subprocess
 import sys
+
+import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
 
 
-def test_fixture_ingest_and_top(tmp_path: Path):
+@pytest.fixture
+def paper_fixture(tmp_path: Path) -> Path:
+    # The Docker build deliberately excludes data/. Keep CLI test inputs
+    # disposable and independent of the user's library and optional models.
+    fixture = tmp_path / "papers.json"
+    fixture.write_text(json.dumps([
+        {"source": "fixture", "title": "Adaptive Context Selection for Sarcasm and Emotion",
+         "abstract": "Context selection for sarcasm detection in online conversations."},
+        {"source": "fixture", "title": "Context Retrieval for Language Models"},
+        {"source": "fixture", "title": "Synthetic Image Classification"},
+    ]), encoding="utf-8")
+    return fixture
+
+
+def test_fixture_ingest_and_top(tmp_path: Path, paper_fixture: Path):
     db = tmp_path / "radar.sqlite3"
     ingest = subprocess.run(
-        [sys.executable, str(ROOT / "cli.py"), "--db", str(db), "ingest-fixture", str(ROOT / "data" / "fixture.json")],
+        [sys.executable, str(ROOT / "cli.py"), "--db", str(db), "ingest-fixture", str(paper_fixture), "--no-semantic"],
         cwd=ROOT,
         capture_output=True,
         text=True,
@@ -26,10 +43,10 @@ def test_fixture_ingest_and_top(tmp_path: Path):
     assert "Adaptive Context Selection" in top.stdout
 
 
-def test_cli_export_and_download_metadata(tmp_path: Path):
+def test_cli_export_and_download_metadata(tmp_path: Path, paper_fixture: Path):
     db = tmp_path / "radar.sqlite3"
     subprocess.run(
-        [sys.executable, str(ROOT / "cli.py"), "--db", str(db), "ingest-fixture", str(ROOT / "data" / "fixture.json"), "--no-semantic"],
+        [sys.executable, str(ROOT / "cli.py"), "--db", str(db), "ingest-fixture", str(paper_fixture), "--no-semantic"],
         cwd=ROOT,
         capture_output=True,
         text=True,

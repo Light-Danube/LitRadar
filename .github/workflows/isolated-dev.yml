@@ -1,0 +1,25 @@
+name: Isolated Docker tests
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  isolated-dev:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate restricted Compose configuration
+        run: docker compose -f compose.isolated-dev.yaml config --quiet
+      - name: Reproduce owner-only cloud checkout permissions
+        run: chmod 600 pyproject.toml
+      - name: Build test image
+        run: docker compose -f compose.isolated-dev.yaml build dev
+      - name: Run offline tests with disposable state
+        run: docker compose -f compose.isolated-dev.yaml run --rm --no-deps dev

@@ -32,12 +32,16 @@ The goal is to prevent an AI coding harness or untrusted repository code from di
 - `docker build` and `docker compose` commands must be issued from a trusted terminal; Docker daemon access itself is powerful. Do not give untrusted agents permission to run arbitrary Docker commands against your host daemon.
 - `network_mode: none` cannot prevent outbound requests at **image build time**; dependencies should be pinned/audited separately, and build inside a dedicated VM.
 - A VM shares physical hardware and still has an attack surface. For the strongest boundary, do not connect shared host storage or privileged integration services.
-- Tests that intentionally use external APIs will not work in this no-network runner. Optional TUI/LLM packages are not installed; the full project test suite may have skips. Add an explicit alternate integration test workflow rather than silently re-enabling network.
+- Tests that intentionally use external APIs will not work in this no-network runner. The image installs lightweight core/web CI dependencies, without semantic models, TUI, LLM packages or Node. Four Textual tests and one Node-dependent XML-export test are expected skips; web tests must execute. The regular CI UI/web jobs cover those optional checks. Add an explicit alternate integration test workflow rather than silently re-enabling network.
 - The dev runner is intentionally **not** a replacement for the existing `compose.yaml` web + Telegram deployment or the existing Windows Scheduler.
 
 ## Data and offline tests
 
-Use `docker compose -f compose.isolated-dev.yaml run --rm dev` to run the included test suite against ephemeral test fixtures. The default `.dockerignore` excludes the `data/` directory (including the repository's `data/fixture.json`), so do **not** expect the CLI fixture-ingest command to work inside this image without a separate, explicit test-only fixture packaging change.
+Use `docker compose -f compose.isolated-dev.yaml run --rm dev` to run the included test suite against ephemeral test fixtures. The default `.dockerignore` excludes the entire `data/` directory, including `data/fixture.json`. CLI smoke tests generate their own JSON under pytest's temporary directory and explicitly disable semantic model loading; the README's manual `data/fixture.json` command remains a host-checkout example.
+
+Only `.github/workflows/tests.yml` and `release.yml` enter the image because existing contract tests read them; other `.github` files stay excluded. Source is copied with UID/GID 10001 ownership to support owner-only cloud checkout permissions. The root filesystem stays read-only and the pytest cache uses `/tmp`.
+
+`Isolated Docker tests` builds and runs this configuration on pull requests, main pushes and manual dispatch, with read-only repository permissions. The current cloud validation used a temporary local-wheel installation override because the Docker build network lacked DNS/proxy access. See [the audit](DOCKER-AUDIT.md) for executed results and remaining stock-build/CI gates.
 
 All per-run `/app/data` state is ephemeral and never mounted from the host. The test suite includes its own fixtures where needed.
 
