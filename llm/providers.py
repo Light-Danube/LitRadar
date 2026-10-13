@@ -13,6 +13,9 @@ class OpenAIProvider:
     model: str = "gpt-4o-mini"
     api_key: str | None = None
     name: str = "openai"
+    timeout: float | None = None
+    max_retries: int = 2
+    max_tokens: int | None = None
 
     def complete(self, prompt: str) -> str:
         try:
@@ -25,11 +28,12 @@ class OpenAIProvider:
         key = self.api_key or os.getenv("OPENAI_API_KEY")
         if not key:
             raise RuntimeError("OPENAI_API_KEY is not set")
-        client = OpenAI(api_key=key)
+        client = OpenAI(api_key=key, max_retries=self.max_retries, **({"timeout": self.timeout} if self.timeout is not None else {}))
         response = client.chat.completions.create(
             model=self.model,
             temperature=0,
             response_format={"type": "json_object"},
+            **({"max_tokens": self.max_tokens} if self.max_tokens is not None else {}),
             messages=[
                 {"role": "system", "content": "Return only valid JSON."},
                 {"role": "user", "content": prompt},
@@ -43,6 +47,8 @@ class AnthropicProvider:
     model: str = "claude-3-5-haiku-latest"
     api_key: str | None = None
     name: str = "anthropic"
+    timeout: float | None = None
+    max_retries: int = 2
 
     def complete(self, prompt: str) -> str:
         try:
@@ -55,7 +61,7 @@ class AnthropicProvider:
         key = self.api_key or os.getenv("ANTHROPIC_API_KEY")
         if not key:
             raise RuntimeError("ANTHROPIC_API_KEY is not set")
-        client = Anthropic(api_key=key)
+        client = Anthropic(api_key=key, max_retries=self.max_retries, **({"timeout": self.timeout} if self.timeout is not None else {}))
         response = client.messages.create(
             model=self.model,
             max_tokens=1200,
@@ -71,6 +77,9 @@ class OllamaProvider:
     model: str = "llama3.1:8b"
     base_url: str = "http://localhost:11434"
     name: str = "ollama"
+    timeout: float = 120
+    use_env_proxy: bool = True
+    max_tokens: int | None = None
 
     def complete(self, prompt: str) -> str:
         body = json.dumps(
@@ -78,7 +87,7 @@ class OllamaProvider:
                 "model": self.model,
                 "stream": False,
                 "format": "json",
-                "options": {"temperature": 0},
+                "options": {"temperature": 0, **({"num_predict": self.max_tokens} if self.max_tokens is not None else {})},
                 "messages": [{"role": "user", "content": prompt}],
             }
         ).encode("utf-8")
@@ -89,7 +98,8 @@ class OllamaProvider:
             method="POST",
         )
         try:
-            with urllib.request.urlopen(request, timeout=120) as response:
+            opener = urllib.request.urlopen if self.use_env_proxy else urllib.request.build_opener(urllib.request.ProxyHandler({})).open
+            with opener(request, timeout=self.timeout) as response:
                 payload = json.load(response)
         except urllib.error.URLError as exc:
             raise RuntimeError(f"Ollama request failed: {exc}") from exc
