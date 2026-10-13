@@ -1,0 +1,24 @@
+# Opt-in isolated *test runner*, not a host-workspace Codex sandbox.
+# Start in a dedicated Linux VM with a clean repository clone.
+# docker compose -f compose.isolated-dev.yaml run --build --rm dev
+services:
+  dev:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    image: litbeacon:isolated-dev
+    network_mode: "none"
+    read_only: true
+    user: "10001:10001"
+    cap_drop: ["ALL"]
+    security_opt: ["no-new-privileges:true"]
+    pids_limit: 128
+    mem_limit: 3g
+    cpus: 2.0
+    init: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=256m,mode=1777
+      - /app/data:rw,nosuid,size=256m,mode=1777
+      - /app/reports:rw,nosuid,size=64m,mode=1777
+      - /app/logs:rw,nosuid,size=64m,mode=1777
+    command: ["python", "-m", "pytest", "-q"]
