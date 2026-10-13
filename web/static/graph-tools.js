@@ -1,7 +1,7 @@
 (function (root) {
   'use strict';
   const xml = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&apos;'}[c]));
-  function layout(graph) {
+  function layout(graph, custom={}) {
     const nodes = [...graph.nodes].sort((a,b)=>a.id-b.id), ids=new Set(nodes.map(n=>n.id));
     const seed=ids.has(graph.seed_id)?graph.seed_id:nodes[0]?.id;
     const neighbors=new Map(nodes.map(n=>[n.id,new Set()]));
@@ -20,15 +20,21 @@
       group.forEach((n,i)=>{positions.set(n.id,{x:40+(column+Math.floor(i/8))*260,y:45+(i%8)*65});});
       column+=Math.ceil(group.length/8);maxRows=Math.max(maxRows,Math.min(8,group.length));
     }
-    return {positions,width:Math.max(900,column*260+40),height:Math.max(510,maxRows*65+30)};
+    const width=Math.max(900,column*260+40),height=Math.max(510,maxRows*65+30);
+    for(const [id,p] of positions) {
+      const saved=custom[id];
+      if(saved && Number.isFinite(saved.x) && Number.isFinite(saved.y))
+        positions.set(id,{x:Math.max(20,Math.min(width-240,saved.x)),y:Math.max(25,Math.min(height-25,saved.y))});
+    }
+    return {positions,width,height};
   }
-  function svg(graph, title='Citation map', empty='No stored relationships') {
-    const {positions,width,height}=layout(graph);
+  function svg(graph, title='Citation map', empty='No stored relationships', custom={}) {
+    const {positions,width,height}=layout(graph,custom);
     const lines=graph.edges.map(e=>{
       const a=positions.get(Number(e.source)),b=positions.get(Number(e.target));if(!a||!b)return '';
-      const length=Math.hypot(b.x-a.x,b.y-a.y);if(!length)return '';
-      const ux=(b.x-a.x)/length,uy=(b.y-a.y)/length;
-      return `<line x1="${a.x+ux*14}" y1="${a.y+uy*14}" x2="${b.x-ux*17}" y2="${b.y-uy*17}" stroke="${e.type==='related'?'#e2bd7c':'#8cc8f2'}" stroke-width="1.6" ${e.type==='related'?'stroke-dasharray="5 5"':'marker-end="url(#citation-arrow)"'}><title>${xml((e.provenance||[]).map(p=>`${p.provider} (${p.observed_at})`).join('; '))}</title></line>`;
+      const length=Math.hypot(b.x-a.x,b.y-a.y);
+      const ux=length?(b.x-a.x)/length:1,uy=length?(b.y-a.y)/length:0;
+      return `<line data-source="${xml(e.source)}" data-target="${xml(e.target)}" x1="${a.x+ux*14}" y1="${a.y+uy*14}" x2="${b.x-ux*17}" y2="${b.y-uy*17}" stroke="${e.type==='related'?'#e2bd7c':'#8cc8f2'}" stroke-width="1.6" ${e.type==='related'?'stroke-dasharray="5 5"':'marker-end="url(#citation-arrow)"'}><title>${xml((e.provenance||[]).map(p=>`${p.provider} (${p.observed_at})`).join('; '))}</title></line>`;
     }).join('');
     const circles=graph.nodes.map(n=>{
       const p=positions.get(n.id),fill=n.id===graph.seed_id?'#42cfb1':n.status==='to-read'?'#e2bd7c':'#63b3ff';

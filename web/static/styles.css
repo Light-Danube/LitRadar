@@ -218,3 +218,5 @@ footer { margin-top: var(--space-5); padding: var(--space-4) 0; border-top: 1px 
   .nav-item.active { outline: 2px solid Highlight; }
   .graph-svg [data-node]:focus-visible .node { stroke: Highlight; }
 }
+.annotation-tools, .inference-tools { margin: var(--space-4) 0; padding: var(--space-3); border: 1px solid var(--line); border-radius: var(--radius); }
+.version-list { max-height: 420px; overflow-y: auto; padding: var(--space-1); }

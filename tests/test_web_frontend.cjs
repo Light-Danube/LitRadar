@@ -26,7 +26,7 @@ test('GraphML export preserves node identities, types and provenance',()=>{
   assert.ok(xml.includes('&lt;script&gt;'));assert.ok(xml.includes('attr.name="provenance"'));
 });
 test('both locales cover every static interface key and preserve interpolation',()=>{
-  const app=fs.readFileSync(require.resolve('../web/static/app.js'),'utf8');
+  const app=['app.js','annotation-workflows.js'].map(name=>fs.readFileSync(require.resolve('../web/static/'+name),'utf8')).join('\n');
   for(const match of app.matchAll(/\bt\('([^']+)'(?:\)|,)/g))assert.ok(i18n.dictionaries.en[match[1]],match[1]);
   for(const match of app.matchAll(/\b(?:button|field)\('[^']+','([^']+)'/g))assert.ok(i18n.dictionaries.en[match[1]],match[1]);
   for(const key of Object.keys(i18n.dictionaries.en)){assert.ok(i18n.dictionaries.uk[key]);
@@ -50,4 +50,19 @@ test('both semantic palettes meet AA text and control contrast on their intended
     for(const [fg,bg] of [['on-accent','accent'],['amber','warning-surface'],['red','error-surface']])assert.ok(contrast(p[fg],p[bg])>=4.5,`${fg} on ${bg}`);
     for(const fg of ['control','focus'])assert.ok(contrast(p[fg],p.surface)>=3,fg);
   }
+});
+test('custom node coordinates update SVG edges without changing graph payload or standalone export semantics',()=>{
+  const coordinates={1:{x:100,y:120},2:{x:450,y:240}};
+  const svg=graphTools.svg(sample,'Map','Empty',coordinates);
+  assert.match(svg,/cx="100" cy="120"/);assert.match(svg,/data-source="1" data-target="2"/);
+  assert.match(svg,/marker-end="url\(#citation-arrow\)"/);assert.equal(sample.nodes[0].x,undefined);
+  const overlap=graphTools.svg(sample,'Map','Empty',{1:{x:100,y:100},2:{x:100,y:100}});
+  assert.match(overlap,/data-source="1" data-target="2"/);
+  const invalid=graphTools.layout(sample,{1:{x:NaN,y:Infinity}});assert.equal(invalid.positions.get(1).x,40);
+});
+test('wheel zoom calculation keeps the anchor fixed and obeys zoom limits',()=>{
+  const {zoomAt}=require('../web/static/graph-interactions.js');
+  const base={width:900,height:510},view={x:0,y:0,w:900,h:510};
+  const next=zoomAt(view,base,.5,{x:200,y:150});assert.equal(next.w,450);assert.equal(next.x,100);assert.equal(next.y,75);
+  assert.equal(zoomAt(view,base,.0001).w,225);assert.equal(zoomAt(view,base,100).w,1800);
 });
