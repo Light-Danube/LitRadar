@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import argparse
 from pathlib import Path
 import sys
 
@@ -72,7 +73,17 @@ def cmd_evidence(args) -> int:
 
 
 def register_commands(sub):
-    venue = sub.add_parser("venue", help="explicit online venue lookup/search (separate from broad search)")
+    venue = sub.add_parser(
+        "venue", help="explicit online venue lookup/search (separate from broad search)",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        description="Find a publication venue, select its concrete source ID, then search within it.",
+        epilog='Example workflow:\n  python cli.py venue lookup "Computational Linguistics"\n'
+               '  python cli.py venue search SOURCE_ID "emotion context" --year-from 2023 --year-to 2026\n'
+               '\nReplace SOURCE_ID with the S+digits identity returned by lookup.\n'
+               'Results are saved in the same local library used by list/show/web.\n'
+               'One bounded page is retrieved; metadata does not certify peer review or indexing.\n'
+               'Guide: docs/research/venue-discovery.md',
+    )
     actions = venue.add_subparsers(dest="venue_action", required=True)
     lookup = actions.add_parser("lookup", help="find concrete venue identities; select by ID, never by name")
     lookup.add_argument("query")
@@ -87,7 +98,19 @@ def register_commands(sub):
     search.add_argument("--page", type=int, default=1)
     search.add_argument("--refresh", action="store_true", help="bypass the local venue cache")
     search.set_defaults(func=cmd_venue)
-    matrix = sub.add_parser("evidence", help="local human-editable literature worksheet; no LLM calls")
+    matrix = sub.add_parser(
+        "evidence", help="local human-editable literature worksheet; no LLM calls",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        description="Record source-backed comparisons separately from personal research notes.",
+        epilog='Example workflow (replace 42 with a stored paper ID):\n'
+               '  python cli.py evidence show 42\n'
+               '  python cli.py evidence update 42 fields.json --expected-revision 0\n'
+               '  python cli.py evidence export 42 --output matrix.md\n'
+               '  python cli.py evidence export 42 --format csv --output matrix.csv\n'
+               '\nfields.json is a partial fields object with value/origin/source provenance.\n'
+               'Use the current revision reported by show; 0 means a new worksheet.\n'
+               'No LLM calls or automatic novelty claims. Guide: docs/research/venue-discovery.md',
+    )
     edits = matrix.add_subparsers(dest="evidence_action", required=True)
     show = edits.add_parser("show", help="show worksheet shape and current revision")
     show.add_argument("paper_id", type=int)

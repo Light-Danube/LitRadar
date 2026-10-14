@@ -932,6 +932,10 @@ def build_parser() -> argparse.ArgumentParser:
 Examples:
   python cli.py init
   python cli.py search "adaptive context emotion sarcasm"
+  python cli.py venue lookup "Computational Linguistics"
+  python cli.py venue search SOURCE_ID "emotion context" --year-from 2023 --year-to 2026
+  python cli.py evidence show 42
+  python cli.py evidence export 42 --output matrix.md
   python cli.py config
   python cli.py list --status new --sort recent
   python cli.py list --sort personalized --limit 20
@@ -965,6 +969,8 @@ Examples:
 Most commands have their own help page, e.g.:
   python cli.py list --help
   python cli.py search --help
+  python cli.py venue --help
+  python cli.py evidence --help
   python cli.py ui --help
   python cli.py explore --help
   python cli.py scan --help
