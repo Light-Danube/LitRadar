@@ -16,11 +16,13 @@
 
 ## Gate 1 — Stabilize the current feature set (P0)
 
-- [ ] Record an accurate feature inventory and list of known defects from current main and open PRs. Distinguish implemented, user-accepted, and externally unverified behavior; close/rebase old work before the release branch.
+- [x] Record an accurate feature inventory and list of known defects from current main and open PRs. [Gate 1 audit](docs/LOCAL-1.0-RELEASE-CHECKLIST.md): baseline `b8b42ff4`, no open PR backlog, reproduced installed-wheel CLI failure. Implemented, user-accepted and externally unverified behavior are separated.
 - [ ] Run the full Python and JS suites on the release candidate. Fix all reproducible failures. Explain every expected skip; no unexplained failures/skips in required CI jobs.
 - [ ] Verify **Research** venue search and evidence worksheets, original five web sections, EN/UK switching and draft persistence with synthetic data. No automatic provider/LLM request from page load or preset selection.
 
 **Done when:** CI is green on the candidate commit, a compact feature/regression checklist exists, and no known data-loss or workflow-blocking defect remains.
+
+Audit evidence: Linux combined suite **430 Python / 38 JS passed, 0 failed, 0 skipped**. Actual baseline Windows API/DOM/native Chrome checks succeeded, but clean built-artifact Windows installation and Narrator remain open. Gate 1 is not closed: final candidate CI and the installed-wheel workflow blocker need resolution. The checklist recommends a bounded SQLite backup/new-destination restore PR for Gate 2; no recovery implementation or version bump is included here.
 
 ## Gate 2 — Local data integrity and recovery (P0)
 

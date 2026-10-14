@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased — local-only 1.0 Gate 1 audit
+
+- Freeze major feature development and add an [evidence-based release checklist](docs/LOCAL-1.0-RELEASE-CHECKLIST.md) covering existing workflows, merged PRs, CI profile skips and remaining gates.
+- Execute combined synthetic Linux checks: **430 Python / 38 JS passed, 0 failed, 0 skipped** (one Starlette deprecation warning). Observe actual green baseline CI, including Windows API/DOM and four native Chrome scenarios; these do not establish clean Windows artifact installation or Narrator validation.
+- Reproduce a built-wheel CLI import failure (`config.py` omitted); inventory missing `VERSION` and default JSON assets. Record recovery/upgrade gaps and the smallest next local backup/new-destination restore PR. Documentation only; no feature changes, personal data access, merge or release-version bump. Final candidate CI remains a separate check.
+
 ## Unreleased — Ukrainian Textual TUI and job crash fixes
 
 - Add EN/UK TUI language selection, translated app bindings/status/sort/detail/help/activity/job controls and notifications. Preserve raw paper data, provider/CLI diagnostics and identifiers; startup language can use `LITBEACON_TUI_LANGUAGE` or its legacy alias.

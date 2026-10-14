@@ -1,5 +1,14 @@
 # Codex development handoff — LitBeacon Research Workspace
 
+## Current — local-only 1.0 freeze, Gate 1 audit
+
+- Branch `codex/local-v1-gate1-audit`, baseline main `b8b42ff4`. Read [release checklist](docs/LOCAL-1.0-RELEASE-CHECKLIST.md) and current ROADMAP before following historical suggestions below. No major features or version bump; 0.8.0 remains current. Real-model quality evaluation and Docker production optimization are not frozen 1.0 blockers.
+- PRs #18/#19/#20 are merged; no open PR backlog existed before this audit PR. Historical entries calling #19 open/draft or Windows unverified describe older commits.
+- Executed on tracked-source export with synthetic fixtures: Linux Python 3.12.14 **430 passed / 0 failed / 0 skipped**, one Starlette warning; Node 24.19.0 **38 passed / 0 failed / 0 skipped**. Baseline main CI is green, including Windows targeted 129/0/1, Node 38/0/0 and four sandboxed Chrome scenarios. Final Draft PR head checks must be observed separately.
+- Built and installed the 0.8.0 wheel into scratch space. CLI import outside source fails with `ModuleNotFoundError: config`; module list omits `config.py`, and wheel inventory lacks `VERSION`/default JSON assets. Fix packaging in a focused defect PR; clean Windows built-artifact and TUI/Narrator checks remain open.
+- Smallest next Gate 2 PR: SQLite backup API, bounded checksummed bundle with explicitly elected research/offline files, restore only into a new destination, synthetic corruption/path/WAL/preservation/legacy-upgrade tests and USER-GUIDE instructions. Avoid source migrations while backing up; stop artifact writers. No implementation in this audit.
+- Gate 1 remains open for candidate CI and workflow blocker resolution. Preserve personal data and existing APIs; do not merge or publish a release without explicit approval.
+
 ## Unreleased — Ukrainian TUI, job crash fix and accessibility evidence
 
 - Branch `codex/tui-uk-accessibility`, based on fetched main `ad4e2a4d`. Read [TUI audit](docs/TUI-ACCESSIBILITY-AUDIT.md) and [menu draft](docs/TUI-MENU-DRAFT.md). Scope is current TUI functionality only; README is intentionally unchanged per user instruction.

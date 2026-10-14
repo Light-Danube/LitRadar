@@ -10,6 +10,8 @@ The project was formerly **LitRadar**. Existing module names, database paths, `L
 
 **Unreleased:** graph and annotation refinements, optional local semantic exploration, and venue discovery/evidence worksheets in the CLI and Research browser section. The release version stays 0.8.0 while validation gates remain open. See [CHANGELOG](CHANGELOG.md), [patch progress](docs/V08-PATCH-PROGRESS.md) and [venue delivery checks](docs/research/delivery-validation.md).
 
+Feature development is frozen for local-only 1.0. The [Gate 1 release checklist](docs/LOCAL-1.0-RELEASE-CHECKLIST.md) records executed regressions, CI evidence and packaging/recovery blockers.
+
 ## Quick start
 
 Use **Python 3.11 or newer**. Run commands from the repository directory.
