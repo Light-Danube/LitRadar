@@ -1,5 +1,13 @@
 # Codex development handoff — LitBeacon Research Workspace
 
+## Current — Gate 1 closure and small package setup
+
+- Branch `codex/gate1-package-setup`, main baseline `1d1a2ca6`; #22/#23/#24 are merged and no prior open PR backlog remains. Current code includes venue preservation checks, fixed wheel/data paths and bounded backup/restore. Older “pending” statements below describe their historical increments.
+- `scripts/build_user_bundle.py` validates an already-built wheel and emits only wheel + standalone SETUP.txt; metadata/root/bundled versions must agree and release tag must match when supplied. CI installs the extracted wheel on Ubuntu/Windows and uploads a review artifact. Future release attachment replaces the full explicit source ZIP; GitHub automatic source archives remain. No version bump/tag/publication/merge here.
+- User confirmed Windows daily use and Narrator work okay on 2026-10-15; record as accepted user-reported evidence, without unprovided versions/task observations or certification. Narrator is optional; broader detailed audit remains optional. Live venue access is still blocked by cloud proxy 403, not a known universal provider defect.
+- Gate 1 is complete for this feature-stability candidate once its actual required CI is green; final release approval/versioning, scheduler-specific verification and remaining focused safety checks stay separate. See [current checklist](docs/LOCAL-1.0-RELEASE-CHECKLIST.md) and [package setup](docs/PACKAGE-SETUP.md).
+- Executed local full suite: **518 Python / 38 JS passed, 0 failed, 0 skipped**, one Starlette warning. Clean Linux venv installed the extracted setup ZIP's actual wheel with declared web dependencies (plus smoke-only httpx) and passed CLI/assets/web edit/restart/custom DB/default preservation smoke. Syntax/link/whitespace checks passed. Final-head CI must be observed; do not infer Windows setup-ZIP success from these Linux results.
+
 ## Current — bounded Gate 2 recovery (unreleased)
 
 - Final local recovery-branch full suite: **479 Python / 38 JS passed, 0 failed, 0 skipped** (one Starlette warning). Separate disposable integration of packaging/recovery/venue source passed **501 Python tests**; the combined wheel was built/installed outside the checkout and executed CLI backup/new-destination restore/no-overwrite, exact all-table preservation, elected files and browser evidence/artifact downloads. Actual recovery-head CI/Windows remain separate.

@@ -14,7 +14,9 @@ Feature development is frozen for local-only 1.0. The [Gate 1 release checklist]
 
 ## Quick start
 
-Use **Python 3.11 or newer**. Run commands from the repository directory.
+Use **Python 3.11 or newer**. For releases providing `LitBeacon-<version>-setup.zip`, extract it and follow the short `SETUP.txt`: only the runtime wheel and guide are needed. [Package setup and updates](docs/PACKAGE-SETUP.md). Installation downloads dependencies; local library use needs no cloud service.
+
+The source-checkout commands below are for developers and existing launcher users.
 
 ### Windows launchers
 
@@ -95,7 +97,7 @@ Replace `PAPER_ID` with a canonical library ID. Worksheets are human-editable, p
 
 ## Data and limitations
 
-The default library is `data/litradar.sqlite3`; `.env`, PDFs and caches stay outside Git. Migrations are additive. Unreleased `library-backup` creates a consistent SQLite snapshot with explicitly elected files; `library-restore` verifies it into a new directory. [Backup, exclusions and upgrade instructions](docs/USER-GUIDE.md#consistent-local-backup-and-restore-unreleased).
+Source checkouts keep `data/litradar.sqlite3`; installed wheels use a separate writable per-user LitBeacon directory ([locations/override](docs/USER-GUIDE.md#wheel-installation)). Migrations are additive. Unreleased `library-backup` creates a consistent SQLite snapshot with explicitly elected files; `library-restore` verifies it into a new directory. [Backup, exclusions and upgrade instructions](docs/USER-GUIDE.md#consistent-local-backup-and-restore-unreleased).
 
 Discovery indexes, preprints, venue metadata and citations do not certify peer review, Scopus/WoS membership or academic novelty. Missing evidence stays unverified. The user confirmed live CLI retrieval locally; cloud OpenAlex/Crossref probes were blocked by proxy **403**. Synthetic tests establish behavior, not live coverage. Windows, rendered-browser and real-model results are tracked separately in the validation documents.
 

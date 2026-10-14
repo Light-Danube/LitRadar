@@ -586,8 +586,10 @@ The dev image uses lightweight core/web CI dependencies, disposable CLI fixtures
 
 ## Wheel installation
 
+For releases providing a lightweight setup ZIP, extract it and follow its standalone `SETUP.txt`. It contains only the runtime wheel and guide, without the development checkout or legacy docs. [Concise package setup, upgrades and release build](PACKAGE-SETUP.md). Current CI artifacts let reviewers test this path before any release is published.
+
 Install a built wheel with `python -m pip install "path/to/litradar-0.8.0-py3-none-any.whl[web]"`, then run `python -m cli init` and `python -m cli web`. Commands work outside a source checkout. Static browser assets and canonical default JSON/version files are bundled; no real library, `.env`, PDFs or model weights are shipped.
 
 Source checkouts preserve their existing root-level defaults. Wheel installations store editable profiles/digest configuration, `.env`, database, artifacts, caches and logs under `%LOCALAPPDATA%\LitBeacon` on Windows, `$XDG_DATA_HOME/LitBeacon` (default `~/.local/share/LitBeacon`) on Linux, or `~/Library/Application Support/LitBeacon` on macOS. Set `LITBEACON_HOME` (legacy `LITRADAR_HOME`) before launch to select a different directory. Missing profile/digest defaults are seeded at explicit startup; existing edits are never replaced. Existing libraries are not moved automatically: pass `--db PATH` explicitly when needed.
 
-Windows `.bat` launchers and Task Scheduler installation/status/removal still require the source checkout and its `.venv`; a wheel reports this limitation explicitly. Wheel users can invoke `python -m cli scheduled-run` through an independently configured scheduler. Actual Windows built-artifact smoke remains a release gate until its Actions result is observed.
+Windows `.bat` launchers and Task Scheduler installation/status/removal still require the source checkout and its `.venv`; a wheel reports this limitation explicitly. Wheel users can invoke `python -m cli scheduled-run` through an independently configured scheduler. Actual Ubuntu/Windows installed-wheel smoke has succeeded ([baseline run](https://github.com/Light-Danube/LitRadar/actions/runs/38656486258)); each later candidate still needs its own artifact checks.

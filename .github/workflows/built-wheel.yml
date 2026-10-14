@@ -21,14 +21,17 @@ jobs:
           python-version: '3.12'
       - name: Build wheel from canonical tracked assets
         run: python -m pip wheel --no-deps --wheel-dir work/wheels .
+      - name: Build lightweight end-user setup bundle
+        shell: python
+        run: |
+          import pathlib, subprocess, sys
+          wheel = next(pathlib.Path('work/wheels').glob('*.whl'))
+          subprocess.run([sys.executable, '-m', 'scripts.build_user_bundle', str(wheel), '--output-dir', 'work/bundles'], check=True)
       - name: Clean install and synthetic smoke outside the checkout
         shell: python
         run: |
           import os, pathlib, subprocess, sys
           root = pathlib.Path.cwd()
-          environment = root / 'work' / 'wheel-venv'
-          subprocess.run([sys.executable, '-m', 'venv', str(environment)], check=True)
-          interpreter = environment / ('Scripts/python.exe' if os.name == 'nt' else 'bin/python')
           wheel = next((root / 'work' / 'wheels').glob('*.whl'))
           from zipfile import ZipFile
           with ZipFile(wheel) as archive:
@@ -38,5 +41,22 @@ jobs:
               assert not any(name.endswith(('.env', '.sqlite', '.sqlite3', '.pdf', '.log', '.safetensors')) or name.startswith('work/') for name in names)
               for name in ('VERSION', 'research_profile.json', 'digest_config.json'):
                   assert archive.read(f'litradar_runtime/assets/{name}') == (root / name).read_bytes()
-          subprocess.run([str(interpreter), '-m', 'pip', 'install', f'{wheel}[web]', 'httpx'], check=True)
-          subprocess.run([str(interpreter), str(root / 'scripts' / 'built_wheel_smoke.py')], cwd=os.environ['RUNNER_TEMP'], check=True)
+          import tempfile
+          with tempfile.TemporaryDirectory(prefix='litbeacon-setup-', dir=os.environ['RUNNER_TEMP']) as temporary:
+              extracted = pathlib.Path(temporary).resolve()
+              with ZipFile(next((root / 'work' / 'bundles').glob('*-setup.zip'))) as archive:
+                  assert set(archive.namelist()) == {wheel.name, 'SETUP.txt'}
+                  assert archive.read(wheel.name) == wheel.read_bytes()
+                  assert wheel.name + '[web]' in archive.read('SETUP.txt').decode('utf-8')
+                  archive.extractall(extracted)
+              environment = extracted / '.venv'
+              subprocess.run([sys.executable, '-m', 'venv', str(environment)], check=True)
+              interpreter = environment / ('Scripts/python.exe' if os.name == 'nt' else 'bin/python')
+              subprocess.run([str(interpreter), '-m', 'pip', 'install', f'{extracted / wheel.name}[web]', 'httpx'], cwd=extracted, check=True)
+              subprocess.run([str(interpreter), str(root / 'scripts' / 'built_wheel_smoke.py')], cwd=extracted, check=True)
+      - name: Upload reviewable setup bundle (no release publication)
+        uses: actions/upload-artifact@v4
+        with:
+          name: litbeacon-setup-${{ matrix.os }}
+          path: work/bundles/*-setup.zip
+          if-no-files-found: error
