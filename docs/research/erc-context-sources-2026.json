@@ -1,0 +1,534 @@
+{
+  "cutoff": "2026-10-14",
+  "recent_window": [
+    "2023-01-01",
+    "2026-10-14"
+  ],
+  "unique_papers": 20,
+  "pre_2023_foundations": 5,
+  "search_result_slots": 42,
+  "search_result_slots_are_unique_sources": false,
+  "discovery": "Exa search/fetch; official-source metadata checked with generic browsing where needed",
+  "search_angles": [
+    "foundational ERC",
+    "recent ERC structure/speaker modeling",
+    "sarcasm context and intended labels",
+    "task-aware compression/long-context robustness"
+  ],
+  "limitations": [
+    "Shell proxy unreachable; live scholarly APIs unavailable to application smoke tests",
+    "Connector extraction can truncate documents; no complete full-text reviews",
+    "Specialized-journal and 2025-2026 coverage not systematic or complete",
+    "Paywalled texts/indexation not bypassed",
+    "RECOMP OpenReview fetch failed; official ICLR record/PDF used",
+    "InstructERC preprint verified; peer-reviewed publication not verified"
+  ],
+  "records": [
+    {
+      "review_id": "R01",
+      "short_label": "DialogueRNN",
+      "bibliographic_identity": "Navonil Majumder, Soujanya Poria, Devamanyu Hazarika, Rada Mihalcea, Alexander Gelbukh, Erik Cambria. *DialogueRNN: An Attentive RNN for Emotion Detection in Conversations*. AAAI 2019 (conference proceedings). [Official record](https://ojs.aaai.org/index.php/AAAI/article/view/4657); DOI 10.1609/aaai.v33i01.33016818 (publisher-hosted citation).",
+      "source_urls": [
+        "https://ojs.aaai.org/index.php/AAAI/article/view/4657"
+      ],
+      "doi": "10.1609/aaai.v33i01.33016818",
+      "retrieved_at": "2026-10-14T15:21:14Z",
+      "verification_status": "bibliography and abstract checked against accessible official record",
+      "evidence_granularity": "abstract reviewed",
+      "partial_full_text_reviewed": false,
+      "reviewed_locations": [
+        "official record abstract"
+      ],
+      "source_statement_and_researcher_question": "Abstract: recurrent tracking of individual party states; two datasets. Attention is not proof of minimal context. Exact dataset names, strongest baseline, metrics and author limitations are not verified here. Candidate comparator: speaker-aware recurrence with matched input budget.",
+      "statement_authorship": "Codex review agent; LLM-assisted summary/interpretation, not human validated",
+      "provider_model": "model identifier not exposed by execution environment",
+      "user_verdict": null,
+      "reading_status": "abstract reviewed",
+      "user_rationale": null,
+      "library_paper_id": null,
+      "scopus_status": "unverified",
+      "wos_status": "unverified"
+    },
+    {
+      "review_id": "R02",
+      "short_label": "DialogueGCN",
+      "bibliographic_identity": "Deepanway Ghosal, Navonil Majumder, Soujanya Poria, Niyati Chhaya, Alexander Gelbukh. *DialogueGCN: A Graph Convolutional Neural Network for Emotion Recognition in Conversation*. EMNLP-IJCNLP 2019, pp. 154–164 (conference proceedings). [Record](https://aclanthology.org/D19-1015/); DOI 10.18653/v1/D19-1015.",
+      "source_urls": [
+        "https://aclanthology.org/D19-1015/"
+      ],
+      "doi": "10.18653/v1/D19-1015",
+      "retrieved_at": "2026-10-14T15:21:14Z",
+      "verification_status": "bibliography and abstract checked against accessible official record",
+      "evidence_granularity": "abstract reviewed",
+      "partial_full_text_reviewed": false,
+      "reviewed_locations": [
+        "official record abstract"
+      ],
+      "source_statement_and_researcher_question": "Abstract: self/inter-speaker dependencies address context propagation. Exact window construction, strongest baseline and metric values need full-text verification. Author limitations not verified. This disconfirms novelty based only on graph-based conversational context.",
+      "statement_authorship": "Codex review agent; LLM-assisted summary/interpretation, not human validated",
+      "provider_model": "model identifier not exposed by execution environment",
+      "user_verdict": null,
+      "reading_status": "abstract reviewed",
+      "user_rationale": null,
+      "library_paper_id": null,
+      "scopus_status": "unverified",
+      "wos_status": "unverified"
+    },
+    {
+      "review_id": "R03",
+      "short_label": "COSMIC",
+      "bibliographic_identity": "Deepanway Ghosal, Navonil Majumder, Alexander Gelbukh, Rada Mihalcea, Soujanya Poria. *COSMIC: COmmonSense knowledge for eMotion Identification in Conversations*. Findings EMNLP 2020, pp. 2470–2481 (proceedings). [Record](https://aclanthology.org/2020.findings-emnlp.224/); DOI 10.18653/v1/2020.findings-emnlp.224.",
+      "source_urls": [
+        "https://aclanthology.org/2020.findings-emnlp.224/"
+      ],
+      "doi": "10.18653/v1/2020.findings-emnlp.224",
+      "retrieved_at": "2026-10-14T15:21:14Z",
+      "verification_status": "bibliography and abstract checked against accessible official record",
+      "evidence_granularity": "abstract reviewed",
+      "partial_full_text_reviewed": false,
+      "reviewed_locations": [
+        "official record abstract"
+      ],
+      "source_statement_and_researcher_question": "Abstract: mental states, events and causal relations support interlocutor interaction modeling on four benchmarks. Exact datasets/strongest baseline/metrics not verified. Author limitations not verified. Hypothesis: selector gains may instead come from extra commonsense information.",
+      "statement_authorship": "Codex review agent; LLM-assisted summary/interpretation, not human validated",
+      "provider_model": "model identifier not exposed by execution environment",
+      "user_verdict": null,
+      "reading_status": "abstract reviewed",
+      "user_rationale": null,
+      "library_paper_id": null,
+      "scopus_status": "unverified",
+      "wos_status": "unverified"
+    },
+    {
+      "review_id": "R04",
+      "short_label": "DAG-ERC",
+      "bibliographic_identity": "Weizhou Shen, Siyue Wu, Yunyi Yang, Xiaojun Quan. *Directed Acyclic Graph Network for Conversational Emotion Recognition*. ACL-IJCNLP **2021**, pp. 1551–1560 (conference proceedings). [Record](https://aclanthology.org/2021.acl-long.123/); DOI 10.18653/v1/2021.acl-long.123.",
+      "source_urls": [
+        "https://aclanthology.org/2021.acl-long.123/"
+      ],
+      "doi": "10.18653/v1/2021.acl-long.123",
+      "retrieved_at": "2026-10-14T15:21:14Z",
+      "verification_status": "bibliography and abstract checked against accessible official record",
+      "evidence_granularity": "abstract reviewed",
+      "partial_full_text_reviewed": false,
+      "reviewed_locations": [
+        "official record abstract"
+      ],
+      "source_statement_and_researcher_question": "The attached lead's 2022 date/title is corrected against the official record. Abstract: DAG encodes nearby and long-distance background; four ERC benchmarks. Exact graph edges and metrics not reviewed. Author limitations not verified. Structured propagation is an obligatory comparator.",
+      "statement_authorship": "Codex review agent; LLM-assisted summary/interpretation, not human validated",
+      "provider_model": "model identifier not exposed by execution environment",
+      "user_verdict": null,
+      "reading_status": "abstract reviewed",
+      "user_rationale": null,
+      "library_paper_id": null,
+      "scopus_status": "unverified",
+      "wos_status": "unverified"
+    },
+    {
+      "review_id": "R05",
+      "short_label": "Sarcasm Analysis Using Conversation Context",
+      "bibliographic_identity": "Debanjan Ghosh, Alexander R. Fabbri, Smaranda Muresan. *Sarcasm Analysis Using Conversation Context*. **Computational Linguistics** 44(4), 2018, pp. 755–792 (journal). [Record](https://aclanthology.org/J18-4009/); DOI 10.1162/coli_a_00336.",
+      "source_urls": [
+        "https://aclanthology.org/J18-4009/"
+      ],
+      "doi": "10.1162/coli_a_00336",
+      "retrieved_at": "2026-10-14T15:21:14Z",
+      "verification_status": "bibliography and abstract checked against accessible official record",
+      "evidence_granularity": "abstract reviewed",
+      "partial_full_text_reviewed": false,
+      "reviewed_locations": [
+        "official record abstract"
+      ],
+      "source_statement_and_researcher_question": "Abstract: Twitter and discussion forums; prior/succeeding turns or both; sentence-attentive and conditional LSTMs outperform current-turn-only LSTM. Attention interpretation is qualitative, not a causal sufficiency proof. Author limitations not verified. Hypothesis: succeeding turns are unavailable in an online causal setting; separate offline and online protocols.",
+      "statement_authorship": "Codex review agent; LLM-assisted summary/interpretation, not human validated",
+      "provider_model": "model identifier not exposed by execution environment",
+      "user_verdict": null,
+      "reading_status": "abstract reviewed",
+      "user_rationale": null,
+      "library_paper_id": null,
+      "scopus_status": "unverified",
+      "wos_status": "unverified"
+    },
+    {
+      "review_id": "R06",
+      "short_label": "DualGATs",
+      "bibliographic_identity": "Duzhen Zhang, Feilong Chen, Xiuyi Chen. *DualGATs: Dual Graph Attention Networks for Emotion Recognition in Conversations*. ACL 2023, pp. 7395–7408 (conference proceedings). [Record](https://aclanthology.org/2023.acl-long.408/); DOI 10.18653/v1/2023.acl-long.408.",
+      "source_urls": [
+        "https://aclanthology.org/2023.acl-long.408/"
+      ],
+      "doi": "10.18653/v1/2023.acl-long.408",
+      "retrieved_at": "2026-10-14T15:21:14Z",
+      "verification_status": "bibliography and abstract checked against accessible official record",
+      "evidence_granularity": "abstract reviewed",
+      "partial_full_text_reviewed": false,
+      "reviewed_locations": [
+        "official record abstract"
+      ],
+      "source_statement_and_researcher_question": "Abstract: discourse-aware and speaker-aware graph attention exchange information; four datasets. Exact strongest baseline/metric and author limitations not verified. Candidate difference must concern explicit budgeted selection or a different tested discussion structure; discourse awareness itself is already prior art.",
+      "statement_authorship": "Codex review agent; LLM-assisted summary/interpretation, not human validated",
+      "provider_model": "model identifier not exposed by execution environment",
+      "user_verdict": null,
+      "reading_status": "abstract reviewed",
+      "user_rationale": null,
+      "library_paper_id": null,
+      "scopus_status": "unverified",
+      "wos_status": "unverified"
+    },
+    {
+      "review_id": "R07",
+      "short_label": "InstructERC (version-controlled preprint)",
+      "bibliographic_identity": "Shanglin Lei, Guanting Dong, Xiaoping Wang, Keheng Wang, Sirui Wang. *InstructERC: Reforming Emotion Recognition in Conversation with a Retrieval Multi-task LLMs Framework* (arXiv landing title for v4). [Record](https://arxiv.org/abs/2309.11911v4); DOI 10.48550/arXiv.2309.11911. First submitted 2023-09-21; v4 revised 2024-03-12. Venue type: repository/preprint; peer-reviewed publication unverified.",
+      "source_urls": [
+        "https://arxiv.org/abs/2309.11911v4",
+        "https://arxiv.org/html/2309.11911v4"
+      ],
+      "doi": "10.48550/arXiv.2309.11911",
+      "retrieved_at": "2026-10-14T15:21:14Z",
+      "verification_status": "bibliography and abstract checked against accessible official record",
+      "evidence_granularity": "abstract reviewed",
+      "partial_full_text_reviewed": true,
+      "reviewed_locations": [
+        "versioned HTML section 2.2",
+        "Figure 2"
+      ],
+      "source_statement_and_researcher_question": "[Versioned HTML](https://arxiv.org/html/2309.11911v4) uses a different subtitle (“Multi-task Retrieval-based LLMs Framework”); latest unversioned record changes it again. Do not create multiple papers for these titles. §2.2/Figure 2 specifies a historical window and speaker information, with SBERT retrieval of one training-set demonstration. This is **demonstration retrieval**, not arbitrary retrieval of distant same-thread utterances. Three benchmark gains are author claims. Strongest baseline/metrics/limitations not verified. Only these passages were reviewed.",
+      "statement_authorship": "Codex review agent; LLM-assisted summary/interpretation, not human validated",
+      "provider_model": "model identifier not exposed by execution environment",
+      "user_verdict": null,
+      "reading_status": "abstract reviewed",
+      "user_rationale": null,
+      "library_paper_id": null,
+      "scopus_status": "unverified",
+      "wos_status": "unverified"
+    },
+    {
+      "review_id": "R08",
+      "short_label": "LaERC-S",
+      "bibliographic_identity": "Yumeng Fu, Junjie Wu, Zhongjie Wang, Meishan Zhang, Lili Shan, Yulin Wu, Bingquan Liu. *LaERC-S: Improving LLM-based Emotion Recognition in Conversation with Speaker Characteristics*. COLING 2025, pp. 6748–6761 (conference proceedings). [Record](https://aclanthology.org/2025.coling-main.451/); DOI not supplied by reviewed record.",
+      "source_urls": [
+        "https://aclanthology.org/2025.coling-main.451/"
+      ],
+      "doi": null,
+      "retrieved_at": "2026-10-14T15:21:14Z",
+      "verification_status": "bibliography and abstract checked against accessible official record",
+      "evidence_granularity": "abstract reviewed",
+      "partial_full_text_reviewed": false,
+      "reviewed_locations": [
+        "official record abstract"
+      ],
+      "source_statement_and_researcher_question": "Abstract: two-stage learning reasons about interlocutor mental states/behavior and emotion tracking; three benchmarks. Exact dataset names/metrics/author limitations not verified. Hypothesis: compare equivalent speaker cues before crediting gains to context pruning.",
+      "statement_authorship": "Codex review agent; LLM-assisted summary/interpretation, not human validated",
+      "provider_model": "model identifier not exposed by execution environment",
+      "user_verdict": null,
+      "reading_status": "abstract reviewed",
+      "user_rationale": null,
+      "library_paper_id": null,
+      "scopus_status": "unverified",
+      "wos_status": "unverified"
+    },
+    {
+      "review_id": "R09",
+      "short_label": "PERC",
+      "bibliographic_identity": "Tazeek Bin Abdur Rakib, Lay-Ki Soon, Wern Han Lim. *Who You Are, What You Say: Intra- and Inter- Context Personality for Emotion Recognition in Conversation*. Findings EACL **March 2026**, pp. 3293–3308 (proceedings). [Record](https://aclanthology.org/2026.findings-eacl.172/); DOI 10.18653/v1/2026.findings-eacl.172.",
+      "source_urls": [
+        "https://aclanthology.org/2026.findings-eacl.172/"
+      ],
+      "doi": "10.18653/v1/2026.findings-eacl.172",
+      "retrieved_at": "2026-10-14T15:21:14Z",
+      "verification_status": "bibliography and abstract checked against accessible official record",
+      "evidence_granularity": "abstract reviewed",
+      "partial_full_text_reviewed": false,
+      "reviewed_locations": [
+        "official record abstract"
+      ],
+      "source_statement_and_researcher_question": "Abstract: intra/inter-speaker segregation, static/dynamic personality, contrastive alignment; three ERC benchmarks. Weighted-F1 gains are asserted against non-LLM/recent LLM methods; exact comparison tables not reviewed and numbers deliberately not transplanted into cross-paper ranking. Author limitations not verified. This directly challenges a broad claim of new context segregation.",
+      "statement_authorship": "Codex review agent; LLM-assisted summary/interpretation, not human validated",
+      "provider_model": "model identifier not exposed by execution environment",
+      "user_verdict": null,
+      "reading_status": "abstract reviewed",
+      "user_rationale": null,
+      "library_paper_id": null,
+      "scopus_status": "unverified",
+      "wos_status": "unverified"
+    },
+    {
+      "review_id": "R10",
+      "short_label": "CoE",
+      "bibliographic_identity": "Zhiyu Shen, Yunhe Pang, Yanghui Rao, Jianxing Yu. *CoE: A Clue of Emotion Framework for Emotion Recognition in Conversations*. ACL 2025, pp. 23548–23563 (conference proceedings). [Record](https://aclanthology.org/2025.acl-long.1148/); DOI 10.18653/v1/2025.acl-long.1148.",
+      "source_urls": [
+        "https://aclanthology.org/2025.acl-long.1148/"
+      ],
+      "doi": "10.18653/v1/2025.acl-long.1148",
+      "retrieved_at": "2026-10-14T15:21:14Z",
+      "verification_status": "bibliography and abstract checked against accessible official record",
+      "evidence_granularity": "abstract reviewed",
+      "partial_full_text_reviewed": false,
+      "reviewed_locations": [
+        "official record abstract"
+      ],
+      "source_statement_and_researcher_question": "Abstract: progressively integrated clues plus role-playing, speaker identification and emotion reasoning; EmoryNLP, MELD, IEMOCAP. Metric/comparator for the abstract's improvement is not resolved here; no numerical comparison is made. Author limitations not verified. Hypothesis: auxiliary training and context selection need factorial controls.",
+      "statement_authorship": "Codex review agent; LLM-assisted summary/interpretation, not human validated",
+      "provider_model": "model identifier not exposed by execution environment",
+      "user_verdict": null,
+      "reading_status": "abstract reviewed",
+      "user_rationale": null,
+      "library_paper_id": null,
+      "scopus_status": "unverified",
+      "wos_status": "unverified"
+    },
+    {
+      "review_id": "R11",
+      "short_label": "Beyond Linguistic Cues",
+      "bibliographic_identity": "Bo Xu, Longjiao Li, Wei Luo, Mehdi Naseriparsa, Zhehuan Zhao, Hongfei Lin, Feng Xia. *Beyond Linguistic Cues: Fine-grained Conversational Emotion Recognition via Belief-Desire Modelling*. LREC-COLING 2024, pp. 2318–2328 (conference proceedings). [Record](https://aclanthology.org/2024.lrec-main.207/); DOI not supplied by reviewed record.",
+      "source_urls": [
+        "https://aclanthology.org/2024.lrec-main.207/"
+      ],
+      "doi": null,
+      "retrieved_at": "2026-10-14T15:21:14Z",
+      "verification_status": "bibliography and abstract checked against accessible official record",
+      "evidence_granularity": "abstract reviewed",
+      "partial_full_text_reviewed": false,
+      "reviewed_locations": [
+        "official record abstract"
+      ],
+      "source_statement_and_researcher_question": "Abstract: emotion-eliciting events and belief/desire graphs model context, speaker state and their interaction; four datasets. Exact metrics and strongest baselines not verified. Author limitations not verified. Hypothesis: pragmatic knowledge could explain gains without adaptive context selection.",
+      "statement_authorship": "Codex review agent; LLM-assisted summary/interpretation, not human validated",
+      "provider_model": "model identifier not exposed by execution environment",
+      "user_verdict": null,
+      "reading_status": "abstract reviewed",
+      "user_rationale": null,
+      "library_paper_id": null,
+      "scopus_status": "unverified",
+      "wos_status": "unverified"
+    },
+    {
+      "review_id": "R12",
+      "short_label": "When Do “More Contexts” Help with Sarcasm Recognition?",
+      "bibliographic_identity": "Ojas Nimase, Sanghyun Hong. *When Do “More Contexts” Help with Sarcasm Recognition?* LREC-COLING 2024, pp. 17537–17543 (conference proceedings). [Record](https://aclanthology.org/2024.lrec-main.1525/); DOI not supplied by reviewed record.",
+      "source_urls": [
+        "https://aclanthology.org/2024.lrec-main.1525/"
+      ],
+      "doi": null,
+      "retrieved_at": "2026-10-14T15:21:14Z",
+      "verification_status": "bibliography and abstract checked against accessible official record",
+      "evidence_granularity": "abstract reviewed",
+      "partial_full_text_reviewed": false,
+      "reviewed_locations": [
+        "official record abstract"
+      ],
+      "source_statement_and_researcher_question": "Abstract: framework combines contextual cues; four approaches on three benchmarks. Authors identify a risk that improved results require societal biases. “More contexts” here concerns richer cue types, so it should not silently become “more ancestor turns.” Exact datasets/metrics not reviewed. Hypothesis: report contextual-source bias and budget, not only aggregate accuracy.",
+      "statement_authorship": "Codex review agent; LLM-assisted summary/interpretation, not human validated",
+      "provider_model": "model identifier not exposed by execution environment",
+      "user_verdict": null,
+      "reading_status": "abstract reviewed",
+      "user_rationale": null,
+      "library_paper_id": null,
+      "scopus_status": "unverified",
+      "wos_status": "unverified"
+    },
+    {
+      "review_id": "R13",
+      "short_label": "Context vs. Human Disagreement in Sarcasm Detection",
+      "bibliographic_identity": "Hyewon Jang, Moritz Jakob, Diego Frassinelli. *Context vs. Human Disagreement in Sarcasm Detection*. FigLang 2024 workshop, pp. 1–7 (workshop proceedings). [Record](https://aclanthology.org/2024.figlang-1.1/); DOI 10.18653/v1/2024.figlang-1.1. [Reviewed PDF version 2](https://aclanthology.org/2024.figlang-1.1v2.pdf).",
+      "source_urls": [
+        "https://aclanthology.org/2024.figlang-1.1/",
+        "https://aclanthology.org/2024.figlang-1.1v2.pdf"
+      ],
+      "doi": "10.18653/v1/2024.figlang-1.1",
+      "retrieved_at": "2026-10-14T15:21:14Z",
+      "verification_status": "bibliography and abstract checked against accessible official record",
+      "evidence_granularity": "abstract reviewed",
+      "partial_full_text_reviewed": true,
+      "reviewed_locations": [
+        "PDF v2 section 4.2/Table 3",
+        "section 4.3/Tables 4-5",
+        "Limitations"
+      ],
+      "source_statement_and_researcher_question": "§4.2/Table 3 and §4.3/Tables 4–5 discuss context amounts and agreement strata, including BERT; numeric cells not transcribed. Context presence generally helps; more context is not consistently better. **Author Limitations:** information amount not systematically quantified, small filtered sample, male-only participants. These are explicitly acknowledged, not inferred. Candidate gap: test a gradient of context budgets, disagreement-sensitive utility and broader sampling. Partial full text reviewed; not a complete review.",
+      "statement_authorship": "Codex review agent; LLM-assisted summary/interpretation, not human validated",
+      "provider_model": "model identifier not exposed by execution environment",
+      "user_verdict": null,
+      "reading_status": "abstract reviewed",
+      "user_rationale": null,
+      "library_paper_id": null,
+      "scopus_status": "unverified",
+      "wos_status": "unverified"
+    },
+    {
+      "review_id": "R14",
+      "short_label": "MM-SARDAC",
+      "bibliographic_identity": "Mohit Tomar, Tulika Saha, Abhisek Tiwari, Sriparna Saha. *Action and Reaction Go Hand in Hand! a Multi-modal Dialogue Act Aided Sarcasm Identification*. LREC-COLING 2024, pp. 298–309 (conference proceedings). [Record](https://aclanthology.org/2024.lrec-main.28/); DOI not supplied by reviewed record.",
+      "source_urls": [
+        "https://aclanthology.org/2024.lrec-main.28/"
+      ],
+      "doi": null,
+      "retrieved_at": "2026-10-14T15:21:14Z",
+      "verification_status": "bibliography and abstract checked against accessible official record",
+      "evidence_granularity": "abstract reviewed",
+      "partial_full_text_reviewed": false,
+      "reviewed_locations": [
+        "official record abstract"
+      ],
+      "source_statement_and_researcher_question": "Abstract: MUStARD extended with dialogue acts; joint dialogue-act/sarcasm transformer and ordered modality infusion. Authors report better performance than sarcasm-only identification. Exact metric and author limitations not verified. Hypothesis: a text-only selector cannot claim comparable gains without modality/label controls.",
+      "statement_authorship": "Codex review agent; LLM-assisted summary/interpretation, not human validated",
+      "provider_model": "model identifier not exposed by execution environment",
+      "user_verdict": null,
+      "reading_status": "abstract reviewed",
+      "user_rationale": null,
+      "library_paper_id": null,
+      "scopus_status": "unverified",
+      "wos_status": "unverified"
+    },
+    {
+      "review_id": "R15",
+      "short_label": "RedSD",
+      "bibliographic_identity": "Qingqing Hong, Dongyu Zhang, Jiayi Lin, Dapeng Yin, Shuyue Zhu, Junli Wang. *Rhetorical Device-Aware Sarcasm Detection with Counterfactual Data Augmentation*. Findings ACL 2025, pp. 11672–11685 (proceedings). [Record](https://aclanthology.org/2025.findings-acl.607/); DOI 10.18653/v1/2025.findings-acl.607.",
+      "source_urls": [
+        "https://aclanthology.org/2025.findings-acl.607/"
+      ],
+      "doi": "10.18653/v1/2025.findings-acl.607",
+      "retrieved_at": "2026-10-14T15:21:14Z",
+      "verification_status": "bibliography and abstract checked against accessible official record",
+      "evidence_granularity": "abstract reviewed",
+      "partial_full_text_reviewed": false,
+      "reviewed_locations": [
+        "official record abstract"
+      ],
+      "source_statement_and_researcher_question": "Abstract: sitcom dialogues, nine rhetorical devices, LLM-assisted counterfactual generation with human revision; fine-tuned models compared with GPT-3.5/LLaMA 3.1 zero-shot models. Exact metric and author limitations not verified. Candidate relevance: rhetorical strata and label semantics, not evidence for a new turn selector.",
+      "statement_authorship": "Codex review agent; LLM-assisted summary/interpretation, not human validated",
+      "provider_model": "model identifier not exposed by execution environment",
+      "user_verdict": null,
+      "reading_status": "abstract reviewed",
+      "user_rationale": null,
+      "library_paper_id": null,
+      "scopus_status": "unverified",
+      "wos_status": "unverified"
+    },
+    {
+      "review_id": "R16",
+      "short_label": "Lost in the Middle",
+      "bibliographic_identity": "Nelson F. Liu, Kevin Lin, John Hewitt, Ashwin Paranjape, Michele Bevilacqua, Fabio Petroni, Percy Liang. *Lost in the Middle: How Language Models Use Long Contexts*. **TACL** 12, 2024, pp. 157–173 (journal). [Record](https://aclanthology.org/2024.tacl-1.9/); DOI 10.1162/tacl_a_00638.",
+      "source_urls": [
+        "https://aclanthology.org/2024.tacl-1.9/"
+      ],
+      "doi": "10.1162/tacl_a_00638",
+      "retrieved_at": "2026-10-14T15:21:14Z",
+      "verification_status": "bibliography and abstract checked against accessible official record",
+      "evidence_granularity": "abstract reviewed",
+      "partial_full_text_reviewed": false,
+      "reviewed_locations": [
+        "official record abstract"
+      ],
+      "source_statement_and_researcher_question": "Abstract: multi-document QA and key-value retrieval show sensitivity to relevant-information position. Exact models/metrics and author limitations not reviewed. This supports a position-perturbation protocol, not an ERC finding. Hypothesis: retain the same distractors while moving the relevant ancestor to distinguish retrieval benefit from position bias.",
+      "statement_authorship": "Codex review agent; LLM-assisted summary/interpretation, not human validated",
+      "provider_model": "model identifier not exposed by execution environment",
+      "user_verdict": null,
+      "reading_status": "abstract reviewed",
+      "user_rationale": null,
+      "library_paper_id": null,
+      "scopus_status": "unverified",
+      "wos_status": "unverified"
+    },
+    {
+      "review_id": "R17",
+      "short_label": "LongLLMLingua",
+      "bibliographic_identity": "Huiqiang Jiang, Qianhui Wu, Xufang Luo, Dongsheng Li, Chin-Yew Lin, Yuqing Yang, Lili Qiu. *LongLLMLingua: Accelerating and Enhancing LLMs in Long Context Scenarios via Prompt Compression*. ACL 2024, pp. 1658–1677 (conference proceedings). [Record](https://aclanthology.org/2024.acl-long.91/); DOI 10.18653/v1/2024.acl-long.91.",
+      "source_urls": [
+        "https://aclanthology.org/2024.acl-long.91/"
+      ],
+      "doi": "10.18653/v1/2024.acl-long.91",
+      "retrieved_at": "2026-10-14T15:21:14Z",
+      "verification_status": "bibliography and abstract checked against accessible official record",
+      "evidence_granularity": "abstract reviewed",
+      "partial_full_text_reviewed": false,
+      "reviewed_locations": [
+        "official record abstract"
+      ],
+      "source_statement_and_researcher_question": "Abstract: prompt compression tackles cost, performance and position bias; NaturalQuestions and LooGLE named. Claims of reduced tokens/cost/latency are setting-specific; not transferable ERC outcomes. Exact matched-budget comparators and author limitations not verified. Hypothesis: compare whole-utterance selection with token compression under equal total cost.",
+      "statement_authorship": "Codex review agent; LLM-assisted summary/interpretation, not human validated",
+      "provider_model": "model identifier not exposed by execution environment",
+      "user_verdict": null,
+      "reading_status": "abstract reviewed",
+      "user_rationale": null,
+      "library_paper_id": null,
+      "scopus_status": "unverified",
+      "wos_status": "unverified"
+    },
+    {
+      "review_id": "R18",
+      "short_label": "RECOMP",
+      "bibliographic_identity": "Fangyuan Xu, Weijia Shi, Eunsol Choi. *RECOMP: Improving Retrieval-Augmented LMs with Context Compression and Selective Augmentation*. ICLR 2024 (conference proceedings). [Official abstract](https://proceedings.iclr.cc/paper_files/paper/2024/hash/bda88ed2892f5e61c9a9bf215c566913-Abstract-Conference.html); DOI unknown. [Official PDF](https://proceedings.iclr.cc/paper_files/paper/2024/file/bda88ed2892f5e61c9a9bf215c566913-Paper-Conference.pdf).",
+      "source_urls": [
+        "https://proceedings.iclr.cc/paper_files/paper/2024/hash/bda88ed2892f5e61c9a9bf215c566913-Abstract-Conference.html",
+        "https://proceedings.iclr.cc/paper_files/paper/2024/file/bda88ed2892f5e61c9a9bf215c566913-Paper-Conference.pdf"
+      ],
+      "doi": null,
+      "retrieved_at": "2026-10-14T15:21:14Z",
+      "verification_status": "bibliography and abstract checked against accessible official record",
+      "evidence_granularity": "abstract reviewed",
+      "partial_full_text_reviewed": true,
+      "reviewed_locations": [
+        "official PDF indexed excerpt section 6"
+      ],
+      "source_statement_and_researcher_question": "Abstract: task-trained extractive/abstractive compressors trade performance against length and may return empty augmentation. §6 indexed PDF excerpts state QA transfer to a different LM can be weaker and leave a gap to oracle compression. Numerical results and full comparator tables not reviewed. This is direct counterevidence to a general claim of first task-aware minimal context. Candidate difference must be tested in same-thread ERC/sarcasm, with structure, causality and budget controls.",
+      "statement_authorship": "Codex review agent; LLM-assisted summary/interpretation, not human validated",
+      "provider_model": "model identifier not exposed by execution environment",
+      "user_verdict": null,
+      "reading_status": "abstract reviewed",
+      "user_rationale": null,
+      "library_paper_id": null,
+      "scopus_status": "unverified",
+      "wos_status": "unverified"
+    },
+    {
+      "review_id": "R19",
+      "short_label": "CoLoR",
+      "bibliographic_identity": "Minju Seo, Jinheon Baek, Seongyun Lee, Sung Ju Hwang. *Efficient Long Context Language Model Retrieval with Compression*. ACL 2025, pp. 15251–15268 (conference proceedings). [Record](https://aclanthology.org/2025.acl-long.740/); DOI 10.18653/v1/2025.acl-long.740.",
+      "source_urls": [
+        "https://aclanthology.org/2025.acl-long.740/"
+      ],
+      "doi": "10.18653/v1/2025.acl-long.740",
+      "retrieved_at": "2026-10-14T15:21:14Z",
+      "verification_status": "bibliography and abstract checked against accessible official record",
+      "evidence_granularity": "abstract reviewed",
+      "partial_full_text_reviewed": false,
+      "reviewed_locations": [
+        "official record abstract"
+      ],
+      "source_statement_and_researcher_question": "Abstract: synthetic chosen/rejected compressions train preference optimization with length regularization; nine IR datasets. Authors claim retrieval and context-size improvements; exact metric/comparators not reviewed. Author limitations not verified. Hypothesis: applying a selector to ERC alone may be a transfer of an existing optimization idea rather than a new method.",
+      "statement_authorship": "Codex review agent; LLM-assisted summary/interpretation, not human validated",
+      "provider_model": "model identifier not exposed by execution environment",
+      "user_verdict": null,
+      "reading_status": "abstract reviewed",
+      "user_rationale": null,
+      "library_paper_id": null,
+      "scopus_status": "unverified",
+      "wos_status": "unverified"
+    },
+    {
+      "review_id": "R20",
+      "short_label": "Never Lost in the Middle",
+      "bibliographic_identity": "Junqing He, Kunhao Pan, Xiaoqun Dong, Zhuoyang Song, Yibo Liu, Qianguo Sun, Yuxin Liang, Hao Wang, Enming Zhang, Jiaxing Zhang. *Never Lost in the Middle: Mastering Long-Context Question Answering with Position-Agnostic Decompositional Training*. ACL 2024, pp. 13628–13642 (conference proceedings). [Record](https://aclanthology.org/2024.acl-long.736/); DOI 10.18653/v1/2024.acl-long.736.",
+      "source_urls": [
+        "https://aclanthology.org/2024.acl-long.736/"
+      ],
+      "doi": "10.18653/v1/2024.acl-long.736",
+      "retrieved_at": "2026-10-14T15:21:14Z",
+      "verification_status": "bibliography and abstract checked against accessible official record",
+      "evidence_granularity": "abstract reviewed",
+      "partial_full_text_reviewed": false,
+      "reviewed_locations": [
+        "official record abstract"
+      ],
+      "source_statement_and_researcher_question": "Abstract: position-agnostic multistep QA training improves information search in long context. Exact backbone, strongest baseline and numerical tables not reviewed. Author limitations not verified. Hypothesis: selection gains may vanish when the classifier is trained to handle distractors; vary backbone training as an explicit control.",
+      "statement_authorship": "Codex review agent; LLM-assisted summary/interpretation, not human validated",
+      "provider_model": "model identifier not exposed by execution environment",
+      "user_verdict": null,
+      "reading_status": "abstract reviewed",
+      "user_rationale": null,
+      "library_paper_id": null,
+      "scopus_status": "unverified",
+      "wos_status": "unverified"
+    }
+  ]
+}
