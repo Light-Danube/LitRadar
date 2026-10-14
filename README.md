@@ -8,7 +8,7 @@ The project was formerly **LitRadar**. Existing module names, database paths, `L
 
 **Released: v0.8.0** — local browser workspace, citation map, heuristic literature clusters, editable annotations and scheduled-job controls.
 
-**Unreleased:** graph and annotation refinements, optional local semantic exploration, and a CLI-first venue discovery/evidence worksheet. The release version stays 0.8.0 while validation gates remain open. See [CHANGELOG](CHANGELOG.md), [patch progress](docs/V08-PATCH-PROGRESS.md) and [venue delivery checks](docs/research/delivery-validation.md).
+**Unreleased:** graph and annotation refinements, optional local semantic exploration, and venue discovery/evidence worksheets in the CLI and Research browser section. The release version stays 0.8.0 while validation gates remain open. See [CHANGELOG](CHANGELOG.md), [patch progress](docs/V08-PATCH-PROGRESS.md) and [venue delivery checks](docs/research/delivery-validation.md).
 
 ## Quick start
 
@@ -80,7 +80,7 @@ python cli.py venue lookup "Computational Linguistics" --limit 10
 python cli.py venue search SOURCE_ID "emotion context" --year-from 2023 --year-to 2026 --limit 20
 ```
 
-Replace `SOURCE_ID` with the returned `S` + digits identifier. Searches use structured source/year filters and bounded pages. Returned paper IDs appear in the existing Literature inbox; browser venue controls remain planned.
+Replace `SOURCE_ID` with the returned `S` + digits identifier. Searches use structured source/year filters and bounded pages. Returned paper IDs appear in the Literature inbox. The **Research** section provides venue search, editable evidence and quick-topic templates; [browser workflow and saved results](docs/research/web-workspace.md).
 
 ```sh
 python cli.py evidence show PAPER_ID
@@ -93,7 +93,7 @@ Replace `PAPER_ID` with a canonical library ID. Worksheets are human-editable, p
 
 The default library is `data/litradar.sqlite3`; `.env`, PDFs and caches stay outside Git. Migrations are additive. Back up your closed library before upgrading; [local data and updates](docs/USER-GUIDE.md#database-and-local-data).
 
-Discovery indexes, preprints, venue metadata and citations do not certify peer review, Scopus/WoS membership or academic novelty. Missing evidence stays unverified. The current cloud session could not reach live OpenAlex/Crossref APIs because its proxy returned **403 Forbidden**; synthetic tests establish behavior, not live coverage. Windows, rendered-browser and real-model results are tracked separately in the validation documents.
+Discovery indexes, preprints, venue metadata and citations do not certify peer review, Scopus/WoS membership or academic novelty. Missing evidence stays unverified. The user confirmed live CLI retrieval locally; cloud OpenAlex/Crossref probes were blocked by proxy **403**. Synthetic tests establish behavior, not live coverage. Windows, rendered-browser and real-model results are tracked separately in the validation documents.
 
 ## Documentation
 

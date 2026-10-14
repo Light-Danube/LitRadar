@@ -12,7 +12,7 @@ The released version is **0.8.0**. Changes on the development branch remain **un
 - [Textual TUI](#textual-tui) and [citation discovery](#citation-intelligence)
 - [Browser startup](#browser-startup-and-runtime) and [annotation recovery](V08-ANNOTATION-WORKFLOWS.md)
 - [Scheduled digest and Telegram](#scheduled-research-digest)
-- [Venue-scoped search and evidence worksheets](research/venue-discovery.md)
+- [Research browser workspace and saved bundles](research/web-workspace.md) · [venue CLI and evidence worksheets](research/venue-discovery.md)
 - [Local data](#database-and-local-data), [updates](#upgrading-and-releasing-with-github-desktop) and [development](#development-and-ci)
 - [Docker deployment](../DOCKER.md) and [isolated development](ISOLATED-DEV.md)
 
@@ -41,7 +41,7 @@ In the citation map, use the mouse wheel to zoom at the cursor, drag nodes to ar
 
 Research notes continue to use `papers.notes`, preserving CLI/TUI commands, search, Markdown exports, and offline bundles. Each changed note records a revision atomically; saving unchanged text adds none. Existing nonempty notes backfill once as legacy material with unknown authorship/original time; their timestamp records migration. Expand **Research note history** to browse revisions, including cleared notes, with pagination. Restoring a historical note appends a new revision and requires the latest-note guard. Supplemental entries stay outside legacy personal-note search/exports.
 
-Select **English / Українська** in the Web UI header; the preference is stored in the browser, and notes/form drafts survive switching languages. Only interface text changes: paper content, statuses stored in SQLite, CLI commands and configuration keys keep their original identifiers. Textual TUI translation remains planned. Keyboard shortcuts: `Alt+1`–`Alt+5` change sections, `/` focuses inbox search outside inputs, and `Ctrl+Enter` saves research notes. A skip link, visible focus rings, readable muted text, localized loading/empty states and retry actions improve keyboard access; a full accessibility audit remains future work.
+Select **English / Українська** in the Web UI header; the preference is stored in the browser, and notes/form drafts survive switching languages. Only interface text changes: paper content, statuses stored in SQLite, CLI commands and configuration keys keep their original identifiers. Textual TUI translation remains planned. Keyboard shortcuts: `Alt+1`–`Alt+5` retain the original sections; `Alt+6` opens Research, `/` focuses inbox search outside inputs, and `Ctrl+Enter` saves research notes. A skip link, visible focus rings, readable muted text, localized loading/empty states and retry actions improve keyboard access; a full accessibility audit remains future work.
 
 The browser workspace is served locally by FastAPI/Uvicorn and builds on the existing research-digest workflow. It keeps the existing Textual TUI and SQLite database. The SQLite schema remains additive; no database reset is required.
 

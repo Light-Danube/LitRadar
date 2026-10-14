@@ -25,7 +25,7 @@ jobs:
       - name: Install test dependencies (no embedding model download)
         run: python -m pip install -r requirements-dev.txt -r requirements-web.txt -r requirements-annotations.txt -r requirements-browser-tests.txt
       - name: Inbox, clusters and mixed-provider graph API workflows
-        run: python -m pytest -q tests/test_workspace_workflow_smoke.py tests/test_citation_mixed_providers.py tests/test_workspace_web.py tests/test_workspace_v08.py
+        run: python -m pytest -q tests/test_workspace_workflow_smoke.py tests/test_citation_mixed_providers.py tests/test_workspace_web.py tests/test_workspace_v08.py tests/test_research_api.py tests/test_research_files.py tests/test_venue_presets.py tests/test_cli_research_bundles.py
       - name: Install pinned DOM test dependencies
         run: npm ci --prefix tests/web --ignore-scripts
       - name: Browser-script DOM workflows and graph regression tests

@@ -1,5 +1,14 @@
 # Codex development handoff — LitBeacon Research Workspace
 
+## Unreleased — browser research workspace
+
+- Add a sixth Research section for explicit venue-scoped search and editing the existing evidence worksheets, with EN/UK, preserved drafts and library filters for to-read/new/all. Keep the prior five sections and Alt+1–5; Alt+6 opens Research.
+- Add editable topic/venue shortcut cards with local icons, conservative unresolved defaults and revision-guarded changes. Card selection fills the form without a provider request; concrete identity resolution remains explicit.
+- Save search pages, worksheet snapshots and Markdown/CSV exports to unique local `data/research/<identifier>/` bundles; generated IDs or validated user names never overwrite existing results. Existing SQLite library and personal notes remain authoritative/intact.
+- User reports live CLI API retrieval succeeds locally (2026-10-14); this supersedes an assumption of universal inaccessibility, while historical cloud 403 probes remain separate evidence. No automatic inference or indexing/novelty certification.
+- Local checks: **405 Python passed / 0 failed / 0 skipped; 6 Node test files passed / 0 failed / 0 skipped**. Browser rendering blocked before launch by SUID sandbox configuration; Windows/remote CI results not claimed.
+- [Browser workflow, storage and verification](docs/research/web-workspace.md) · [quick-topic design](docs/research/quick-venues.md). Release version remains 0.8.0.
+
 ## Unreleased — compact documentation and CLI guidance
 
 - Keep README as a compact overview/quick start, with detailed instructions in `docs/USER-GUIDE.md`; AGENTS now records this maintenance rule.

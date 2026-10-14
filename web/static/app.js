@@ -14,10 +14,11 @@ function toast(message,error=false){const el=$('#toast');el.textContent=message;
 async function api(url,options={}){
   const response=await fetch(url,{...options,headers:{'Content-Type':'application/json',...options.headers}});
   const data=await response.json().catch(()=>({}));
-  if(!response.ok){const detail=Array.isArray(data.detail)?data.detail.map(e=>e.msg).join('; '):data.detail;throw new Error(detail||`${response.status}`);}
+  if(!response.ok){const detail=Array.isArray(data.detail)?data.detail.map(e=>e.msg).join('; '):data.detail;const error=new Error(detail?.message||detail||`${response.status}`);error.status=response.status;error.detail=detail;throw error;}
   return data;
 }
 function captureDraft(){
+  globalThis.ResearchWorkspace?.captureDraft($('#page-content'));
   if(!state.selected||!$('#detail-notes'))return;
   const draft=state.drafts[state.selected.id]||{};
   draft.paper={notes:$('#detail-notes').value,status:$('#detail-status').value,tags:$('#detail-tags').value};
@@ -41,7 +42,7 @@ document.querySelectorAll('[data-page]').forEach(el=>el.addEventListener('click'
 $('#refresh').addEventListener('click',()=>{captureDraft();renderPage();});
 $('#language').addEventListener('change',event=>{captureDraft();state.language=event.target.value;try{localStorage.setItem('litbeacon-language',state.language);}catch(_){}header();renderPage();});
 document.addEventListener('keydown',event=>{
-  if(event.altKey&&/^[1-5]$/.test(event.key)){event.preventDefault();switchPage(['overview','inbox','graph','clusters','jobs'][Number(event.key)-1]);}
+  if(event.altKey&&/^[1-6]$/.test(event.key)){event.preventDefault();switchPage(['overview','inbox','graph','clusters','jobs','research'][Number(event.key)-1]);}
   if(event.key==='/'&&!event.ctrlKey&&!event.altKey&&!/INPUT|TEXTAREA|SELECT/.test(document.activeElement?.tagName)){event.preventDefault();if(state.page!=='inbox'){state.focusSearch=true;switchPage('inbox');}else $('#paper-search')?.focus();}
   if(event.ctrlKey&&event.key==='Enter'&&$('#detail-notes')===document.activeElement){event.preventDefault();$('#save-annotation').click();}
 });
@@ -49,10 +50,11 @@ async function renderPage(){
   const request=++state.request,page=state.page,container=$('#page-content');$('#page-title').textContent=t(page);
   container.setAttribute('aria-busy','true');container.innerHTML=`<p class="loading">${t('loading')}</p>`;
   const view=document.createElement('div');
-  try{await ({overview:renderOverview,inbox:renderInbox,graph:renderGraph,clusters:renderClusters,jobs:renderJobs}[page])(view);if(request===state.request){container.replaceChildren(view);if(page==='inbox'&&(!state.selected||state.focusSearch)){$('#paper-search',view).focus();state.focusSearch=false;}}}
+  try{await ({overview:renderOverview,inbox:renderInbox,graph:renderGraph,clusters:renderClusters,jobs:renderJobs,research:renderResearch}[page])(view);if(request===state.request){container.replaceChildren(view);if(page==='inbox'&&(!state.selected||state.focusSearch)){$('#paper-search',view).focus();state.focusSearch=false;}}}
   catch(error){if(request===state.request){container.innerHTML=`<div class="error" role="alert">${t('error')}: ${esc(error.message)}<p>${t('serverError')}</p>${button('retry','retry')}${(page==='clusters'&&state.clusterMode==='semantic')||(page==='graph'&&state.graphFilters.include_semantic)?button('disable-semantic','semanticReset'):''}</div>`;$('#retry').onclick=()=>renderPage();if($('#disable-semantic'))$('#disable-semantic').onclick=()=>{if(page==='clusters')state.clusterMode='heuristic';else {state.graphFilters.include_semantic=false;if(state.graphFilters.provider.startsWith('embedding:'))state.graphFilters.provider='';}renderPage();};}}
   finally{if(request===state.request)container.setAttribute('aria-busy','false');}
 }
+async function renderResearch(root){if(!globalThis.ResearchWorkspace)throw new Error(t('serverError'));await ResearchWorkspace.render(root,{api,t,esc,toast,state,openPaper});}
 function paperRow(p){return `<article class="paper-row"><div><button class="paper-title" data-paper="${p.id}">${esc(titleOf(p))}</button><div class="paper-meta"><span>${esc((p.published_at||'').slice(0,4)||t('yearUnknown'))}</span><span>${esc(p.source||t('sourceUnknown'))}</span><span>${t('citationCount',{count:p.citation_count||0})}</span><span>${t('status-'+p.status)}</span></div></div><span class="score">${Math.round(Number(p.relevance_score)*100)}%</span></article>`;}
 function bindPapers(root){root.querySelectorAll('[data-paper]').forEach(el=>el.onclick=()=>openPaper(Number(el.dataset.paper)));}
 async function openPaper(id){const serial=state.detailRequest=(state.detailRequest||0)+1;try{captureDraft();const paper=await api(`/api/papers/${id}`);if(serial!==state.detailRequest)return;state.selected=paper;state.page='inbox';header();renderPage();}catch(e){toast(`${t('error')}: ${e.message}`,true);}}

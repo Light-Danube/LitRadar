@@ -13,6 +13,8 @@ from storage.sqlite import PaperStore
 def cmd_venue(args) -> int:
     from venue_discovery import error_status, lookup, search_and_store
     store = PaperStore(args.db)
+    operation = "discovery"
+    saved_in_database = False
     try:
         # Config is loaded only for an explicit online command; tests inject it.
         config = RadarConfig.load()
@@ -23,17 +25,32 @@ def cmd_venue(args) -> int:
                        "venues": [v.to_dict() for v in found],
                        "next_step": "Select a concrete source_id and run venue search. Provider metadata does not certify peer review or indexing."}
         else:
-            payload = search_and_store(store, args.query, args.source_id,
-                                       year_from=args.year_from, year_to=args.year_to,
-                                       limit=args.limit, page=args.page, force=args.refresh, config=config)
+            from web.research_files import ResearchFiles
+            operation = "storage"
+            files = ResearchFiles(Path(args.db).parent / "research")
+            with files.reserve(args.identifier) as reservation:
+                operation = "discovery"
+                payload = search_and_store(store, args.query, args.source_id,
+                                           year_from=args.year_from, year_to=args.year_to,
+                                           limit=args.limit, page=args.page, force=args.refresh, config=config)
+                saved_in_database = True
+                operation = "storage"
+                payload["artifact"] = reservation.save("search", {"search.json": payload},
+                                                       metadata={"paper_ids": payload["paper_ids"], "query": args.query})
             payload["browser_handoff"] = "Open the existing Literature inbox to inspect these paper_ids. Browser venue lookup is planned."
             payload["coverage"] = "One bounded OpenAlex primary-source page; not a complete venue bibliography."
         print(json.dumps(payload, ensure_ascii=False, indent=2))
         return 0
     except Exception as exc:
         # Do not echo exception strings containing authenticated provider URLs.
-        print(json.dumps({"status": error_status(exc),
-                          "message": "Venue discovery failed; check input, network access and provider availability."}), file=sys.stderr)
+        if operation == "storage":
+            status = "conflict" if isinstance(exc, FileExistsError) else "invalid_request" if isinstance(exc, ValueError) else "save_failed"
+            message = "Research bundle could not be saved; check its unique identifier and local folder permissions."
+        else:
+            status = error_status(exc)
+            message = "Venue discovery failed; check input, network access and provider availability."
+        print(json.dumps({"status": status, "saved_in_database": saved_in_database,
+                          "message": message}), file=sys.stderr)
         return 1
     finally:
         store.close()
@@ -59,11 +76,20 @@ def cmd_evidence(args) -> int:
         else:
             if not 1 <= len(args.paper_ids) <= 100:
                 raise ValueError("Select 1–100 paper IDs")
-            text = export_csv(store, args.paper_ids) if args.format == "csv" else export_markdown(
-                store, args.paper_ids, research_question=args.research_question,
-                hypothesis=args.hypothesis, disconfirming_evidence=args.disconfirming_evidence)
-            Path(args.output).write_text(text, encoding="utf-8")
-            print(f"Exported evidence worksheet: {args.output}")
+            markdown = export_markdown(store, args.paper_ids, research_question=args.research_question,
+                                       hypothesis=args.hypothesis, disconfirming_evidence=args.disconfirming_evidence)
+            csv = export_csv(store, args.paper_ids)
+            if args.output:
+                if args.identifier:
+                    raise ValueError("Use --identifier with the default data bundle, or --output for an explicit file")
+                Path(args.output).write_text(csv if args.format == "csv" else markdown, encoding="utf-8")
+                print(f"Exported evidence worksheet: {args.output}")
+            else:
+                from web.research_files import ResearchFiles
+                artifact = ResearchFiles(Path(args.db).parent / "research").save(
+                    "export", {"matrix.md": markdown, "matrix.csv": csv}, identifier=args.identifier,
+                    metadata={"paper_ids": args.paper_ids, "research_question": args.research_question})
+                print(json.dumps(artifact, ensure_ascii=False, indent=2))
         return 0
     except (ValueError, KeyError, OSError) as exc:
         print(f"Evidence error: {exc}", file=sys.stderr)
@@ -97,6 +123,7 @@ def register_commands(sub):
     search.add_argument("--limit", type=int, default=20)
     search.add_argument("--page", type=int, default=1)
     search.add_argument("--refresh", action="store_true", help="bypass the local venue cache")
+    search.add_argument("--identifier", help="optional unique result-bundle name (letters/digits/_/-); otherwise generated")
     search.set_defaults(func=cmd_venue)
     matrix = sub.add_parser(
         "evidence", help="local human-editable literature worksheet; no LLM calls",
@@ -123,7 +150,8 @@ def register_commands(sub):
     export = edits.add_parser("export", help="export selected canonical paper evidence")
     export.add_argument("paper_ids", nargs="+", type=int)
     export.add_argument("--format", choices=["markdown", "csv"], default="markdown")
-    export.add_argument("--output", required=True)
+    export.add_argument("--output", help="explicit output file; otherwise save Markdown/CSV in a generated data bundle")
+    export.add_argument("--identifier", help="optional unique name for the default saved result bundle")
     export.add_argument("--research-question", default="")
     export.add_argument("--hypothesis", default="")
     export.add_argument("--disconfirming-evidence", default="")
