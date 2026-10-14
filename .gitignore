@@ -33,3 +33,4 @@ frontend/dist/
 # Optional local embedding weights are not source or isolated-test inputs.
 models/
 *.safetensors
+*.sqlite
