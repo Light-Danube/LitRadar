@@ -46,6 +46,8 @@ Additive preset tables, existing evidence tables and immutable result directorie
 
 ## Verification and limits
 
+Current independent [venue verification](venue-verification.md) records transport-level CLI/API preservation checks and an explicit public lookup attempt on 2026-10-15. The cloud proxy refused the connection (403), so live-provider/browser verification remains pending. Historical results below describe their original increment; current Windows subset evidence is linked from the release checklist.
+
 The user confirmed real CLI OpenAlex retrieval works on their installation on 2026-10-14. This is useful user-reported validation; no independent live browser search is claimed here. Historical cloud proxy 403 results remain recorded as environment-specific failures. This browser increment is checked with synthetic HTTP/database/filesystem fixtures and EN/UK DOM workflows; current counts and rendering limitations are recorded in the delivery handoff.
 
 The review artifact is still a bounded literature review, largely abstract-based. A filled matrix helps compare evidence; it does not automatically establish academic novelty, peer review or Scopus/WoS membership. Full-text competitor review and controlled experiments remain the next research steps.
