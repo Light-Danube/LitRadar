@@ -1,5 +1,7 @@
 # Venue discovery and evidence worksheet (unreleased)
 
+[Russian step-by-step CLI workflow and practical significance](cli-workflow-ru.md).
+
 The CLI is the first end-to-end interface. Existing `search` remains broad discovery; `venue` performs an explicit OpenAlex Sources/Works request. No automatic search, Crossref enrichment or model inference is added. Scholarly metadata is untrusted provider evidence, not certification.
 
 ## Choose an identity, then search

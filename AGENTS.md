@@ -7,6 +7,7 @@
 - Push the feature branch and immediately attempt a **draft** PR targeting `main`, with a concrete summary, validation and remaining gates. The `auto-draft-pr.yml` workflow can create it after push if the cloud GitHub API is Forbidden. A Git push does not prove CI passed. Git PR head refs can confirm existence, not draft/check status.
 - NEVER merge PRs or push directly to `main`/`master`. Do not generate credentials, broaden GitHub permissions or change security settings to bypass an API denial.
 - Keep commits focused and preserve user changes. Delegate independent tasks only when the user or applicable instructions authorize it; assign non-overlapping file ownership and integrate/test the combined result.
+- Keep `README.md` compact: a short product overview, quick start, essential commands and links to detailed documentation. Aim for roughly 100–150 lines; move long tutorials, configuration/reference material, migration details, research evidence and validation history into `docs/`, CHANGELOG or CODEX-HANDOFF instead of appending them to README. Update concise summaries and links when features change; do not duplicate release history or lose instructions when relocating content.
 
 ## Technical map
 
