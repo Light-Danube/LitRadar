@@ -205,9 +205,12 @@ def _make_clusters(rows: list[sqlite3.Row]) -> dict[str, Any]:
     }
 
 
-def create_app(db_path: str | Path = DEFAULT_DB, *, semantic_enabled: bool | None = None, semantic_embedder=None) -> FastAPI:
+def create_app(db_path: str | Path = DEFAULT_DB, *, semantic_enabled: bool | None = None, semantic_embedder=None,
+               research_results_root: str | Path | None = None) -> FastAPI:
     app = FastAPI(title="LitBeacon Research Workspace", version="0.8.0")
     app.state.db_path = str(db_path)
+    from web.research_api import register_research_routes
+    register_research_routes(app, db_path, results_root=research_results_root)
     if semantic_enabled is None:
         semantic_enabled = os.getenv('LITBEACON_SEMANTIC_WORKSPACE', os.getenv('LITRADAR_SEMANTIC_WORKSPACE', '0')).lower() in {'1','true'}
     app.state.semantic_enabled = semantic_enabled

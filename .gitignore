@@ -13,6 +13,7 @@ data/*.bib
 .idea/
 .DS_Store
 data/source_cache/
+data/research/
 
 data/oa_cache/
 build/
