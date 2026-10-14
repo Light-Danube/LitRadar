@@ -374,6 +374,7 @@ Additional local state:
 
 ```text
 data/offline/       # saved papers/PDFs
+data/research/      # immutable search/evidence/export snapshots
 data/source_cache/   # cached provider results
 data/oa_cache/       # cached Unpaywall legal-OA resolutions
 .env                 # secrets and local configuration
@@ -382,6 +383,43 @@ data/oa_cache/       # cached Unpaywall legal-OA resolutions
 These are intentionally excluded from Git.
 
 Additive SQLite migrations are applied automatically. Upgrading from v0.4.x does not require a database reset.
+
+### Consistent local backup and restore (unreleased)
+
+Use `library-backup` for a consistent SQLite snapshot, including committed changes in an active WAL. The source is opened read-only through SQLite's backup API; it is never initialized or migrated. Do not copy an open `.sqlite3` file by itself. `restore` still changes one paper's reading status; **`library-restore`** restores a library.
+
+Choose a **new directory** whose parent already exists. Database-only backup requires no network, provider, model or credentials:
+
+```sh
+python cli.py --db data/litradar.sqlite3 library-backup ../litbeacon-backup
+```
+
+To include durable files, first stop the web/TUI/Telegram applications, scans, digests, scheduled jobs and downloads that write this library or its artifacts. Keep them stopped until the backup completes. Explicitly elect the roots you want and acknowledge this with `--writers-stopped`:
+
+```sh
+python cli.py --db data/litradar.sqlite3 library-backup ../litbeacon-backup-with-files --research-dir data/research --offline-dir data/offline --writers-stopped
+```
+
+Omit either root if you do not want to include it, or if it does not exist. Custom databases normally store Research results in their parent's `research/`; offline commands may use a separately selected root, so pass the actual root explicitly. SQLite cannot atomically snapshot separate files. The acknowledgment is your confirmation that writers are stopped; it is not an automatic lock or proof of consistency.
+
+Only existing Research bundle files (`manifest.json`, `search.json`, `evidence.json`, `matrix.md`, `matrix.csv`) and offline paper files (PDFs, metadata, abstracts, notes, citations, saved assessments and retrieval status/error text) are accepted. Unsupported files, hidden files, links and unexpected layouts fail the backup with cleanup; they are not silently included or omitted. Store custom documents separately.
+
+The private bundle contains `library.sqlite3`, elected `research/` and `offline/` files, and a versioned `manifest.json` listing relative paths, sizes, SHA-256 checksums, included roots and exclusions. Limits: 10,000 data files, 1 GiB per file/database, 4 GiB total and 2 MiB manifest; SQLite snapshot and each file-copy step have a 60-second limit. POSIX permissions are owner-only; on Windows place the bundle in an account-private directory and protect it using normal filesystem permissions. **The bundle is not encrypted** and contains notes/evidence and any elected PDFs.
+
+Credentials/`.env`, logs, provider/OA caches, models and application code are excluded. **Preserve `research_profile.json` and `digest_config.json` manually** in a safe location and review them on the restored installation; re-register scheduler jobs separately, keeping listeners/jobs disabled until verified. Credential recovery is separate; the commands never read `.env` or those configuration files.
+
+Restore only a bundle you created or trust. Checksums detect accidental corruption; they do not authenticate a bundle. The commands reject unsafe paths, symlinks/hardlinks/Windows reparse points (including junctions), duplicate/case-colliding paths, unsupported schema triggers/views/virtual tables, missing/extra files, invalid checksums and failed SQLite integrity/foreign-key checks. This is a bounded recovery validation, not an exhaustive audit of hostile SQLite files; do not allow other processes to change either root during recovery.
+
+```sh
+python cli.py library-restore ../litbeacon-backup-with-files ../litbeacon-restored
+python cli.py --db ../litbeacon-restored/litradar.sqlite3 init
+python cli.py --db ../litbeacon-restored/litradar.sqlite3 stats
+python cli.py --db ../litbeacon-restored/litradar.sqlite3 list
+```
+
+Restore never overwrites or merges, even with an empty existing directory, and does not switch your configured database. It creates `litradar.sqlite3` plus elected artifact roots under the new destination, validates the copied snapshot before reporting success, and leaves the original library/bundle intact. `init` applies additive migrations **only to the selected restored copy**. Inspect IDs, notes, tags, histories and artifact availability there before choosing it for normal use. `--db` selects SQLite and its sibling Research root; **it does not change the existing default offline root** in CLI/TUI/browser helpers. Open restored PDFs directly from the destination's `offline/` directory for the recovery check; for future explicit downloads select `--output-dir ../litbeacon-restored/offline`. Default UI offline availability remains tied to the installation's configured/default offline directory. Keep the original and backup until satisfied. On ordinary errors the reserved destination is removed; an interrupted process/power failure may leave an incomplete directory—inspect it and choose another new destination for the retry.
+
+Automated evidence uses synthetic/disposable libraries: active-WAL committed state, user fields/IDs, citations/feedback, annotation/evidence histories and tombstones, elected artifacts, damage/path/schema rejection, failure cleanup and repeated additive legacy upgrades. Clean Windows built-artifact recovery and final candidate CI remain release checks; no personal library was accessed for this evidence.
 
 ## Upgrading and releasing with GitHub Desktop
 

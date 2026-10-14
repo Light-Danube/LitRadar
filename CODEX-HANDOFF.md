@@ -1,5 +1,15 @@
 # Codex development handoff — LitBeacon Research Workspace
 
+## Current — bounded Gate 2 recovery (unreleased)
+
+- Final local recovery-branch full suite: **479 Python / 38 JS passed, 0 failed, 0 skipped** (one Starlette warning). Separate disposable integration of packaging/recovery/venue source passed **501 Python tests**; the combined wheel was built/installed outside the checkout and executed CLI backup/new-destination restore/no-overwrite, exact all-table preservation, elected files and browser evidence/artifact downloads. Actual recovery-head CI/Windows remain separate.
+
+- Branch `codex/local-backup-restore`, based on main `448a6ea0` after the Gate 1 audit. User accepted the smallest recovery PR and separate blocker fixes. No major feature, merge, version bump, personal database or service/model access.
+- `storage/recovery.py` owns directory bundles; CLI `library-backup` and `library-restore` are distinct from paper-status `restore`. Backup source is direct SQLite `mode=ro`, avoiding PaperStore migrations, and SQLite's backup API captures committed WAL state. Elected exact-layout Research/offline roots require `--writers-stopped`; stopped writers are an explicit user precondition, not a filesystem transaction/automatic lock.
+- Manifest version 1 records relative paths/sizes/SHA-256 and exclusions. Private exclusive destination, bounds, portable paths, links/case-collisions, missing/extra files, corruption, SQLite integrity/foreign keys and known FTS-only triggers/virtual-table restrictions. Restore copies then verifies before publishing `litradar.sqlite3`; no overwrite/merge or automatic schema migration. Ordinary failures clean up; process/power interruption may leave an incomplete reserved directory.
+- `tests/test_library_recovery.py`: **49 passed / 0 failed / 0 skipped**, Linux Python 3.12.14. Exact all-table round-trip includes user fields/IDs, relations/feedback, annotations/evidence histories and tombstones; elected artifacts, active WAL, bad SQL schema, bounds, injected failures and restored additive legacy metadata schema upgraded twice. Existing v0.1 migration tests are separate. Only synthetic fixtures used.
+- Profiles/digest config and scheduler registrations require manual safe preservation/review; credentials are separate, and commands never load them. Checksums do not authenticate an untrusted bundle. README/ROADMAP/USER-GUIDE/checklist record implemented checks and pending candidate CI/clean Windows built-artifact recovery. Packaging blocker fix belongs to its independent focused PR.
+
 ## Current — local-only 1.0 freeze, Gate 1 audit
 
 - Branch `codex/local-v1-gate1-audit`, baseline main `b8b42ff4`. Read [release checklist](docs/LOCAL-1.0-RELEASE-CHECKLIST.md) and current ROADMAP before following historical suggestions below. No major features or version bump; 0.8.0 remains current. Real-model quality evaluation and Docker production optimization are not frozen 1.0 blockers.
