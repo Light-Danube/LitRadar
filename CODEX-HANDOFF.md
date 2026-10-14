@@ -11,6 +11,7 @@
 - Final local checks: **430 Python / 0 failed / 0 skipped**, **6 Node test files / 0 failed / 0 skipped**, including **29 TUI tests**. Native ANSI PTY 80×24 and disposable audit-fixture smoke passed separately. One existing Starlette TestClient deprecation warning. Restricted sandbox inter-thread dispatch hung; the same tests passed in the approved executor outside that restriction. Do not classify that as a production defect.
 - The user selected Windows Terminal + Narrator. `python scripts/tui_accessibility_fixture.py --language uk` creates a temporary synthetic library with all provider/scheduler/download/browser actions mocked and no personal config/profile loading. `--smoke` checks the fixture headlessly. Actual Narrator speech, Braille, contrast and participant results remain unverified; preserve the unchecked combined accessibility gate and record real outcomes before closing it.
 - README changes from PRs #17/#18 were already in latest main, not authored by this patch. Remote CI remains to be observed after push; create a draft PR and never merge automatically.
+- Draft [PR #19](https://github.com/Light-Danube/LitRadar/pull/19) confirmed open/draft targeting main; its description records scope, checks and remaining gates. GitHub reported `action_required` for tests, isolated Docker and Windows at head `85d841dc`; tests had no jobs. No remote pass is claimed; inspect checks for subsequent heads separately.
 
 ## Unreleased — browser research workspace
 

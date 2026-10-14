@@ -30,6 +30,8 @@ Localization has separate EN/UK catalog and Pilot tests. Their final counts belo
 
 Final combined checks: **430 Python passed / 0 failed / 0 skipped**, **6 Node test files passed / 0 failed / 0 skipped**. TUI subset: **29 passed / 0 failed / 0 skipped**. A native ANSI PTY smoke at 80×24 also completed with Ukrainian synthetic content and mocked jobs; it verifies terminal execution, not spoken output or visual usability. The disposable audit fixture's `--smoke` check passed separately. Python reports one existing Starlette TestClient deprecation warning.
 
+Draft [PR #19](https://github.com/Light-Danube/LitRadar/pull/19) targets main. At head `85d841dc`, GitHub reported `action_required` for tests, isolated Docker and Windows workflows; the tests run had no jobs. This is an unresolved remote CI gate, not a CI pass or a test failure. Later heads require their own checks.
+
 The implementation now requires **Textual >=1.0,<2**, consistently in `requirements-ui.txt` and the package UI extra. Testing the old declared minimum 0.50.1 exposed incompatible binding APIs; new runtime localization and focus APIs are supported and tested on 1.0.0. Upgrade UI dependencies before running this patch. No application release-version bump is made.
 
 ## Ukrainian interface
