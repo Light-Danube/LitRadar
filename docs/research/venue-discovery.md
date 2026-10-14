@@ -2,7 +2,7 @@
 
 [Russian step-by-step CLI workflow and practical significance](cli-workflow-ru.md).
 
-The CLI is the first end-to-end interface. Existing `search` remains broad discovery; `venue` performs an explicit OpenAlex Sources/Works request. No automatic search, Crossref enrichment or model inference is added. Scholarly metadata is untrusted provider evidence, not certification.
+The CLI was the first end-to-end interface; [Research browser workflow](web-workspace.md) now offers the same retrieval and editable evidence. Existing `search` remains broad discovery; `venue` performs an explicit OpenAlex Sources/Works request. No automatic search, Crossref enrichment or model inference is added. Scholarly metadata is untrusted provider evidence, not certification.
 
 ## Choose an identity, then search
 
@@ -22,7 +22,9 @@ Search applies `primary_location.source.id:S…` and inclusive `publication_year
 
 CLI bounds: 1–100 results, pages 1–10, queries 1–500 characters and years 1000–9999. HTTP timeout/retries/backoff are capped at 60 seconds/3 retries/5 seconds, and each retry wait at 60 seconds. Existing `LITRADAR_SOURCE_*` configuration and optional `OPENALEX_API_KEY` apply. Cached successful pages, including empty results, use keys with provider/source/query/years/limit/page; TTL is `LITRADAR_SOURCE_CACHE_TTL`. `--refresh` bypasses cache. The most recent 100 page entries are retained. Cached metadata keeps its original observation timestamp. Errors are not cached. No secrets enter stored provenance or displayed error URLs.
 
-JSON distinguishes `zero_results`, `ambiguous_venue`, `rate_limited`, `timeout`, `metadata_inaccessible`, `network_unavailable`, `provider_error`, `malformed_metadata` and `invalid_request`; venue verification/type/status are separate fields. Every search emits a start event. Browser handoff is the existing inbox using returned canonical `paper_ids`; a localized browser discovery form is future work, so this increment changes no EN/UK UI strings or browser contracts.
+Search results are now saved to local `data/research/<identifier>/` bundles; see the [storage contract](web-workspace.md#where-results-are-stored). Without `--output`, `evidence export` saves both Markdown and CSV there.
+
+JSON distinguishes `zero_results`, `ambiguous_venue`, `rate_limited`, `timeout`, `metadata_inaccessible`, `network_unavailable`, `provider_error`, `malformed_metadata` and `invalid_request`; venue verification/type/status are separate fields. Every search emits a start event. The existing inbox opens returned canonical `paper_ids`. The new [Research browser section](web-workspace.md) adds localized lookup, evidence editing and saved result bundles while retaining the original five sections.
 
 ## Editable evidence, independent of notes
 
