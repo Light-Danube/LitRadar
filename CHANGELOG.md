@@ -1,11 +1,10 @@
 # Changelog
 
-## Unreleased — installed-wheel packaging blocker fix
+## Unreleased — venue verification and accurate CLI handoff
 
-- Include `config.py` and bundle canonical VERSION/profile/digest defaults; retain packaged HTML/JS/CSS/icons. Separate immutable code/assets from per-user editable data, caches, offline artifacts, `.env` and logs; source checkout defaults and legacy names remain compatible.
-- Support `python -m cli` outside the checkout and seed missing user defaults without replacing edits. Keep Windows launchers/Task Scheduler helper source-only with an explicit wheel diagnostic; no version bump or scheduler redesign.
-- Executed Linux validation: **435 Python / 38 JS passed, 0 failed, 0 skipped**, one existing Starlette deprecation warning; direct wheel and sdist-built wheel smoke passed outside checkout, including clean-venv installation with cached test dependencies. Actual Windows built-wheel Actions evidence remains pending. New Linux/Windows clean-venv artifact workflow uses only synthetic data and no provider/model requests.
-
+- Verify existing venue lookup/search through real CLI/API/discovery adapters with only HTTP transport mocked: ambiguous identities, structured source/year filters, Unicode query encoding, cache/dedup, evidence/manual-field preservation and classified failures without partial bundles. Correct stale CLI text to point to the implemented Research section.
+- Add an explicit public-provider probe that reads no library/configuration/credentials. Current live lookup failed at the environment proxy tunnel with 403; no independent live venue/browser search pass is claimed. [Evidence and repeat procedure](docs/research/venue-verification.md).
+- Executed: **447 Python / 38 JS passed, 0 failed, 0 skipped**; one Starlette warning; whitespace check passed. No release/version bump, new provider or major feature.
 
 ## Unreleased — local-only 1.0 Gate 1 audit
 

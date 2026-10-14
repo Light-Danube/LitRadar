@@ -84,6 +84,8 @@ python cli.py venue search SOURCE_ID "emotion context" --year-from 2023 --year-t
 
 Replace `SOURCE_ID` with the returned `S` + digits identifier. Searches use structured source/year filters and bounded pages. Returned paper IDs appear in the Literature inbox. The **Research** section provides venue search, editable evidence and quick-topic templates; [browser workflow and saved results](docs/research/web-workspace.md).
 
+[Independent venue verification](docs/research/venue-verification.md) records transport/integrity tests and a repeatable public probe. The current cloud probe was blocked by proxy 403; live verification stays pending.
+
 ```sh
 python cli.py evidence show PAPER_ID
 python cli.py evidence export PAPER_ID --output matrix.md

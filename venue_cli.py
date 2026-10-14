@@ -37,7 +37,7 @@ def cmd_venue(args) -> int:
                 operation = "storage"
                 payload["artifact"] = reservation.save("search", {"search.json": payload},
                                                        metadata={"paper_ids": payload["paper_ids"], "query": args.query})
-            payload["browser_handoff"] = "Open the existing Literature inbox to inspect these paper_ids. Browser venue lookup is planned."
+            payload["browser_handoff"] = "Open Research for venue lookup/evidence, or Literature to inspect these paper_ids."
             payload["coverage"] = "One bounded OpenAlex primary-source page; not a complete venue bibliography."
         print(json.dumps(payload, ensure_ascii=False, indent=2))
         return 0

@@ -1,11 +1,11 @@
 # Codex development handoff — LitBeacon Research Workspace
 
-## Unreleased — installed-wheel packaging blocker fix
+## Current — verify venue workflow independently
 
-- Include `config.py` and bundle canonical VERSION/profile/digest defaults; retain packaged HTML/JS/CSS/icons. Separate immutable code/assets from per-user editable data, caches, offline artifacts, `.env` and logs; source checkout defaults and legacy names remain compatible.
-- Support `python -m cli` outside the checkout and seed missing user defaults without replacing edits. Keep Windows launchers/Task Scheduler helper source-only with an explicit wheel diagnostic; no version bump or scheduler redesign.
-- Executed Linux validation: **435 Python / 38 JS passed, 0 failed, 0 skipped**, one existing Starlette deprecation warning; direct wheel and sdist-built wheel smoke passed outside checkout, including clean-venv installation with cached test dependencies. Actual Windows built-wheel Actions evidence remains pending. New Linux/Windows clean-venv artifact workflow uses only synthetic data and no provider/model requests.
-
+- Branch `codex/venue-verification`, baseline `448a6ea0`. [Executed checks and public-probe instructions](docs/research/venue-verification.md). Gate 1 audit PR #21 is merged; actual checks at its head `84c3f5ed` succeeded. New PR checks remain separate.
+- Tests replace HTTP transport only, exercising request encoding, identity/year validation, shared CLI/API service, cache/dedup, manual/evidence preservation and rollback across lookup/source/works failures. CLI handoff now points to implemented Research.
+- Linux Python **447/0/0**, Node **38/0/0**, one Starlette warning. Live public lookup attempted 2026-10-15 01:49 Europe/Kiev: cloud proxy tunnel 403 before OpenAlex. No personal configuration/database or live LLM/model access. Further live-provider/browser verification remains pending; the user's working CLI remains user-reported.
+- `python -m scripts.venue_provider_probe --live` performs public lookup; select an explicit returned `--source-id` for one bounded search page. Does not load `.env`/credentials or mutate libraries. Keep real results distinct from fixtures and certification claims.
 
 ## Current — local-only 1.0 freeze, Gate 1 audit
 
