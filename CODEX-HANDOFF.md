@@ -2,6 +2,15 @@
 
 This file records development progress and a safe starting point for continuing with Codex. The repository is still named `LitRadar` on GitHub, while the public-facing application name is **LitBeacon**.
 
+## Semantic exploration and graph/workflow refinement (unreleased)
+
+- Branch `codex/v08-semantic-graph-workflows`, base main `54f48330`. Read [patch progress/release gates](docs/V08-PATCH-PROGRESS.md), [semantic evaluation](docs/SEMANTIC-WORKSPACE.md) and [Windows smoke](docs/WINDOWS-WORKSPACE-SMOKE.md).
+- Semantic exploration is OFF by default and local-only; UI opt-in graph edges are ephemeral related links participating in bounded traversal, never citations. Complete-link clusters are distinct from heuristic grouping. No model download or silent semantic fallback.
+- Graphs settle label/node collisions on drag/keyboard changes; native stationary pointer capture is assigned to the node. Export is a details menu; retain keyboard controls and model-provenance labels.
+- New mixed-provider/API/EN/UK workflow tests and Windows CI/native Chrome script use synthetic data; screenshots are uploaded only from the unique run directory. No Windows result is claimed here.
+- Local checks: Python 186/0/0; Node 28/0/0; restricted Docker 179/0/7 expected optional skips. Corpus lexical controls executed, but neural-model evaluation is blocked by missing local weights/proxy 403. The version remains 0.8.0 until the authorized 0.8.5 gates are confirmed.
+- AGENTS.md now contains project map, recovery/security boundaries, optional flags and release verification rules. GitHub API remains Forbidden; after push use the auto-created draft and inspect actual Actions results through the user's GitHub interface.
+
 ## Annotation adapters, recovery and graph layout (unreleased)
 
 - Branch `codex/annotation-adapters-graph`, base `ef5ecd06`. Read [the workflow/recovery specification](docs/V08-ANNOTATION-WORKFLOWS.md).

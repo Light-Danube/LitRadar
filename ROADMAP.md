@@ -18,7 +18,7 @@ This roadmap separates implemented behavior from research ideas that still need 
 
 - [x] Implement Phase 1 shared tokens, light/dark/system appearance and responsive shell with EN/UK and regression checks (unreleased; visual accepted by user on 2026-10-14). See [verification notes](docs/ux-research/phase-1.md).
 - [x] Current WebUI visual/functionality accepted by the user (2026-10-14); skip the additional cloud-browser gate as requested. No automated browser pass is claimed. Phase 2 navigation proposals remain separate future research.
-- [ ] Review the [readability/UX design draft](docs/ux-research/README.md), extend the [public-source competitor review](docs/ux-research/live-review-2026-10-13.md) with hands-on tasks and participant testing. Preserve all 48 current web contracts; ship tokens/shell, library/detail, provenance, graph and secondary screens in separate reviewed increments.
+- [x] Review and implement the [readability/UX design draft](docs/ux-research/README.md), retain the [public-source competitor review](docs/ux-research/live-review-2026-10-13.md) and user acceptance of the implemented redesign. No additional hands-on competitor or participant study is claimed. Preserve all 48 current web contracts; ship tokens/shell, library/detail, provenance, graph and secondary screens in separate reviewed increments.
 
 - [x] Add graph pan/zoom, keyboard/click node selection, directional arrows/legend, relation/provider filters applied before bounded traversal, and merged edge provenance (unreleased).
 - [x] Improve graph layout with deterministic BFS layers and separated labels; apply year-range/unknown-year filters before traversal; export the displayed graph to standalone SVG, GraphML and JSON (unreleased).
@@ -26,9 +26,12 @@ This roadmap separates implemented behavior from research ideas that still need 
 - [x] Integrate bounded, repeat-safe JSON annotation import and stored-metadata extraction, opt-in suggestions from stored assessments/local reading prompts, review/edit with revision-conflict checks, and paginated research-note history UI (unreleased). Automatic entries record the adapter; manual origin labels remain declarations.
 - [x] Extend annotation adapters to PDF/RIS/BibTeX and atomic multi-file uploads; add per-paper opt-in fresh LLM inference with provider/model choice, append-only history restoration and reversible annotation deletion (unreleased). See [limits, recovery behavior and tests](docs/V08-ANNOTATION-WORKFLOWS.md). Live provider calls remain unverified.
 - [x] Add cursor-anchored wheel zoom, draggable graph nodes, Shift+arrow movement, locally saved node layouts/reset and layout-aware SVG export (unreleased).
-- [ ] Add semantic-similarity edges and embedding-based clustering only behind an explicit optional dependency/feature flag, with fixtures and evaluation against real-but-shareable small corpora.
-- [ ] Test graph edge direction and deduplication more extensively against mixed OpenAlex/Semantic Scholar records.
-- [ ] Add UI workflow smoke tests for inbox editing, clusters, and graph navigation; verify on Windows.
+- [x] Implement ephemeral semantic-similarity related edges and complete-link embedding clusters behind an OFF-default feature flag/local-only model dependency, with synthetic fixtures and an attributed shareable title corpus.
+- [ ] Complete real neural-model quality evaluation on the [shareable corpus](docs/SEMANTIC-WORKSPACE.md); lexical controls have run, model/metadata access remains blocked.
+- [x] Test graph direction, mixed OpenAlex/Semantic Scholar aliases, duplicates/self-edges, antiparallel citations, cycles, refresh and merged provenance with synthetic fixtures.
+- [x] Add synthetic API and EN/UK DOM workflow smoke tests for inbox editing, clusters and graph navigation.
+- [ ] Confirm the [Windows workflow](docs/WINDOWS-WORKSPACE-SMOKE.md) result on Windows; the same commands passed locally on Linux.
+- [x] Add bounded node/label collision settling, fix native single-click selection and group exports in a keyboard-accessible menu. Keep zoom buttons for keyboard users.
 - [x] Refine Web UI onboarding, semantic paper buttons/labels, skip link, Alt+1–5 / search / save shortcuts, empty/loading/error/retry states, visible focus and contrast (unreleased; no claim of a complete accessibility audit).
 - [x] Add Ukrainian Web UI localization with externalized English/Ukrainian strings, a persisted language selector, localized statuses/help/actions, and Unicode workflow checks; preserve CLI/config identifiers (unreleased).
 - [ ] Extend Ukrainian localization to Textual TUI and perform a full accessibility audit with assistive technology.
