@@ -979,6 +979,8 @@ Most commands have their own help page, e.g.:
     parser.add_argument("--version", action="version", version=f"LitBeacon {VERSION} (formerly LitRadar)")
     parser.add_argument("--db", default=str(DEFAULT_DB), help="SQLite database path")
     sub = parser.add_subparsers(dest="command", required=True, metavar="COMMAND")
+    from venue_cli import register_commands
+    register_commands(sub)
 
     p_init = sub.add_parser("init", help="initialize or migrate the database")
     p_init.set_defaults(func=cmd_init)

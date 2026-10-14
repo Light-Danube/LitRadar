@@ -116,6 +116,22 @@ CREATE TABLE IF NOT EXISTS digest_delivery_papers (
     PRIMARY KEY(delivery_id, paper_id)
 );
 CREATE INDEX IF NOT EXISTS idx_digest_delivery_papers_paper ON digest_delivery_papers(paper_id);
+CREATE TABLE IF NOT EXISTS discovery_venues (
+    source_id TEXT PRIMARY KEY,
+    metadata_json TEXT NOT NULL,
+    retrieved_at TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS paper_venue_observations (
+    paper_id INTEGER NOT NULL REFERENCES papers(id) ON DELETE CASCADE,
+    source_id TEXT NOT NULL REFERENCES discovery_venues(source_id),
+    observation_json TEXT NOT NULL,
+    PRIMARY KEY(paper_id, source_id)
+);
+CREATE TABLE IF NOT EXISTS venue_search_cache (
+    cache_key TEXT PRIMARY KEY,
+    retrieved_at TEXT NOT NULL,
+    payload_json TEXT NOT NULL
+);
 CREATE TABLE IF NOT EXISTS paper_annotations (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     paper_id INTEGER NOT NULL REFERENCES papers(id) ON DELETE CASCADE,
@@ -643,6 +659,9 @@ class PaperStore:
                 (identifier_type, identifier_value),
             ).fetchone()
             if row:
+                incoming_doi = _clean_doi(paper.doi)
+                if incoming_doi and row["doi_normalized"] and incoming_doi != row["doi_normalized"]:
+                    raise ValueError("Conflicting DOI for an existing provider identifier")
                 return row
 
         doi = _clean_doi(paper.doi)
