@@ -1,0 +1,13 @@
+{
+  "source": "Manually curated public bibliographic titles and DOI identifiers; no abstracts or full text",
+  "retrieval_status": "Crossref API verification attempted 2026-10-14; proxy returned 403 Forbidden. Metadata below is manually curated, not a downloaded API response.",
+  "labels": "Author-supplied topic labels for a tiny smoke corpus, not a representative benchmark",
+  "papers": [
+    {"id": 1, "doi": "10.1038/nature14539", "source_url": "https://doi.org/10.1038/nature14539", "title": "Deep learning", "abstract": "", "topic": "machine-learning"},
+    {"id": 2, "doi": "10.1038/nature16961", "source_url": "https://doi.org/10.1038/nature16961", "title": "Mastering the game of Go with deep neural networks and tree search", "abstract": "", "topic": "machine-learning"},
+    {"id": 3, "doi": "10.1126/science.1259855", "source_url": "https://doi.org/10.1126/science.1259855", "title": "Planetary boundaries: Guiding human development on a changing planet", "abstract": "", "topic": "planetary-boundaries"},
+    {"id": 4, "doi": "10.1038/461472a", "source_url": "https://doi.org/10.1038/461472a", "title": "A safe operating space for humanity", "abstract": "", "topic": "planetary-boundaries"},
+    {"id": 5, "doi": "10.1103/PhysRevLett.116.061102", "source_url": "https://doi.org/10.1103/PhysRevLett.116.061102", "title": "Observation of Gravitational Waves from a Binary Black Hole Merger", "abstract": "", "topic": "gravitational-waves"},
+    {"id": 6, "doi": "10.1103/PhysRevLett.119.161101", "source_url": "https://doi.org/10.1103/PhysRevLett.119.161101", "title": "GW170817: Observation of Gravitational Waves from a Binary Neutron Star Inspiral", "abstract": "", "topic": "gravitational-waves"}
+  ]
+}

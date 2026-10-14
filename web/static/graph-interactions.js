@@ -16,7 +16,7 @@
     };
     const update=()=>svg.setAttribute('viewBox',`${view.x} ${view.y} ${view.w} ${view.h}`);
     function move(id,x,y) {
-      const p={x:Math.max(20,Math.min(base.width-240,x)),y:Math.max(25,Math.min(base.height-25,y))};
+      const p={x:Math.max(20,Math.min(base.width-340,x)),y:Math.max(25,Math.min(base.height-25,y))};
       positions.set(id,p);
       const original=initial.positions.get(id);
       nodes.get(id).setAttribute('transform',`translate(${p.x-original.x} ${p.y-original.y})`);
@@ -26,6 +26,10 @@
         const length=Math.hypot(b.x-a.x,b.y-a.y),ux=length?(b.x-a.x)/length:1,uy=length?(b.y-a.y)/length:0;
         for(const [key,value] of Object.entries({x1:a.x+ux*14,y1:a.y+uy*14,x2:b.x-ux*17,y2:b.y-uy*17}))line.setAttribute(key,value);
       });
+    }
+    function settle(pinned) {
+      const next=root.GraphTools.settlePositions(positions,base.width,base.height,pinned);
+      for(const [id,p] of next)move(id,p.x,p.y);
     }
     const snapshot=()=>Object.fromEntries(positions);
     const persist=()=>save(snapshot());
@@ -40,8 +44,11 @@
     svg.onpointerdown=event=>{
       if(event.button!==0)return;
       const node=event.target.closest('[data-node]'),p=point(event),id=node?Number(node.dataset.node):null;
-      drag={viewOrigin:{...view},pointer:event.pointerId,id,start:p,last:p,moved:false,client:{x:event.clientX,y:event.clientY},origin:id===null?null:{...positions.get(id)}};
-      svg.setPointerCapture?.(event.pointerId);
+      // Capture on the original node, so a stationary gesture produces a native
+      // node click. Capturing on the SVG retargets that click to the background.
+      const capture=node||svg;
+      drag={viewOrigin:{...view},capture,pointer:event.pointerId,id,start:p,last:p,moved:false,client:{x:event.clientX,y:event.clientY},origin:id===null?null:{...positions.get(id)}};
+      capture.setPointerCapture?.(event.pointerId);
     };
     svg.onpointermove=event=>{
       if(!drag||drag.pointer!==event.pointerId)return;
@@ -57,16 +64,16 @@
         if(old.id!==null)move(old.id,old.origin.x,old.origin.y);else {view={...old.viewOrigin};update();}
       } else if(old.moved) {
         suppressClick=true;setTimeout(()=>{suppressClick=false;},0);
-        if(old.id!==null)persist();
+        if(old.id!==null){settle(old.id);persist();}
       }
-      if(svg.hasPointerCapture?.(event.pointerId))svg.releasePointerCapture(event.pointerId);
+      if(old.capture.hasPointerCapture?.(event.pointerId))old.capture.releasePointerCapture(event.pointerId);
     }
     svg.onpointerup=svg.onpointercancel=svg.onlostpointercapture=finish;
     svg.addEventListener('click',event=>{if(suppressClick){event.stopImmediatePropagation();event.preventDefault();}},{capture:true});
     for(const [id,node] of nodes)node.addEventListener('keydown',event=>{
       const directions={ArrowLeft:[-20,0],ArrowRight:[20,0],ArrowUp:[0,-20],ArrowDown:[0,20]};
       if(event.shiftKey&&directions[event.key]) {
-        event.preventDefault();const p=positions.get(id),[dx,dy]=directions[event.key];move(id,p.x+dx,p.y+dy);persist();
+        event.preventDefault();const p=positions.get(id),[dx,dy]=directions[event.key];move(id,p.x+dx,p.y+dy);settle(id);persist();
       }
     });
     return {zoom,snapshot,resetView(){view={x:0,y:0,w:base.width,h:base.height};update();},

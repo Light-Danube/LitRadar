@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased — semantic exploration, graph collision handling and workflow verification
+
+- Add OFF-default local-only embedding related edges/complete-link clusters, bounded cohorts, explicit UI selection and computed provenance. Existing citation records and heuristic defaults are retained.
+- Add deterministic node/label collision settling, ordinary click capture fix, accessible export dropdown and retained keyboard zoom/selection controls.
+- Extend mixed OpenAlex/Semantic Scholar/API/EN/UK DOM tests and a Windows native-Chrome workflow with synthetic screenshot artifacts. Expand AGENTS.md for continuation.
+- Local validation: Python 186 passed / 0 failed / 0 skipped; Node 28 / 0 / 0; restricted Docker 179 / 0 / 7 expected optional skips. Native Windows and real neural-model evaluation remain pending; no conditional 0.8.5 bump yet. See [patch status](docs/V08-PATCH-PROGRESS.md).
+
 ## Unreleased — annotation adapters, recovery and graph layout
 
 - Add atomic multi-file JSON/RIS/BibTeX/PDF annotation import with bounded uploaded bytes, optional local parsers and repeat-safe provenance. Existing JSON API remains compatible.

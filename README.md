@@ -8,6 +8,11 @@
 
 ### Next v0.8.x increment (unreleased)
 
+The graph now settles overlapping nodes/labels, supports ordinary mouse-click selection and groups exports in a keyboard-accessible menu. Optional local semantic edges/clusters are **off by default**: install `requirements-semantic.txt`, configure `LITBEACON_SEMANTIC_WORKSPACE=1` and an existing local model directory via `LITBEACON_EMBEDDING_MODEL_PATH`, then explicitly select the mode in the graph/groups UI. No model is downloaded automatically. [Semantic limits/evaluation](docs/SEMANTIC-WORKSPACE.md).
+
+[Patch progress](docs/V08-PATCH-PROGRESS.md) records smoke tests and pending native Windows/neural-model evidence. The conditional 0.8.5 version bump remains pending these gates; the current release version is unchanged.
+
+
 The [Beacon Blue refinement](docs/ux-research/brand-beacon.md) adds a reader-robot/beacon mark and aligns the palettes with the Telegram identity: navy, blue, cyan and restrained gold.
 
 Quiet Research Phase 1 adds a shared light/dark palette, responsive shell, clearer typography and keyboard focus. **Appearance** offers System, Light and Dark; the preference is stored locally and theme changes preserve open editors and graph state. English and Ukrainian remain available. See [implementation and verification notes](docs/ux-research/phase-1.md); real-browser visual acceptance is still pending.

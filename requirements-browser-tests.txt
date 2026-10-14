@@ -1,0 +1,2 @@
+# Optional CI/native-browser test dependency, never needed by the application.
+playwright>=1.50,<2
