@@ -1,0 +1,42 @@
+name: Built wheel smoke
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  installed-artifact:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Build wheel from canonical tracked assets
+        run: python -m pip wheel --no-deps --wheel-dir work/wheels .
+      - name: Clean install and synthetic smoke outside the checkout
+        shell: python
+        run: |
+          import os, pathlib, subprocess, sys
+          root = pathlib.Path.cwd()
+          environment = root / 'work' / 'wheel-venv'
+          subprocess.run([sys.executable, '-m', 'venv', str(environment)], check=True)
+          interpreter = environment / ('Scripts/python.exe' if os.name == 'nt' else 'bin/python')
+          wheel = next((root / 'work' / 'wheels').glob('*.whl'))
+          from zipfile import ZipFile
+          with ZipFile(wheel) as archive:
+              names = archive.namelist()
+              for name in ('config.py', 'web/index.html', 'litradar_runtime/assets/VERSION', 'litradar_runtime/assets/research_profile.json', 'litradar_runtime/assets/digest_config.json'):
+                  assert name in names, name
+              assert not any(name.endswith(('.env', '.sqlite', '.sqlite3', '.pdf', '.log', '.safetensors')) or name.startswith('work/') for name in names)
+              for name in ('VERSION', 'research_profile.json', 'digest_config.json'):
+                  assert archive.read(f'litradar_runtime/assets/{name}') == (root / name).read_bytes()
+          subprocess.run([str(interpreter), '-m', 'pip', 'install', f'{wheel}[web]', 'httpx'], check=True)
+          subprocess.run([str(interpreter), str(root / 'scripts' / 'built_wheel_smoke.py')], cwd=os.environ['RUNNER_TEMP'], check=True)

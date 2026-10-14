@@ -17,10 +17,9 @@ from config import RadarConfig
 from pipeline import SearchSummary, search_and_ingest
 from storage.sqlite import PaperStore
 
-ROOT = Path(__file__).resolve().parent
-DEFAULT_SCAN_CONFIG = ROOT / "digest_config.json"
-DEFAULT_PROFILE = ROOT / "research_profile.json"
-DEFAULT_DB = ROOT / "data" / "litradar.sqlite3"
+from litradar_runtime import WORKSPACE_ROOT, DEFAULT_SCAN_CONFIG, DEFAULT_PROFILE, DEFAULT_DB, ensure_user_defaults
+
+ROOT = WORKSPACE_ROOT
 
 # Common function words and generic research terms are removed from overlap
 # checks so that shared domain vocabulary alone does not trigger a warning.
@@ -84,6 +83,8 @@ def _parse_since(value: str) -> datetime:
 
 
 def load_scan_config(path: str | Path = DEFAULT_SCAN_CONFIG) -> dict[str, Any]:
+    if Path(path) == DEFAULT_SCAN_CONFIG:
+        ensure_user_defaults()
     config_path = Path(path)
     try:
         payload = json.loads(config_path.read_text(encoding="utf-8"))

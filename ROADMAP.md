@@ -20,9 +20,11 @@
 - [ ] Run the full Python and JS suites on the release candidate. Fix all reproducible failures. Explain every expected skip; no unexplained failures/skips in required CI jobs.
 - [ ] Verify **Research** venue search and evidence worksheets, original five web sections, EN/UK switching and draft persistence with synthetic data. No automatic provider/LLM request from page load or preset selection.
 
+[Venue verification](docs/research/venue-verification.md) adds CLI/API checks through the mocked HTTP transport boundary: identity/year validation, cache/persistence and failed-request preservation. Combined checks: **447 Python / 38 JS passed, 0 failed, 0 skipped**. An explicit public live lookup failed at the cloud proxy tunnel (403); further live-provider/browser verification is pending and user-reported success remains separate.
+
 **Done when:** CI is green on the candidate commit, a compact feature/regression checklist exists, and no known data-loss or workflow-blocking defect remains.
 
-Audit evidence: Linux combined suite **430 Python / 38 JS passed, 0 failed, 0 skipped**. Actual baseline Windows API/DOM/native Chrome checks succeeded, but clean built-artifact Windows installation and Narrator remain open. Gate 1 is not closed: final candidate CI and the installed-wheel workflow blocker need resolution. The checklist recommends a bounded SQLite backup/new-destination restore PR for Gate 2; no recovery implementation or version bump is included here.
+Audit evidence: Linux combined suite **430 Python / 38 JS passed, 0 failed, 0 skipped**. Actual baseline Windows API/DOM/native Chrome checks succeeded, but clean built-artifact Windows installation and Narrator remain open. Gate 1 is not closed: final candidate CI remains open. The focused packaging fix resolves the reproduced import/default-path failure in local Linux installed-artifact smoke; actual Windows wheel CI is still unverified. The bounded SQLite backup/new-destination restore PR remains the next Gate 2 step; no version bump is included.
 
 ## Gate 2 — Local data integrity and recovery (P0)
 

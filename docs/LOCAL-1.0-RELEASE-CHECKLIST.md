@@ -46,7 +46,7 @@ No open PRs or issues were returned before this audit PR was created. PRs [#18](
 
 - [x] **Gate 1 inventory/backlog:** freeze implemented workflows; no open feature PR to reconcile at audit time.
 - [x] **Gate 1 source regressions:** combined Python/JS pass, Research and five-section EN/UK/draft/consent contracts covered by synthetic tests; dependency skips explained by CI profile.
-- [ ] **Gate 1 candidate CI:** inspect actual checks at the Draft PR's final head. Baseline green checks do not close this item.
+- [x] **Gate 1 audit candidate CI:** actual checks at merged audit PR #21 head `84c3f5ed` succeeded. This does not establish later packaging/recovery/release-candidate checks.
 - [ ] **P0 packaging defect (Gates 3/6):** explicit `pyproject.toml` module list omits `config.py`, which `cli.py` imports. CLI also reads sibling `VERSION`; profile/digest defaults are sibling JSON files, absent from the wheel. Add a focused packaging fix and clean installed-artifact CLI/web smoke outside the checkout; verify package-owned assets and writable user-data paths.
 - [x] **P0 recovery source checks (Gate 2, unreleased):** `library-backup` uses a read-only source/SQLite backup API; `library-restore` validates manifests/checksums, integrity/foreign keys and paths into a new directory only. Elected Research/offline files require stopped-writers acknowledgment; profile/config/scheduler recovery stays manual. CLI `restore` retains paper-status behavior. See [instructions](USER-GUIDE.md#consistent-local-backup-and-restore-unreleased); final CI/Windows artifact checks remain open.
 - [x] **P0 upgrade integrity source checks (Gate 2):** synthetic older metadata schema restored/upgraded twice with stable identities/manual fields/history and successful integrity/foreign-key checks. Existing v0.1 migration fixture remains covered separately; no personal database migrated.
@@ -55,7 +55,9 @@ No open PRs or issues were returned before this audit PR was created. PRs [#18](
 - [ ] **P1 practical accessibility (Gate 5):** execute Windows Terminal + Narrator fixture/manual check; document blocking keyboard/assistive limitations honestly.
 - [ ] **P0 release artifact/docs (Gate 6):** clean installation, full artifact exclusions, backup/upgrade guide and final candidate checklist. Keep 0.8.0 until candidate verification and explicit release approval; no merge/tag/version bump in this PR.
 
-**Gate 1 is not declared complete:** candidate CI and packaging/workflow blocker resolution remain open. Real-model evaluation and optional Docker production optimization are outside the frozen 1.0 release scope, despite older handoff language.
+**Gate 1 is not declared complete:** candidate CI remains open; reproduced packaging failure is fixed locally, while Windows built-artifact and other release gates remain unverified. Real-model evaluation and optional Docker production optimization are outside the frozen 1.0 release scope, despite older handoff language.
+
+[Further venue verification](research/venue-verification.md): **447 Python / 38 JS passed, 0 failed, 0 skipped** on a dedicated branch, with additional HTTP-transport CLI/API identity/filter/preservation tests. Explicit live lookup encountered the cloud proxy tunnel 403 before OpenAlex. A repeatable public probe is available; live search remains pending. User-reported working retrieval is not promoted to an independently observed pass.
 
 ## Smallest next PR — local recovery, not a new subsystem
 

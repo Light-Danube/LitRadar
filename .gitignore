@@ -35,3 +35,6 @@ frontend/dist/
 models/
 *.safetensors
 *.sqlite
+
+# Disposable development and artifact smoke workspaces
+work/
