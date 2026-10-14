@@ -1,10 +1,12 @@
 # Changelog
 
-## Unreleased — venue verification and accurate CLI handoff
+## Unreleased — bounded local library recovery (Gate 2)
 
-- Verify existing venue lookup/search through real CLI/API/discovery adapters with only HTTP transport mocked: ambiguous identities, structured source/year filters, Unicode query encoding, cache/dedup, evidence/manual-field preservation and classified failures without partial bundles. Correct stale CLI text to point to the implemented Research section.
-- Add an explicit public-provider probe that reads no library/configuration/credentials. Current live lookup failed at the environment proxy tunnel with 403; no independent live venue/browser search pass is claimed. [Evidence and repeat procedure](docs/research/venue-verification.md).
-- Executed: **447 Python / 38 JS passed, 0 failed, 0 skipped**; one Starlette warning; whitespace check passed. No release/version bump, new provider or major feature.
+- Add `library-backup`: SQLite backup API on a read-only source, no source migration, private new-directory bundle with versioned manifest/SHA-256 and explicitly elected Research/offline artifacts. Including files requires acknowledgment that artifact writers are stopped; credentials, logs/caches, models, profile/digest config and scheduler registrations are excluded.
+- Add `library-restore`: bounded validation and restore into a new directory only, no overwrite/merge or automatic database switching. Validate checksums, portable paths, links, executable schema restrictions and SQLite integrity/foreign keys before success; clean up ordinary failures. Preserve existing paper-status `restore` command.
+- Synthetic targeted tests: **49 passed / 0 failed / 0 skipped** on Linux Python 3.12.14; active WAL, exact table/history/tombstone preservation, elected files, corruption/path/schema rejection, cleanup and repeated restored legacy upgrade. Full candidate CI/Windows artifact checks remain separate; no personal database, external services, major new features or release-version bump.
+- Full recovery-branch checks: **479 Python / 38 JS passed, 0 failed, 0 skipped**, one existing Starlette warning. A disposable integration checkout with the separate packaging/venue changes passed **501 Python tests** and an installed-wheel recovery/web-artifact smoke; this is local integration evidence, not the published recovery PR's Windows result.
+- Document [recovery commands, exclusions, manual profile/scheduler preservation and limits](docs/USER-GUIDE.md#consistent-local-backup-and-restore-unreleased).
 
 ## Unreleased — local-only 1.0 Gate 1 audit
 

@@ -28,12 +28,14 @@ Audit evidence: Linux combined suite **430 Python / 38 JS passed, 0 failed, 0 sk
 
 ## Gate 2 — Local data integrity and recovery (P0)
 
-- [ ] Provide a documented **consistent SQLite backup** using SQLite's backup API or another safe, tested snapshot mechanism (not raw copying of an open database).
-- [ ] Define and implement a bounded local backup/restore workflow covering the SQLite library and durable research/offline artifacts that the user elects to include. Record a manifest/checksums and what is excluded (for example, .env credentials); never silently overwrite existing files.
-- [ ] Demonstrate restore into a **new, disposable destination**, including notes, tags, annotation/evidence history, citation relationships and saved research bundles. Include corruption/missing-file/duplicate-path failure tests.
-- [ ] Verify an upgrade from a synthetic older LitRadar database, preserving legacy LITRADAR_* names, paper identities, user edits and metadata.
+- [x] Provide a documented **consistent SQLite backup** using SQLite's backup API and a read-only source without source migrations; committed active-WAL snapshot tested.
+- [x] Implement bounded `library-backup`/`library-restore`, explicitly elected Research/offline roots, manifest/SHA-256 and exclusions. Artifact inclusion requires an explicit stopped-writers acknowledgment. [Instructions and limits](docs/USER-GUIDE.md#consistent-local-backup-and-restore-unreleased).
+- [x] Demonstrate restore into a **new, disposable destination**, retaining all table data: notes/tags/status/IDs, citations/feedback, annotation/evidence histories/tombstones, preset tombstones and elected files. Corruption/missing/duplicate/path/schema/failure-cleanup checks execute on synthetic fixtures.
+- [x] Restore an additive older LitRadar schema and upgrade twice, retaining existing fields, identities, metadata and histories. Compatibility identifiers remain unchanged.
 
 **Done when:** automated tests verify backup, restore and upgrade without contacting services or touching personal data; USER-GUIDE documents restore steps and exclusions.
+
+Implementation evidence: Linux Python 3.12.14 recovery **49 passed / 0 failed / 0 skipped**; full recovery branch **479 Python / 38 JS passed, 0 failed, 0 skipped**. A disposable integration of the separate packaging/recovery/venue changes passed **501 Python tests** and installed-wheel recovery/web smoke. Gate 2 source checks are implemented; final recovery-head CI and Windows recovery remain to be observed. This does not close Gate 1 or authorize a release/version bump.
 
 ## Gate 3 — Windows-first install, launch and normal use (P0)
 

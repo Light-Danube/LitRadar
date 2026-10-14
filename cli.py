@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import sqlite3
 import sys
 import subprocess
 import textwrap
@@ -59,6 +60,31 @@ def cmd_init(args: argparse.Namespace) -> int:
     store.close()
     print(f"Initialized database: {args.db}")
     print(f"Papers stored: {stats['all']}")
+    return 0
+
+
+def cmd_library_backup(args: argparse.Namespace) -> int:
+    from storage.recovery import backup_library
+    try:
+        bundle = backup_library(args.db, args.destination, research=args.research_dir,
+                                offline=args.offline_dir, writers_stopped=args.writers_stopped)
+    except (ValueError, OSError, sqlite3.Error) as exc:
+        print(f"Library backup failed: {exc}", file=sys.stderr)
+        return 1
+    print(f"Library backup created: {bundle}")
+    print("Excluded: credentials, logs, caches, models, profiles/config and scheduler registrations.")
+    return 0
+
+
+def cmd_library_restore(args: argparse.Namespace) -> int:
+    from storage.recovery import restore_library
+    try:
+        database = restore_library(args.bundle, args.destination)
+    except (ValueError, OSError, sqlite3.Error) as exc:
+        print(f"Library restore failed: {exc}", file=sys.stderr)
+        return 1
+    print(f"Library restored into new destination: {database}")
+    print("Select this database explicitly with --db. Review profile/config and scheduler settings manually.")
     return 0
 
 
@@ -992,6 +1018,18 @@ Most commands have their own help page, e.g.:
 
     p_init = sub.add_parser("init", help="initialize or migrate the database")
     p_init.set_defaults(func=cmd_init)
+
+    p_backup = sub.add_parser("library-backup", help="consistent local SQLite snapshot; no source migrations")
+    p_backup.add_argument("destination", help="new backup directory; parent must exist")
+    p_backup.add_argument("--research-dir", help="explicitly include this stopped-writer research artifact root")
+    p_backup.add_argument("--offline-dir", help="explicitly include this stopped-writer offline artifact root")
+    p_backup.add_argument("--writers-stopped", action="store_true", help="acknowledge all artifact writers have been stopped")
+    p_backup.set_defaults(func=cmd_library_backup)
+
+    p_library_restore = sub.add_parser("library-restore", help="verify a trusted bundle and restore into a new directory only")
+    p_library_restore.add_argument("bundle", help="local backup bundle directory")
+    p_library_restore.add_argument("destination", help="new restore directory; never overwrite or merge")
+    p_library_restore.set_defaults(func=cmd_library_restore)
 
     p_config = sub.add_parser("config", help="show effective runtime configuration (secrets are masked)")
     p_config.set_defaults(func=cmd_config)

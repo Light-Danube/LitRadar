@@ -95,7 +95,7 @@ Replace `PAPER_ID` with a canonical library ID. Worksheets are human-editable, p
 
 ## Data and limitations
 
-Source checkouts keep `data/litradar.sqlite3`. Installed wheels use a writable per-user LitBeacon directory; `LITBEACON_HOME` (legacy `LITRADAR_HOME`) overrides it. Run installed commands with `python -m cli`; see [wheel installation and data paths](docs/USER-GUIDE.md#wheel-installation). `.env`, PDFs and caches stay outside Git. Migrations are additive. Back up your closed library before upgrading; [local data and updates](docs/USER-GUIDE.md#database-and-local-data).
+The default library is `data/litradar.sqlite3`; `.env`, PDFs and caches stay outside Git. Migrations are additive. Unreleased `library-backup` creates a consistent SQLite snapshot with explicitly elected files; `library-restore` verifies it into a new directory. [Backup, exclusions and upgrade instructions](docs/USER-GUIDE.md#consistent-local-backup-and-restore-unreleased).
 
 Discovery indexes, preprints, venue metadata and citations do not certify peer review, Scopus/WoS membership or academic novelty. Missing evidence stays unverified. The user confirmed live CLI retrieval locally; cloud OpenAlex/Crossref probes were blocked by proxy **403**. Synthetic tests establish behavior, not live coverage. Windows, rendered-browser and real-model results are tracked separately in the validation documents.
 
