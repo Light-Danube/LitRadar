@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased — Ukrainian Textual TUI and job crash fixes
+
+- Add EN/UK TUI language selection, translated app bindings/status/sort/detail/help/activity/job controls and notifications. Preserve raw paper data, provider/CLI diagnostics and identifiers; startup language can use `LITBEACON_TUI_LANGUAGE` or its legacy alias.
+- Fix scheduler thread results dispatched through App, prevent repeated commands while busy, recover controls after errors/timeouts and ignore late results after dialog closure. Refresh new tags in the filter immediately after saving.
+- Keep the TUI alive on offline-storage errors and retain the localized failure in the activity panel; test PDF/metadata outcomes and intercepted PDF/DOI opening.
+- Add keyboard-scrollable help/details/jobs, explicit help Close, visible focus, vertically stacked job controls, a flexible online input and two-row toolbar below 110 columns. Keep the full grouped-menu redesign as a [draft](docs/TUI-MENU-DRAFT.md).
+- Require Textual >=1.0,<2 in both UI installation paths and include the localization module in package metadata. Existing release version remains 0.8.0.
+- Add synthetic workflow/localization tests and a disposable [Windows Terminal + Narrator audit fixture](docs/TUI-ACCESSIBILITY-AUDIT.md). **430 Python passed / 0 failed / 0 skipped; 6 Node files passed / 0 failed / 0 skipped**; 29 TUI tests, ANSI PTY and fixture smoke passed. One existing Starlette deprecation warning. Full assistive-technology audit and remote CI remain unverified; no README changes.
+
 ## Unreleased — browser research workspace
 
 - Add a sixth Research section for explicit venue-scoped search and editing the existing evidence worksheets, with EN/UK, preserved drafts and library filters for to-read/new/all. Keep the prior five sections and Alt+1–5; Alt+6 opens Research.
