@@ -48,7 +48,7 @@
     "title_similarity": 0.42
   },
   "delivery": {
-    "enabled": true,
+    "enabled": false,
     "frequency": "weekly",
     "time": "09:00"
   }
