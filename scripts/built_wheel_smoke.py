@@ -11,7 +11,8 @@ import tempfile
 
 def main() -> None:
     with tempfile.TemporaryDirectory(prefix="litbeacon-wheel-") as temporary:
-        root = Path(temporary)
+        # Windows runner temporary paths may use a short name or junction alias.
+        root = Path(temporary).resolve()
         os.environ["LITBEACON_HOME"] = str(root / "user")
         # Set the disposable home before any application imports.
         import cli
@@ -25,7 +26,8 @@ def main() -> None:
 
         assert not (CODE_ROOT / "pyproject.toml").exists(), "Smoke must import the installed wheel, not the checkout"
         assert Path(cli.__file__).parent == CODE_ROOT
-        assert WORKSPACE_ROOT == root / "user"
+        expected_home = (root / "user").resolve()
+        assert WORKSPACE_ROOT == expected_home, f"Actual workspace {WORKSPACE_ROOT!s}; expected {expected_home!s}; temporary {temporary!s}"
         assert cli.build_parser().parse_args(["web", "--no-open-browser"]).host == "127.0.0.1"
         assert cli.DEFAULT_DB == DEFAULT_DB
         assert config.ENV_PATH == WORKSPACE_ROOT / ".env"
