@@ -1,0 +1,2 @@
+# Optional OFF-default workspace semantic exploration. Models must exist locally.
+sentence-transformers>=3.0,<6

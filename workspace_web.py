@@ -9,6 +9,10 @@ from __future__ import annotations
 import json
 import re
 import sqlite3
+import os
+import threading
+import hashlib
+import copy
 from collections import Counter, defaultdict
 from pathlib import Path
 from typing import Any, Literal
@@ -201,9 +205,42 @@ def _make_clusters(rows: list[sqlite3.Row]) -> dict[str, Any]:
     }
 
 
-def create_app(db_path: str | Path = DEFAULT_DB) -> FastAPI:
+def create_app(db_path: str | Path = DEFAULT_DB, *, semantic_enabled: bool | None = None, semantic_embedder=None) -> FastAPI:
     app = FastAPI(title="LitBeacon Research Workspace", version="0.8.0")
     app.state.db_path = str(db_path)
+    if semantic_enabled is None:
+        semantic_enabled = os.getenv('LITBEACON_SEMANTIC_WORKSPACE', os.getenv('LITRADAR_SEMANTIC_WORKSPACE', '0')).lower() in {'1','true'}
+    app.state.semantic_enabled = semantic_enabled
+    app.state.semantic_embedder = semantic_embedder
+    app.state.semantic_cache = {}
+    semantic_lock = threading.Lock()
+
+    def semantic_status():
+        return {'enabled': app.state.semantic_enabled,
+                'configured': app.state.semantic_embedder is not None or bool(os.getenv('LITBEACON_EMBEDDING_MODEL_PATH', os.getenv('LITRADAR_EMBEDDING_MODEL_PATH', ''))),
+                'max_papers': 200, 'threshold': 0.72}
+
+    def semantic_analysis(papers):
+        if not app.state.semantic_enabled:
+            raise HTTPException(409, 'Semantic workspace is disabled; enable the explicit server feature flag')
+        from ranking.semantic_workspace import LocalSentenceTransformerEmbedder, SemanticWorkspace
+        with semantic_lock:
+            try:
+                if app.state.semantic_embedder is None:
+                    path = os.getenv('LITBEACON_EMBEDDING_MODEL_PATH', os.getenv('LITRADAR_EMBEDDING_MODEL_PATH', ''))
+                    if not path:
+                        raise ValueError('Configure an existing local model directory')
+                    app.state.semantic_embedder = LocalSentenceTransformerEmbedder(path)
+                key = hashlib.sha256(json.dumps([(p['id'],p['title'],p['abstract']) for p in papers],ensure_ascii=False).encode()).hexdigest()
+                if key not in app.state.semantic_cache:
+                    app.state.semantic_cache = {key: SemanticWorkspace(app.state.semantic_embedder).analyze(papers)}
+                result = copy.deepcopy(app.state.semantic_cache[key])
+                latest = {p['id']:p for p in papers}
+                for cluster in result['clusters']:
+                    cluster['papers'] = [latest[p['id']] for p in cluster['papers']]
+                return result
+            except (RuntimeError, ValueError, ImportError, OSError) as exc:
+                raise HTTPException(503, 'Local semantic model unavailable or invalid; check optional dependency and local model configuration') from exc
     app.mount("/static", StaticFiles(directory=str(STATIC_ROOT)), name="static")
 
     @app.get("/", include_in_schema=False)
@@ -212,7 +249,12 @@ def create_app(db_path: str | Path = DEFAULT_DB) -> FastAPI:
 
     @app.get("/api/health")
     def health() -> dict[str, Any]:
-        return {"ok": True, "product": "LitBeacon", "legacy_name": "LitRadar", "database": Path(app.state.db_path).name}
+        return {"ok": True, "product": "LitBeacon", "legacy_name": "LitRadar", "database": Path(app.state.db_path).name,
+                "semantic_workspace": semantic_status()}
+
+    @app.get('/api/semantic-workspace')
+    def semantic_capabilities():
+        return semantic_status()
 
     @app.get("/api/summary")
     def summary() -> dict[str, Any]:
@@ -445,6 +487,7 @@ def create_app(db_path: str | Path = DEFAULT_DB) -> FastAPI:
         year_from: int | None = Query(default=None, ge=1000, le=9999),
         year_to: int | None = Query(default=None, ge=1000, le=9999),
         include_unknown: bool = True,
+        include_semantic: bool = False,
     ) -> dict[str, Any]:
         if year_from is not None and year_to is not None and year_from > year_to:
             raise HTTPException(422, "Year range is reversed")
@@ -467,6 +510,25 @@ def create_app(db_path: str | Path = DEFAULT_DB) -> FastAPI:
                 return store.conn.execute(f"SELECT 1 FROM papers WHERE id=? AND ({year_clause})",
                                           (paper_id, *year_params)).fetchone() is not None
             # Apply edge filters during traversal as well as during serialization.
+            semantic_rows, semantic_metadata = [], None
+            if include_semantic:
+                cohort_rows = store.conn.execute(f"SELECT * FROM papers WHERE {year_clause} ORDER BY relevance_score DESC, id DESC LIMIT 200", year_params).fetchall()
+                cohort = {int(row['id']): _paper_dict(row) for row in cohort_rows}
+                if seed_id is not None:
+                    seed = store.get(seed_id)
+                    if seed is None:
+                        raise HTTPException(404, 'Paper not found')
+                    if seed_id not in cohort and len(cohort)>=200:
+                        cohort.pop(next(reversed(cohort)))
+                    cohort[seed_id] = _paper_dict(seed)
+                analysis = semantic_analysis(list(cohort.values()))
+                semantic_metadata = {k:v for k,v in analysis.items() if k not in {'edges','clusters'}}
+                for edge in analysis['edges']:
+                    if relation not in {'all','related'} or (provider and provider!=edge['provider']):
+                        continue
+                    semantic_rows.append({'source_paper_id':int(edge['source']),'target_paper_id':int(edge['target']),
+                                          'relation_type':'related','provider':edge['provider'],'observed_at':None,
+                                          'similarity':edge['similarity'],'model':analysis['model'],'ephemeral':True})
             filters, filter_params = [], []
             if relation != "all":
                 filters.append("relation_type=?")
@@ -480,16 +542,20 @@ def create_app(db_path: str | Path = DEFAULT_DB) -> FastAPI:
                 ordered = sorted(ids)
                 marks = ",".join("?" for _ in ordered)
                 operator = "AND" if induced else "OR"
-                return store.conn.execute(
+                stored = store.conn.execute(
                     f"SELECT * FROM paper_relations WHERE (source_paper_id IN ({marks}) "
                     f"{operator} target_paper_id IN ({marks})){suffix} "
                     "ORDER BY source_paper_id, target_paper_id, relation_type, provider",
                     (*ordered, *ordered, *filter_params),
                 ).fetchall()
+                extra = [e for e in semantic_rows if ((e['source_paper_id'] in ids and e['target_paper_id'] in ids) if induced else (e['source_paper_id'] in ids or e['target_paper_id'] in ids))]
+                return list(stored)+extra
 
             providers = [row[0] for row in store.conn.execute(
                 "SELECT DISTINCT provider FROM paper_relations ORDER BY provider"
             )]
+            if semantic_rows:
+                providers=sorted(set(providers)|{e['provider'] for e in semantic_rows})
             truncated = False
             if seed_id is None:
                 rows = store.conn.execute(f"SELECT * FROM papers WHERE {year_clause} "
@@ -541,16 +607,24 @@ def create_app(db_path: str | Path = DEFAULT_DB) -> FastAPI:
                 item = grouped[key]
                 if edge["provider"] not in item["providers"]:
                     item["providers"].append(edge["provider"])
-                item["provenance"].append({"provider": edge["provider"], "observed_at": edge["observed_at"]})
+                observation = {"provider": edge["provider"], "observed_at": edge["observed_at"]}
+                if isinstance(edge,dict) and edge.get('ephemeral'):
+                    observation.update(ephemeral=True, model=edge['model'], similarity=edge['similarity'])
+                    item['similarity'] = edge['similarity']
+                item["provenance"].append(observation)
             edge_payload = [grouped[key] for key in sorted(grouped)]
             return {"seed_id": seed_id, "depth": depth, "truncated": truncated, "nodes": nodes,
                     "edges": edge_payload, "providers": providers, "relation": relation, "provider": provider,
-                    "year_from": year_from, "year_to": year_to, "include_unknown": include_unknown}
+                    "year_from": year_from, "year_to": year_to, "include_unknown": include_unknown,
+                    "include_semantic": include_semantic, "semantic": semantic_metadata}
 
     @app.get("/api/clusters")
-    def clusters(limit: int = Query(default=400, ge=1, le=500)) -> dict[str, Any]:
+    def clusters(limit: int = Query(default=400, ge=1, le=500), mode: Literal['heuristic','semantic'] = 'heuristic') -> dict[str, Any]:
         with _with_store(app.state.db_path) as store:
-            rows = store.list_papers(limit=limit, sort="relevance_score")
+            rows = store.list_papers(limit=min(limit,200) if mode=='semantic' else limit, sort="relevance_score")
+            if mode=='semantic':
+                result=semantic_analysis([_paper_dict(row) for row in rows])
+                return {**result,'description':'Computed local embedding groups; not citation evidence or novelty claims.'}
             return _make_clusters(rows)
 
     @app.get("/api/jobs")

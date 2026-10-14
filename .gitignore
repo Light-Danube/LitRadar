@@ -29,3 +29,7 @@ data/telegram_bot_state.json.tmp
 # LitBeacon web workspace build/cache (the shipped web/ files are source assets)
 node_modules/
 frontend/dist/
+
+# Optional local embedding weights are not source or isolated-test inputs.
+models/
+*.safetensors
