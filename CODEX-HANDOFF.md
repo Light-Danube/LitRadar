@@ -1,5 +1,12 @@
 # Codex development handoff — LitBeacon Research Workspace
 
+## Current — verify venue workflow independently
+
+- Branch `codex/venue-verification`, baseline `448a6ea0`. [Executed checks and public-probe instructions](docs/research/venue-verification.md). Gate 1 audit PR #21 is merged; actual checks at its head `84c3f5ed` succeeded. New PR checks remain separate.
+- Tests replace HTTP transport only, exercising request encoding, identity/year validation, shared CLI/API service, cache/dedup, manual/evidence preservation and rollback across lookup/source/works failures. CLI handoff now points to implemented Research.
+- Linux Python **447/0/0**, Node **38/0/0**, one Starlette warning. Live public lookup attempted 2026-10-15 01:49 Europe/Kiev: cloud proxy tunnel 403 before OpenAlex. No personal configuration/database or live LLM/model access. Further live-provider/browser verification remains pending; the user's working CLI remains user-reported.
+- `python -m scripts.venue_provider_probe --live` performs public lookup; select an explicit returned `--source-id` for one bounded search page. Does not load `.env`/credentials or mutate libraries. Keep real results distinct from fixtures and certification claims.
+
 ## Current — local-only 1.0 freeze, Gate 1 audit
 
 - Branch `codex/local-v1-gate1-audit`, baseline main `b8b42ff4`. Read [release checklist](docs/LOCAL-1.0-RELEASE-CHECKLIST.md) and current ROADMAP before following historical suggestions below. No major features or version bump; 0.8.0 remains current. Real-model quality evaluation and Docker production optimization are not frozen 1.0 blockers.

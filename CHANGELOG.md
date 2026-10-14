@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased — venue verification and accurate CLI handoff
+
+- Verify existing venue lookup/search through real CLI/API/discovery adapters with only HTTP transport mocked: ambiguous identities, structured source/year filters, Unicode query encoding, cache/dedup, evidence/manual-field preservation and classified failures without partial bundles. Correct stale CLI text to point to the implemented Research section.
+- Add an explicit public-provider probe that reads no library/configuration/credentials. Current live lookup failed at the environment proxy tunnel with 403; no independent live venue/browser search pass is claimed. [Evidence and repeat procedure](docs/research/venue-verification.md).
+- Executed: **447 Python / 38 JS passed, 0 failed, 0 skipped**; one Starlette warning; whitespace check passed. No release/version bump, new provider or major feature.
+
 ## Unreleased — local-only 1.0 Gate 1 audit
 
 - Freeze major feature development and add an [evidence-based release checklist](docs/LOCAL-1.0-RELEASE-CHECKLIST.md) covering existing workflows, merged PRs, CI profile skips and remaining gates.

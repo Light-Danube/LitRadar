@@ -46,7 +46,7 @@ No open PRs or issues were returned before this audit PR was created. PRs [#18](
 
 - [x] **Gate 1 inventory/backlog:** freeze implemented workflows; no open feature PR to reconcile at audit time.
 - [x] **Gate 1 source regressions:** combined Python/JS pass, Research and five-section EN/UK/draft/consent contracts covered by synthetic tests; dependency skips explained by CI profile.
-- [ ] **Gate 1 candidate CI:** inspect actual checks at the Draft PR's final head. Baseline green checks do not close this item.
+- [x] **Gate 1 audit candidate CI:** actual checks at merged audit PR #21 head `84c3f5ed` succeeded. This does not establish later packaging/recovery/release-candidate checks.
 - [ ] **P0 packaging defect (Gates 3/6):** explicit `pyproject.toml` module list omits `config.py`, which `cli.py` imports. CLI also reads sibling `VERSION`; profile/digest defaults are sibling JSON files, absent from the wheel. Add a focused packaging fix and clean installed-artifact CLI/web smoke outside the checkout; verify package-owned assets and writable user-data paths.
 - [ ] **P0 recovery gap (Gate 2):** no consistent SQLite backup or database restore command exists. CLI `restore` changes paper status only. Document and test database plus elected durable research/offline artifacts; current note/annotation recovery cannot replace this.
 - [ ] **P0 upgrade integrity (Gate 2):** extend existing legacy migration fixtures to comprehensive identity/manual-field/history preservation; check foreign keys and integrity before/after repeated upgrade.
@@ -56,6 +56,8 @@ No open PRs or issues were returned before this audit PR was created. PRs [#18](
 - [ ] **P0 release artifact/docs (Gate 6):** clean installation, full artifact exclusions, backup/upgrade guide and final candidate checklist. Keep 0.8.0 until candidate verification and explicit release approval; no merge/tag/version bump in this PR.
 
 **Gate 1 is not declared complete:** candidate CI and packaging/workflow blocker resolution remain open. Real-model evaluation and optional Docker production optimization are outside the frozen 1.0 release scope, despite older handoff language.
+
+[Further venue verification](research/venue-verification.md): **447 Python / 38 JS passed, 0 failed, 0 skipped** on a dedicated branch, with additional HTTP-transport CLI/API identity/filter/preservation tests. Explicit live lookup encountered the cloud proxy tunnel 403 before OpenAlex. A repeatable public probe is available; live search remains pending. User-reported working retrieval is not promoted to an independently observed pass.
 
 ## Smallest next PR — local recovery, not a new subsystem
 
