@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import os
 import re
 import subprocess
 import sys
@@ -15,12 +16,15 @@ from offline import is_available_offline, offline_pdf_path, save_paper_offline
 from pipeline import search_and_ingest
 from citation_intelligence import explore_citation_graph
 
+from ui_locales import HELP_TEXT, localize_explanation, normalize_language, tr
+
 from rich.text import Text
 from textual.app import App, ComposeResult
 from textual import work
 from textual.binding import Binding
-from textual.containers import Horizontal, Vertical
+from textual.containers import Horizontal, Vertical, VerticalScroll
 from textual.screen import ModalScreen
+from textual.worker import get_current_worker
 from textual.widgets import Button, DataTable, Footer, Header, Input, ProgressBar, Select, Static
 
 
@@ -56,35 +60,25 @@ def highlight_search_terms(body: str, abstract: str, query: str) -> Text:
 class HelpScreen(ModalScreen[None]):
     BINDINGS = [Binding("escape", "close", "Close", show=False), Binding("q", "close", "Close", show=False)]
 
+    def __init__(self, language: str = "en") -> None:
+        super().__init__()
+        self.language = normalize_language(language)
+
+    def _t(self, key: str, **kwargs) -> str:
+        return tr(self.language, key, **kwargs)
+
     def compose(self) -> ComposeResult:
-        yield Static(
-            "[b]LitBeacon (formerly LitRadar) — keyboard help[/b]\n\n"
-            "[b]Navigation[/b]\n"
-            "↑ / ↓   select paper\n"
-            "Enter   select row\n"
-            "/       focus search\n"
-            "F       focus status filter\n"
-            "S       focus sort\n"
-            "Search box filters the saved library locally.\n"
-            "Online search box + Fetch / Ctrl+Enter queries enabled providers.\n"
-            "The progress panel below shows provider activity, ranking, and saving.\n\n"
-            "[b]Workflow[/b]\n"
-            "T       mark To Read\n"
-            "R       mark Read\n"
-            "Y       useful / positive feedback\n"
-            "N       not relevant / negative feedback\n"
-            "D       dismiss\n"
-            "U       restore\n"
-            "G       edit tags\n"
-            "L       save current paper offline\n"
-            "O       open local PDF or paper URL\n"
-            "C       explore citations/references for selected paper\n"
-            "J       manage scheduled scan/digest jobs (install/remove)\n"
-            "S       includes Personalized sort\n\n"
-            "?       this help\n"
-            "Q / Esc close help / quit\n",
-            id="help_body",
-        )
+        with Vertical(id="help_dialog"):
+            with VerticalScroll(id="help_scroll", can_focus=True):
+                yield Static(self._t(HELP_TEXT), id="help_body")
+            yield Button(self._t("Close"), id="help_close")
+
+    def on_mount(self) -> None:
+        self.query_one("#help_scroll", VerticalScroll).focus()
+
+    def on_button_pressed(self, event: Button.Pressed) -> None:
+        if event.button.id == "help_close":
+            self.dismiss()
 
     def action_close(self) -> None:
         self.dismiss()
@@ -93,22 +87,26 @@ class HelpScreen(ModalScreen[None]):
 class TagScreen(ModalScreen[None]):
     BINDINGS = [Binding("escape", "cancel", "Cancel", show=False)]
 
-    def __init__(self, store: PaperStore, paper_id: int) -> None:
+    def __init__(self, store: PaperStore, paper_id: int, language: str = "en") -> None:
         super().__init__()
         self.store = store
         self.paper_id = paper_id
+        self.language = normalize_language(language)
+
+    def _t(self, key: str, **kwargs) -> str:
+        return tr(self.language, key, **kwargs)
 
     def compose(self) -> ComposeResult:
         row = self.store.get(self.paper_id)
         current = ", ".join(json.loads(row["tags_json"] or "[]")) if row else ""
-        existing = ", ".join(self.store.all_tags()) or "(none yet)"
+        existing = ", ".join(self.store.all_tags()) or self._t("(none yet)")
         with Vertical(id="tag_dialog"):
-            yield Static("[b]Edit tags[/b]", id="tag_title")
-            yield Static(f"Existing tags: {existing}", id="tag_existing")
-            yield Input(value=current, placeholder="tag-one, tag-two, …", id="tag_input")
+            yield Static(self._t("[b]Edit tags[/b]"), id="tag_title")
+            yield Static(self._t("Existing tags: {existing}", existing=existing), id="tag_existing", markup=False)
+            yield Input(value=current, placeholder=self._t("tag-one, tag-two, …"), id="tag_input")
             with Horizontal(id="tag_buttons"):
-                yield Button("Save", id="tag_save", variant="primary")
-                yield Button("Cancel", id="tag_cancel")
+                yield Button(self._t("Save"), id="tag_save", variant="primary")
+                yield Button(self._t("Cancel"), id="tag_cancel")
 
     def on_mount(self) -> None:
         self.query_one("#tag_input", Input).focus()
@@ -138,34 +136,42 @@ class ScheduleScreen(ModalScreen[None]):
 
     BINDINGS = [Binding("escape", "close", "Close", show=False), Binding("q", "close", "Close", show=False)]
 
-    def __init__(self, config_path: str | Path | None = None) -> None:
+    def __init__(self, config_path: str | Path | None = None, language: str = "en") -> None:
         super().__init__()
+        self.language = normalize_language(language)
+        self._busy = False
         self.config_path = Path(config_path or (Path(__file__).resolve().parent / "digest_config.json"))
 
+    def _t(self, key: str, **kwargs) -> str:
+        return tr(self.language, key, **kwargs)
+
     def compose(self) -> ComposeResult:
-        with Vertical(id="schedule_dialog"):
-            yield Static("[b]Scheduled jobs[/b]", id="schedule_title")
+        with VerticalScroll(id="schedule_dialog", can_focus=True):
+            yield Static(self._t("Scheduled jobs"), id="schedule_title", markup=False)
             yield Static(
-                "Scan fills the local library. Digest sends the configured daily/weekly report.\n"
+                self._t("Scan fills the local library. Digest sends the configured daily/weekly report.\n"
                 "Remove only the job you do not want; removing a job does not delete papers or settings.\n"
-                "The built-in manager supports Windows Task Scheduler. On Linux/macOS, remove disables LitBeacon's scheduled-run config; remove the matching cron/launchd entry too.",
+                "The built-in manager supports Windows Task Scheduler. On Linux/macOS, remove disables LitBeacon's scheduled-run config; remove the matching cron/launchd entry too."),
                 id="schedule_help",
+                markup=False,
             )
-            yield Static("Checking scheduler status…", id="schedule_status", markup=False)
+            yield Static(self._t("Checking scheduler status…"), id="schedule_status", markup=False)
             with Horizontal(id="schedule_action_row"):
-                yield Button("Refresh status", id="schedule_status_btn")
-                yield Button("Install scan · daily 07:30", id="schedule_install_scan")
-                yield Button("Install digest · weekly 09:00", id="schedule_install_digest")
+                yield Button(self._t("Refresh status"), id="schedule_status_btn")
+                yield Button(self._t("Install scan · daily 07:30"), id="schedule_install_scan")
+                yield Button(self._t("Install digest · weekly 09:00"), id="schedule_install_digest")
             with Horizontal(id="schedule_remove_row"):
-                yield Button("Remove scan", id="schedule_remove_scan", variant="warning")
-                yield Button("Remove digest", id="schedule_remove_digest", variant="warning")
-                yield Button("Remove all", id="schedule_remove_all", variant="error")
-                yield Button("Close", id="schedule_close")
+                yield Button(self._t("Remove scan"), id="schedule_remove_scan", variant="warning")
+                yield Button(self._t("Remove digest"), id="schedule_remove_digest", variant="warning")
+                yield Button(self._t("Remove all"), id="schedule_remove_all", variant="error")
+                yield Button(self._t("Close"), id="schedule_close")
 
     def on_mount(self) -> None:
-        self._run_schedule("status", "all")
+        self.query_one("#schedule_close", Button).focus()
+        self._start_schedule("status", "all")
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
+        event.stop()
         actions = {
             "schedule_status_btn": ("status", "all", "daily", "08:00"),
             "schedule_install_scan": ("install", "scan", "daily", "07:30"),
@@ -179,10 +185,22 @@ class ScheduleScreen(ModalScreen[None]):
             return
         values = actions.get(event.button.id)
         if values:
-            self._run_schedule(*values)
+            self._start_schedule(*values)
+
+    def _start_schedule(self, action: str, job: str, frequency: str = "daily", when: str = "08:00") -> None:
+        if self._busy:
+            return
+        self._busy = True
+        self.query_one("#schedule_status", Static).update(self._t("Running scheduler command…"))
+        for button in self.query(Button):
+            if button.id != "schedule_close":
+                button.disabled = True
+        self._run_schedule(action, job, frequency, when)
 
     @work(exclusive=True, thread=True)
     def _run_schedule(self, action: str, job: str, frequency: str = "daily", when: str = "08:00") -> None:
+        worker = get_current_worker()
+        app = self.app
         command = [
             sys.executable, str(Path(__file__).resolve().parent / "cli.py"), "schedule", action,
             "--job", job, "--frequency", frequency, "--time", when, "--config", str(self.config_path),
@@ -193,18 +211,28 @@ class ScheduleScreen(ModalScreen[None]):
             if completed.stderr:
                 message = (message + "\n" + completed.stderr.strip()).strip()
             if not message:
-                message = f"Schedule command finished with exit code {completed.returncode}."
+                message = self._t("Schedule command finished with exit code {code}.", code=completed.returncode)
             if completed.returncode:
-                message = f"Command exit code {completed.returncode}.\n{message}"
+                message = self._t("Command exit code {code}.\n{message}", code=completed.returncode, message=message)
         except (OSError, subprocess.TimeoutExpired) as exc:
-            message = f"Could not run scheduler command: {type(exc).__name__}: {exc}"
-        self.call_from_thread(self._display_status, message)
+            message = self._t("Could not run scheduler command: {error}: {message}", error=type(exc).__name__, message=exc)
+        # Screen has no call_from_thread; only App owns the UI event loop.
+        # A closed dialog must not receive a late subprocess result.
+        if not worker.is_cancelled and app.is_running:
+            app.call_from_thread(self._display_status, message)
 
     def _display_status(self, message: str) -> None:
+        if not self.is_mounted:
+            return
+        self._busy = False
+        for button in self.query(Button):
+            button.disabled = False
         self.query_one("#schedule_status", Static).update(message)
 
     def action_close(self) -> None:
         self.dismiss()
+
+
 
 
 class LitRadarApp(App[None]):
@@ -236,8 +264,11 @@ class LitRadarApp(App[None]):
         Binding("j", "manage_jobs", "Scheduled jobs"),
     ]
 
-    def __init__(self, db_path: str | Path) -> None:
+    def __init__(self, db_path: str | Path, language: str | None = None) -> None:
         super().__init__()
+        self.language = normalize_language(language or os.environ.get("LITBEACON_TUI_LANGUAGE", os.environ.get("LITRADAR_TUI_LANGUAGE", "en")))
+        self.sub_title = self._t(self.SUB_TITLE)
+        self._localize_bindings()
         self.db_path = str(db_path)
         self.store = PaperStore(db_path)
         self.current_rows = []
@@ -249,68 +280,152 @@ class LitRadarApp(App[None]):
         self._search_source_count = 0
         self._search_source_done: set[str] = set()
         self._search_source_messages: dict[str, str] = {}
-        self._search_phase_line = "Ready. Enter a query above; provider activity and the final summary will appear here."
+        self._search_phase_line = self._t("Ready. Enter a query above; provider activity and the final summary will appear here.")
         self._citation_busy = False
+
+    def _main_query(self, selector, expect_type=None):
+        """Keep app callbacks on the library screen while a modal is active."""
+        return self.screen_stack[0].query_one(selector, expect_type)
+
+    def _t(self, key: str, **kwargs) -> str:
+        return tr(self.language, key, **kwargs)
+
+    def _status_label(self, status: str) -> str:
+        if self.language == "en":
+            return status.replace("-", " ").title()
+        return self._t(status)
+
+    def _localize_bindings(self) -> None:
+        translated = type(self._bindings)([
+            Binding(binding.key, binding.action, self._t(binding.description),
+                    show=binding.show, priority=binding.priority)
+            for binding in self.BINDINGS
+        ])
+        # Constructing a binding map normalizes punctuation keys, unlike bind().
+        # Retain framework bindings such as Ctrl+Q and the command palette.
+        keys = translated.key_to_bindings
+        for key, bindings in self._bindings.key_to_bindings.items():
+            if key not in keys:
+                keys[key] = bindings
+        self._bindings = translated
+
+    def _localize_controls(self) -> None:
+        for selector, label in (
+            ("#search", "Saved library"), ("#status", "Status"),
+            ("#sort", "Sort"), ("#tag", "Tags"),
+            ("#source_query", "Online search"), ("#language", "Language"),
+        ):
+            widget = self._main_query(selector)
+            widget.border_title = self._t(label)
+            widget.tooltip = self._t(label)
+
+    def set_language(self, language: str) -> None:
+        language = normalize_language(language)
+        if language == self.language:
+            return
+        selected_id = self._selected_id()
+        self.language = language
+        self.sub_title = self._t(self.SUB_TITLE)
+        self._localize_bindings()
+        self._main_query("#search", Input).placeholder = self._t("Filter saved library by title/abstract/notes…")
+        self._main_query("#source_query", Input).placeholder = self._t("Search online sources…")
+        self._main_query("#search_sources", Button).label = self._t("Fetch papers")
+        for selector, options in (
+            ("#status", [(self._status_label(value), value) for value in ["all", *STATUSES]]),
+            ("#sort", [(self._t(label), value) for value, label in SORT_LABELS.items()]),
+        ):
+            widget = self._main_query(selector, Select)
+            value = widget.value
+            widget.set_options(options)
+            widget.value = value
+        self._refresh_tag_options()
+        table = self._main_query("#papers", DataTable)
+        table.clear(columns=True)
+        table.add_columns("ID", self._t("Score"), self._t("Status"), self._t("Year"), self._t("Title"))
+        if not self._search_query:
+            self._search_phase_line = self._t("Ready. Enter a query above; provider activity and the final summary will appear here.")
+            self._main_query("#search_status", Static).update(self._search_phase_line)
+        else:
+            self._render_search_activity()
+        self.refresh_rows()
+        if selected_id is not None:
+            for index, row in enumerate(self.current_rows):
+                if int(row["id"]) == selected_id:
+                    table.move_cursor(row=index)
+                    break
+            self._show_details()
+        self._localize_controls()
+        self.refresh_bindings()
 
     def compose(self) -> ComposeResult:
         yield Header(show_clock=True)
         with Horizontal(id="toolbar"):
-            yield Input(placeholder="Filter saved library by title/abstract/notes…", id="search")
+            yield Input(placeholder=self._t("Filter saved library by title/abstract/notes…"), id="search")
             yield Select(
-                [(label.replace("-", " ").title(), label) for label in ["all", *STATUSES]],
+                [(self._status_label(label), label) for label in ["all", *STATUSES]],
                 value="all",
                 id="status",
                 allow_blank=False,
             )
             yield Select(
-                [(label, key) for key, label in SORT_LABELS.items()],
+                [(self._t(label), key) for key, label in SORT_LABELS.items()],
                 value="relevance_score",
                 id="sort",
                 allow_blank=False,
             )
-            yield Select([("All tags", "__all_tags__")], value="__all_tags__", id="tag", allow_blank=False)
-            yield Static("Papers: 0", id="library_count")
+            yield Select([(self._t("All tags"), "__all_tags__")], value="__all_tags__", id="tag", allow_blank=False)
+            yield Static(self._t("Papers: 0"), id="library_count")
         with Horizontal(id="actionbar"):
-            yield Input(placeholder="Search online sources…", id="source_query")
-            yield Button("Fetch papers", id="search_sources", variant="primary")
+            yield Input(placeholder=self._t("Search online sources…"), id="source_query")
+            yield Button(self._t("Fetch papers"), id="search_sources", variant="primary")
+            yield Select([("English", "en"), ("Українська", "uk")], value=self.language, id="language", allow_blank=False)
         with Horizontal(id="search_progress_row"):
             yield ProgressBar(total=100, show_eta=False, show_percentage=True, id="search_progress")
             yield Static(
-                "Ready. Enter a query above; provider activity and the final summary will appear here.",
+                self._t("Ready. Enter a query above; provider activity and the final summary will appear here."),
                 id="search_status",
                 markup=False,
             )
         with Horizontal(id="main"):
             yield DataTable(id="papers", cursor_type="row", zebra_stripes=True)
-            with Vertical(id="details"):
-                yield Static("Select a paper", id="details_title")
+            with VerticalScroll(id="details", can_focus=True):
+                yield Static(self._t("Select a paper"), id="details_title", markup=False)
                 yield Static("", id="details_body")
         yield Footer()
 
     def on_mount(self) -> None:
-        table = self.query_one("#papers", DataTable)
-        table.add_columns("ID", "Score", "Status", "Year", "Title")
+        self._update_compact_layout()
+        self._localize_controls()
+        table = self._main_query("#papers", DataTable)
+        table.add_columns("ID", self._t("Score"), self._t("Status"), self._t("Year"), self._t("Title"))
         self._refresh_tag_options()
         self.refresh_rows()
+
+    def on_resize(self) -> None:
+        self._update_compact_layout()
+
+    def _update_compact_layout(self) -> None:
+        if self.screen_stack:
+            self.screen_stack[0].set_class(self.size.width < 110, "compact")
 
     def on_unmount(self) -> None:
         self.store.close()
 
     def _selected_id(self) -> int | None:
-        table = self.query_one("#papers", DataTable)
+        table = self._main_query("#papers", DataTable)
         if table.cursor_row < 0 or table.cursor_row >= len(self.current_rows):
             return None
         return int(self.current_rows[table.cursor_row]["id"])
 
     def refresh_rows(self) -> None:
-        query = self.query_one("#search", Input).value.strip() or None
-        status = str(self.query_one("#status", Select).value or "all")
-        sort = str(self.query_one("#sort", Select).value or "relevance_score")
-        tag_value = str(self.query_one("#tag", Select).value or "__all_tags__")
+        query = self._main_query("#search", Input).value.strip() or None
+        status = str(self._main_query("#status", Select).value or "all")
+        sort = str(self._main_query("#sort", Select).value or "relevance_score")
+        tag_value = str(self._main_query("#tag", Select).value or "__all_tags__")
         tag = None if tag_value == "__all_tags__" else tag_value
         library_total = self.store.total_count()
         view_total = self.store.total_count(status=status, query=query, tag=tag)
-        self.query_one("#library_count", Static).update(f"Library: {library_total} | View: {view_total}")
+        self._main_query("#library_count", Static).update(self._t("Library: {total} | View: {view}", total=library_total, view=view_total))
 
         if sort == "personalized":
             config = RadarConfig.load()
@@ -338,12 +453,12 @@ class LitRadarApp(App[None]):
             )
             self.current_display_scores = {int(row["id"]): float(row["relevance_score"] or 0.0) for row in self.current_rows}
 
-        table = self.query_one("#papers", DataTable)
+        table = self._main_query("#papers", DataTable)
         table.clear(columns=False)
         for row in self.current_rows:
             year = (row["published_at"] or "")[:4] or "—"
             display_score = self.current_display_scores.get(int(row["id"]), float(row["relevance_score"] or 0.0))
-            table.add_row(str(row["id"]), f"{display_score:.3f}", row["status"], year, row["title"])
+            table.add_row(str(row["id"]), f"{display_score:.3f}", self._status_label(row["status"]), year, Text(row["title"]))
         self._show_details()
 
     def _profile(self) -> object:
@@ -352,32 +467,32 @@ class LitRadarApp(App[None]):
     def _show_details(self) -> None:
         paper_id = self._selected_id()
         if paper_id is None:
-            self.query_one("#details_title", Static).update("No paper selected")
-            self.query_one("#details_body", Static).update("")
+            self._main_query("#details_title", Static).update(self._t("No paper selected"))
+            self._main_query("#details_body", Static).update("")
             return
         row = self.store.get(paper_id)
         if row is None:
             return
         tags = ", ".join(json.loads(row["tags_json"] or "[]")) or "—"
         source_tags = ", ".join(json.loads(row["source_tags_json"] or "[]")) or "—"
-        abstract_value = row["abstract"] or "(no abstract)"
+        abstract_value = row["abstract"] or self._t("(no abstract)")
         body = (
-            f"Status: {row['status']}\n"
-            f"Base score: {row['relevance_score']:.3f}\n"
-            f"Displayed score: {self.current_display_scores.get(int(row['id']), float(row['relevance_score'] or 0.0)):.3f}\n"
-            f"Source: {row['source']}\n"
-            f"Published: {row['published_at'] or 'n/a'}\n"
-            f"Venue: {row['venue'] or 'n/a'}\n"
-            f"DOI: {row['doi'] or 'n/a'}\n"
-            f"Citations: {row['citation_count']}\n"
-            f"References: {row['reference_count'] if row['reference_count'] is not None else 'n/a'}\n"
-            f"Influential citations: {row['influential_citation_count'] if row['influential_citation_count'] is not None else 'n/a'}\n"
-            f"Tags: {tags}\n"
-            f"Source tags: {source_tags}\n"
-            f"Offline PDF: {offline_pdf_path(row) if is_available_offline(row) else 'not saved'}\n\n"
+            f"{self._t('Status')}: {self._status_label(row['status'])}\n"
+            f"{self._t('Base score')}: {row['relevance_score']:.3f}\n"
+            f"{self._t('Displayed score')}: {self.current_display_scores.get(int(row['id']), float(row['relevance_score'] or 0.0)):.3f}\n"
+            f"{self._t('Source')}: {row['source']}\n"
+            f"{self._t('Published')}: {row['published_at'] or self._t('n/a')}\n"
+            f"{self._t('Venue')}: {row['venue'] or self._t('n/a')}\n"
+            f"DOI: {row['doi'] or self._t('n/a')}\n"
+            f"{self._t('Citations')}: {row['citation_count']}\n"
+            f"{self._t('References')}: {row['reference_count'] if row['reference_count'] is not None else self._t('n/a')}\n"
+            f"{self._t('Influential citations')}: {row['influential_citation_count'] if row['influential_citation_count'] is not None else self._t('n/a')}\n"
+            f"{self._t('Tags')}: {tags}\n"
+            f"{self._t('Source tags')}: {source_tags}\n"
+            f"{self._t('Offline PDF')}: {offline_pdf_path(row) if is_available_offline(row) else self._t('not saved')}\n\n"
             f"{abstract_value}"
         )
-        if str(self.query_one("#sort", Select).value) == "personalized" and self._personalization_model_active and self._personal_model is not None:
+        if str(self._main_query("#sort", Select).value) == "personalized" and self._personalization_model_active and self._personal_model is not None:
             config = RadarConfig.load()
             explanation = explain_candidate(
                 row,
@@ -385,14 +500,16 @@ class LitRadarApp(App[None]):
                 self._profile(),
                 weight=config.personalized_weight,
             )
-            body += f"\n\nPersonalized recommendation: {explanation}"
-        elif str(self.query_one("#sort", Select).value) == "personalized":
-            body += "\n\nPersonalized recommendation: not active yet; add more feedback or enable personalization."
-        self.query_one("#details_title", Static).update(row["title"])
-        search_query = self.query_one("#search", Input).value.strip()
+            if self.language == "uk":
+                explanation = localize_explanation(explanation)
+            body += f"\n\n{self._t('Personalized recommendation')}: {explanation}"
+        elif str(self._main_query("#sort", Select).value) == "personalized":
+            body += "\n\n" + self._t("Personalized recommendation: not active yet; add more feedback or enable personalization.")
+        self._main_query("#details_title", Static).update(row["title"])
+        search_query = self._main_query("#search", Input).value.strip()
         # Construct Rich Text from literal content so abstracts containing
         # markup-like characters remain safe to display.
-        self.query_one("#details_body", Static).update(
+        self._main_query("#details_body", Static).update(
             highlight_search_terms(body, abstract_value, search_query)
         )
 
@@ -409,14 +526,14 @@ class LitRadarApp(App[None]):
 
     def action_search_sources(self) -> None:
         if self._citation_busy:
-            self.notify("Citation exploration is still running.", severity="warning")
+            self.notify(self._t("Citation exploration is still running."), severity="warning")
             return
-        query = self.query_one("#source_query", Input).value.strip()
+        query = self._main_query("#source_query", Input).value.strip()
         if not query:
-            self.notify("Enter a source-search query in the online search field first.", severity="warning")
-            self.query_one("#source_query", Input).focus()
+            self.notify(self._t("Enter a source-search query in the online search field first."), severity="warning")
+            self._main_query("#source_query", Input).focus()
             return
-        self.query_one("#search_sources", Button).disabled = True
+        self._main_query("#search_sources", Button).disabled = True
         self._begin_source_search(query, 0)
         self._fetch_sources(query)
 
@@ -445,19 +562,19 @@ class LitRadarApp(App[None]):
 
     def action_explore_citations(self) -> None:
         if self._citation_busy:
-            self.notify("Citation exploration is already running.", severity="warning")
+            self.notify(self._t("Citation exploration is already running."), severity="warning")
             return
-        if self.query_one("#search_sources", Button).disabled:
-            self.notify("An online source search is already running; wait for it to finish first.", severity="warning")
+        if self._main_query("#search_sources", Button).disabled:
+            self.notify(self._t("An online source search is already running; wait for it to finish first."), severity="warning")
             return
         paper_id = self._selected_id()
         if paper_id is None:
-            self.notify("Select a paper first.", severity="warning")
+            self.notify(self._t("Select a paper first."), severity="warning")
             return
         self._citation_busy = True
-        self.query_one("#search_sources", Button).disabled = True
-        self._begin_source_search(f"Citation graph for paper id={paper_id}", 0)
-        self._search_phase_line = "Preparing bounded citation graph (references, cited-by and related; depth 1, up to 50 nodes)…"
+        self._main_query("#search_sources", Button).disabled = True
+        self._begin_source_search(self._t("Citation graph for paper id={paper_id}", paper_id=paper_id), 0)
+        self._search_phase_line = self._t("Preparing bounded citation graph (references, cited-by and related; depth 1, up to 50 nodes)…")
         self._render_search_activity()
         self._fetch_citation_graph(paper_id)
 
@@ -487,20 +604,19 @@ class LitRadarApp(App[None]):
     def _handle_citation_progress(self, event: str, message: str) -> None:
         self._search_phase_line = message
         if event in {"completed", "cache-hit"}:
-            bar = self.query_one("#search_progress", ProgressBar)
+            bar = self._main_query("#search_progress", ProgressBar)
             current = int(bar.progress or 0)
             bar.update(total=100, progress=min(90, current + 12))
         elif event == "error":
-            self._search_source_messages["citation-warning"] = f"warning: {message}"
+            self._search_source_messages["citation-warning"] = f"{self._t('warning')}: {message}"
         self._search_source_messages[f"citation-{len(self._search_source_messages)}"] = message
         self._render_search_activity()
 
     def _finish_citation_explore(self, result) -> None:
         self._citation_busy = False
-        self.query_one("#search_sources", Button).disabled = False
+        self._main_query("#search_sources", Button).disabled = False
         self._search_phase_line = (
-            f"Citation graph finished: {len(result.papers)} neighbor(s), {result.edges_added} new edge(s), "
-            f"{result.provider_requests} provider lookup(s), {result.cache_hits} cache hit(s)."
+            self._t("Citation graph finished: {papers} neighbor(s), {edges} new edge(s), {requests} provider lookup(s), {hits} cache hit(s).", papers=len(result.papers), edges=result.edges_added, requests=result.provider_requests, hits=result.cache_hits)
         )
         if result.warnings:
             self._search_phase_line += " " + " ".join(result.warnings[:1])
@@ -509,18 +625,18 @@ class LitRadarApp(App[None]):
             for index, paper in enumerate(result.papers[:4], start=1)
         }
         if result.errors:
-            self._search_source_messages["errors"] = f"{len(result.errors)} provider error(s): {result.errors[0]}"
-        self.query_one("#search_progress", ProgressBar).update(total=100, progress=100)
+            self._search_source_messages["errors"] = self._t("{count} provider error(s): {message}", count=len(result.errors), message=result.errors[0])
+        self._main_query("#search_progress", ProgressBar).update(total=100, progress=100)
         self._render_search_activity()
         self._personal_model = None
         self.refresh_rows()
 
     def _finish_citation_explore_error(self, message: str) -> None:
         self._citation_busy = False
-        self.query_one("#search_sources", Button).disabled = False
-        self._search_phase_line = f"Citation exploration failed: {message}"
+        self._main_query("#search_sources", Button).disabled = False
+        self._search_phase_line = self._t("Citation exploration failed: {message}", message=message)
         self._render_search_activity()
-        self.notify(f"Citation exploration failed: {message}", severity="error")
+        self.notify(self._t("Citation exploration failed: {message}", message=message), severity="error")
 
     def _begin_source_search(self, query: str, source_count: int) -> None:
         """Reset the persistent search activity panel before a new network query."""
@@ -528,16 +644,33 @@ class LitRadarApp(App[None]):
         self._search_source_count = max(int(source_count), 0)
         self._search_source_done = set()
         self._search_source_messages = {}
-        self._search_phase_line = f"Searching {self._search_source_count} source(s)…"
-        self.query_one("#search_progress", ProgressBar).update(total=100, progress=0)
+        self._search_phase_line = self._t("Searching {count} source(s)…", count=self._search_source_count)
+        self._main_query("#search_progress", ProgressBar).update(total=100, progress=0)
         self._render_search_activity()
+
+    def _localized_phase(self, source: str, message: str) -> str:
+        if self.language == "en":
+            return message
+        patterns = {
+            "search": (r"Searching (\d+) online source\(s\) for: (.*)", "Searching {count} online source(s) for: {query}", ("count", "query")),
+            "ranking": (r"Ranking (\d+) fetched paper\(s\); this can take longer when semantic scoring is enabled\.", "Ranking {count} fetched paper(s); this can take longer when semantic scoring is enabled.", ("count",)),
+            "saving": (r"Saving (\d+) ranked paper\(s\) to the local library\.", "Saving {count} ranked paper(s) to the local library.", ("count",)),
+            "complete": (r"Search complete: fetched (\d+); added (\d+); library total (\d+)\.", "Search complete: fetched {fetched}; added {added}; library total {total}.", ("fetched", "added", "total")),
+        }
+        if source in patterns:
+            pattern, template, fields = patterns[source]
+            match = re.fullmatch(pattern, message, flags=re.DOTALL)
+            if match:
+                return self._t(template, **dict(zip(fields, match.groups())))
+        return message
 
     def _handle_search_progress(self, event: str, source: str, message: str) -> None:
         """Render provider and pipeline progress in the main TUI instead of a toast."""
-        progress_bar = self.query_one("#search_progress", ProgressBar)
+        progress_bar = self._main_query("#search_progress", ProgressBar)
 
         if event == "phase":
-            self._search_phase_line = message
+            # Only translate known pipeline prose; provider diagnostics remain literal.
+            self._search_phase_line = self._localized_phase(source, message)
             if source == "search":
                 progress_bar.update(total=100, progress=0)
             elif source == "ranking":
@@ -550,11 +683,11 @@ class LitRadarApp(App[None]):
             return
 
         label = {
-            "started": "searching",
-            "cache-hit": "cached",
-            "completed": "done",
-            "error": "ERROR",
-            "warning": "warning",
+            "started": self._t("searching"),
+            "cache-hit": self._t("cached"),
+            "completed": self._t("done"),
+            "error": self._t("ERROR"),
+            "warning": self._t("warning"),
         }.get(event, event)
         self._search_source_messages[source] = f"{source}: {label} — {message}"
 
@@ -564,45 +697,46 @@ class LitRadarApp(App[None]):
             ratio = len(self._search_source_done) / self._search_source_count
             progress_bar.update(total=100, progress=min(70, round(70 * ratio)))
             self._search_phase_line = (
-                f"Searching online sources: {len(self._search_source_done)}/"
-                f"{self._search_source_count} finished. Other stages will follow."
+                self._t("Searching online sources: {done}/{count} finished. Other stages will follow.", done=len(self._search_source_done), count=self._search_source_count)
             )
         self._render_search_activity()
 
     def _render_search_activity(self) -> None:
         # Keep the query and current phase fixed, then show the latest provider states.
         source_lines = list(self._search_source_messages.values())[-4:]
-        lines = [f"Query: {self._search_query}", self._search_phase_line, *source_lines]
-        self.query_one("#search_status", Static).update("\n".join(lines))
+        lines = [self._t("Query: {query}", query=self._search_query), self._search_phase_line, *source_lines]
+        self._main_query("#search_status", Static).update("\n".join(lines))
 
     def _finish_source_search(self, summary) -> None:
-        self.query_one("#search_sources", Button).disabled = False
-        errors = f"; {len(summary.source_errors)} source error(s)" if summary.source_errors else ""
+        self._main_query("#search_sources", Button).disabled = False
+        errors = self._t("; {count} source error(s)", count=len(summary.source_errors)) if summary.source_errors else ""
         self._search_phase_line = (
-            f"Finished: fetched {summary.fetched}; added {summary.newly_stored}; "
-            f"library total {summary.library_total}{errors}."
+            self._t("Finished: fetched {fetched}; added {added}; library total {total}{errors}.", fetched=summary.fetched, added=summary.newly_stored, total=summary.library_total, errors=errors)
         )
-        self.query_one("#search_progress", ProgressBar).update(total=100, progress=100)
+        self._main_query("#search_progress", ProgressBar).update(total=100, progress=100)
         self._render_search_activity()
         # The durable result is shown in the activity panel; no disappearing success toast.
         self._personal_model = None
         self.refresh_rows()
 
     def _finish_source_search_error(self, message: str) -> None:
-        self.query_one("#search_sources", Button).disabled = False
-        self._search_phase_line = f"Search failed: {message}"
+        self._main_query("#search_sources", Button).disabled = False
+        self._search_phase_line = self._t("Search failed: {message}", message=message)
         self._render_search_activity()
-        self.notify(f"Source search failed: {message}", severity="error")
+        self.notify(self._t("Source search failed: {message}", message=message), severity="error")
 
     def on_select_changed(self, event: Select.Changed) -> None:
+        if event.select.id == "language":
+            self.set_language(str(event.value))
+            return
         if event.select.id in {"status", "sort", "tag"}:
             self.refresh_rows()
 
     def action_manage_jobs(self) -> None:
-        self.push_screen(ScheduleScreen())
+        self.push_screen(ScheduleScreen(language=self.language))
 
     def action_help(self) -> None:
-        self.push_screen(HelpScreen())
+        self.push_screen(HelpScreen(language=self.language))
 
     def action_mark_read(self) -> None:
         self._change_status("read")
@@ -636,13 +770,18 @@ class LitRadarApp(App[None]):
             return
         self.store.record_feedback(paper_id, signal, reason=reason)
         self._personal_model = None
-        self.notify("Recorded useful feedback." if signal > 0 else "Recorded not-relevant feedback.")
+        self.notify(self._t("Recorded useful feedback.") if signal > 0 else self._t("Recorded not-relevant feedback."))
         self.refresh_rows()
 
     def action_tags(self) -> None:
         paper_id = self._selected_id()
         if paper_id is not None:
-            self.push_screen(TagScreen(self.store, paper_id), callback=lambda _: self.refresh_rows())
+            self.push_screen(TagScreen(self.store, paper_id, language=self.language), callback=self._tags_closed)
+
+    def _tags_closed(self, _result=None) -> None:
+        self._refresh_tag_options()
+        self._personal_model = None
+        self.refresh_rows()
 
     def _change_status(self, status: str) -> None:
         paper_id = self._selected_id()
@@ -664,15 +803,24 @@ class LitRadarApp(App[None]):
 
     @work(exclusive=True, thread=True)
     def _save_offline(self, row) -> None:
-        result = save_paper_offline(row, unpaywall_email=RadarConfig.load().unpaywall_email)
+        try:
+            result = save_paper_offline(row, unpaywall_email=RadarConfig.load().unpaywall_email)
+        except Exception as exc:
+            self.call_from_thread(self._finish_offline_error, str(exc))
+            return
         message = (
-            f"Offline copy ready: {row['title']}"
+            self._t("Offline copy ready: {title}", title=row["title"])
             if result["has_pdf"]
-            else f"Metadata saved; PDF unavailable: {row['title']}"
+            else self._t("Metadata saved; PDF unavailable: {title}", title=row["title"])
         )
         severity = "information" if result["has_pdf"] else "warning"
         self.call_from_thread(self.notify, message, severity=severity)
         self.call_from_thread(self._show_details)
+
+    def _finish_offline_error(self, message: str) -> None:
+        self._search_phase_line = self._t("Offline save failed: {message}", message=message)
+        self._render_search_activity()
+        self.notify(self._search_phase_line, severity="error")
 
     def action_open(self) -> None:
         paper_id = self._selected_id()
@@ -695,7 +843,7 @@ class LitRadarApp(App[None]):
             return
         row = self.store.get(paper_id)
         if row is None or not row["doi"]:
-            self.notify("The selected paper has no DOI recorded.", severity="warning")
+            self.notify(self._t("The selected paper has no DOI recorded."), severity="warning")
             return
         doi = str(row["doi"]).strip()
         if doi.startswith("http://") or doi.startswith("https://"):
@@ -705,21 +853,21 @@ class LitRadarApp(App[None]):
         webbrowser.open(target)
 
     def action_focus_search(self) -> None:
-        self.query_one("#search", Input).focus()
+        self._main_query("#search", Input).focus()
 
     def action_focus_status(self) -> None:
-        self.query_one("#status", Select).focus()
+        self._main_query("#status", Select).focus()
 
     def action_focus_sort(self) -> None:
-        self.query_one("#sort", Select).focus()
+        self._main_query("#sort", Select).focus()
 
     def action_focus_tag(self) -> None:
-        self.query_one("#tag", Select).focus()
+        self._main_query("#tag", Select).focus()
 
     def _refresh_tag_options(self) -> None:
-        tag_select = self.query_one("#tag", Select)
+        tag_select = self._main_query("#tag", Select)
         current = str(tag_select.value or "__all_tags__")
-        options = [("All tags", "__all_tags__")] + [(tag, tag) for tag in self.store.all_tags()]
+        options = [(self._t("All tags"), "__all_tags__")] + [(tag, tag) for tag in self.store.all_tags()]
         tag_select.set_options(options)
         if current in {value for _, value in options}:
             tag_select.value = current

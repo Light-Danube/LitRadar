@@ -12,12 +12,12 @@ dependencies = ["numpy>=1.26,<3", "python-dotenv>=1.0,<2"]
 [project.optional-dependencies]
 annotations = ["pypdf>=5,<7", "bibtexparser>=1.4,<2"]
 semantic = ["sentence-transformers>=3.0,<6"]
-ui = ["textual>=0.50,<2"]
+ui = ["textual>=1.0,<2"]
 web = ["fastapi>=0.115,<1", "uvicorn>=0.30,<1"]
 llm = ["openai>=1.0,<3", "anthropic>=0.30,<1"]
 
 [tool.setuptools]
-py-modules = ["cli", "bibliography", "offline", "ui", "pipeline", "notes", "citation_intelligence", "research_digest", "telegram_bot", "workspace_web", "venue_cli", "venue_discovery", "evidence_matrix"]
+py-modules = ["cli", "bibliography", "offline", "ui", "ui_locales", "pipeline", "notes", "citation_intelligence", "research_digest", "telegram_bot", "workspace_web", "venue_cli", "venue_discovery", "evidence_matrix"]
 packages = ["ranking", "sources", "storage", "llm", "web"]
 include-package-data = true
 

@@ -1,5 +1,18 @@
 # Codex development handoff — LitBeacon Research Workspace
 
+## Unreleased — Ukrainian TUI, job crash fix and accessibility evidence
+
+- Branch `codex/tui-uk-accessibility`, based on fetched main `ad4e2a4d`. Read [TUI audit](docs/TUI-ACCESSIBILITY-AUDIT.md) and [menu draft](docs/TUI-MENU-DRAFT.md). Scope is current TUI functionality only; README is intentionally unchanged per user instruction.
+- `ui_locales.py` owns EN/UK app strings; `ui.py` selects language at runtime or from `LITBEACON_TUI_LANGUAGE` / legacy alias. Paper data, technical identifiers and provider/CLI diagnostic output stay literal. Framework-owned palette/theme dialogs may retain English. Switching retains filters, query input and selected paper.
+- Jobs crashed because Screen lacks `call_from_thread`; scheduler results now dispatch through App with busy/cancellation/mount guards. New tags refresh filter options on modal close. App background callbacks address the main screen while a modal is open.
+- Offline-storage exceptions now produce a persistent localized error instead of an unhandled worker failure. Tests intercept all offline/browser operations; no real downloads or external destinations were used.
+- Help/details/jobs scroll by keyboard, Close is reachable, focus has a border cue, job buttons stack, online input flexes, and toolbar uses two rows below 110 columns. The complete grouped-menu/pane-switch proposal is still a draft.
+- Textual minimum raised to 1.0 in requirements and UI extra; 0.50.1's binding API is incompatible with this implementation. Tested 1.0.0. Module registration includes `ui_locales`; no application release-version bump.
+- Final local checks: **430 Python / 0 failed / 0 skipped**, **6 Node test files / 0 failed / 0 skipped**, including **29 TUI tests**. Native ANSI PTY 80×24 and disposable audit-fixture smoke passed separately. One existing Starlette TestClient deprecation warning. Restricted sandbox inter-thread dispatch hung; the same tests passed in the approved executor outside that restriction. Do not classify that as a production defect.
+- The user selected Windows Terminal + Narrator. `python scripts/tui_accessibility_fixture.py --language uk` creates a temporary synthetic library with all provider/scheduler/download/browser actions mocked and no personal config/profile loading. `--smoke` checks the fixture headlessly. Actual Narrator speech, Braille, contrast and participant results remain unverified; preserve the unchecked combined accessibility gate and record real outcomes before closing it.
+- README changes from PRs #17/#18 were already in latest main, not authored by this patch. Remote CI remains to be observed after push; create a draft PR and never merge automatically.
+- Draft [PR #19](https://github.com/Light-Danube/LitRadar/pull/19) confirmed open/draft targeting main; its description records scope, checks and remaining gates. GitHub reported `action_required` for tests, isolated Docker and Windows at head `85d841dc`; tests had no jobs. No remote pass is claimed; inspect checks for subsequent heads separately.
+
 ## Unreleased — browser research workspace
 
 - Add a sixth Research section for explicit venue-scoped search and editing the existing evidence worksheets, with EN/UK, preserved drafts and library filters for to-read/new/all. Keep the prior five sections and Alt+1–5; Alt+6 opens Research.
