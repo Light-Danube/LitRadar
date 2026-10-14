@@ -1,6 +1,6 @@
 {
   "name": "litbeacon-web-regression-tests",
   "private": true,
-  "scripts": {"test": "node --test ../test_web_frontend.cjs *.cjs"},
+  "scripts": {"test": "node --test ../test_web_frontend.cjs ../test_graph_interactions.cjs shell.cjs workflows.cjs semantics.cjs"},
   "devDependencies": {"jsdom": "26.1.0"}
 }

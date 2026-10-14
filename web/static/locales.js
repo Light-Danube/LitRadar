@@ -2,6 +2,12 @@
   'use strict';
   const messages = {
     llmProvider:['LLM provider','LLM-провайдер'], layoutSession:['Layout is retained for this session; browser storage is unavailable.','Розміщення зберігається в цій сесії; сховище браузера недоступне.'],
+    semanticMeta:['Model {{model}} · cosine threshold {{threshold}} · evaluated {{count}} papers','Модель {{model}} · поріг косинуса {{threshold}} · оцінено публікацій: {{count}}'],
+    semanticReset:['Use stored links / heuristic groups','Повернути збережені зв’язки / евристичні групи'],
+    semanticOption:['Include local semantic similarity (optional)','Додати локальну семантичну схожість (опціонально)'],
+    semanticHelp:['Optional local embedding similarity; computed related links, not citations or novelty evidence. Bounded to 200 candidate papers; requires an enabled server flag and local model.','Опціональна схожість локальних embeddings; обчислені зв’язки, не цитування чи докази новизни. До 200 кандидатних публікацій; потрібні прапорець сервера й локальна модель.'],
+    semanticComputed:['Computed similarity: {{model}}, cosine {{score}}','Обчислена схожість: {{model}}, косинус {{score}}'],
+    clusterMode:['Grouping method','Метод групування'], heuristicMode:['Tags / venue / terms','Теги / видання / терміни'], semanticMode:['Local embeddings (optional)','Локальні embeddings (опціонально)'],
     sourceTools:['Import and local extraction','Імпорт і локальний витяг'],
     restoreVersion:['Restore this version','Відновити цю версію'], revision:['Revision {{revision}}','Ревізія {{revision}}'],
     restoreNoteConfirm:['Replace current notes with this version? Unsaved note text will be replaced; stored history remains.','Замінити поточну нотатку цією версією? Незбережений текст нотатки буде замінено; історія збережеться.'],
@@ -13,7 +19,7 @@
     inferenceConsent:['I agree to send this title/abstract to the selected provider for this request.','Погоджуюся надіслати цю назву/анотацію обраному провайдеру для цього запиту.'],
     fileLimit:['Select at most 10 files, 5 MB combined and 100 parsed entries.','Виберіть до 10 файлів, разом до 5 МБ і 100 записів.'], unsupportedFile:['Use JSON, RIS, BibTeX or PDF files.','Використовуйте файли JSON, RIS, BibTeX або PDF.'],
     'method-pdf_import':['PDF import','Імпорт PDF'], 'method-ris_import':['RIS import','Імпорт RIS'], 'method-bibtex_import':['BibTeX import','Імпорт BibTeX'], 'method-fresh_llm':['Fresh LLM inference','Новий LLM inference'], 'method-history_restore':['History restoration','Відновлення з історії'],
-    resetLayout:['Reset node layout','Скинути розміщення вузлів'], graphGestures:['Wheel to zoom; drag nodes to arrange; drag background to pan. Shift+arrow keys move a focused node. Layout is saved in this browser.','Колесо змінює масштаб; перетягуйте вузли для розміщення, тло — для переміщення. Shift+стрілки рухають вузол у фокусі. Розміщення зберігається в цьому браузері.'],
+    exportMenu:['Export graph','Експорт графа'], resetLayout:['Reset node layout','Скинути розміщення вузлів'], graphGestures:['Click to select. Wheel to zoom; drag nodes to arrange; drag background to pan. Shift+arrow keys move a focused node. Overlaps settle when movement ends. Layout is saved in this browser.','Клацніть для вибору. Колесо змінює масштаб; перетягуйте вузли для розміщення, тло — для переміщення. Shift+стрілки рухають вузол у фокусі. Накладання усуваються після руху. Розміщення зберігається в цьому браузері.'],
     theme:['Appearance','Оформлення'], themeSystem:['System','Системне'], themeLight:['Light','Світле'], themeDark:['Dark','Темне'],
     workspace:['Research workspace','Дослідницький простір'], home:['LitBeacon home','На головну LitBeacon'],
     overview:['Overview','Огляд'], inbox:['Literature inbox','Бібліотека'], graph:['Citation map','Граф цитувань'], clusters:['Literature clusters','Групи публікацій'], jobs:['Scheduled jobs','Заплановані завдання'],
