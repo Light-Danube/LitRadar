@@ -19,7 +19,7 @@ if not exist "%MARKER%" (
   echo Installing LitBeacon core, UI, development, LLM and web workspace dependencies...
   "%PYTHON%" -m pip install --upgrade pip
   if errorlevel 1 goto failed
-  "%PYTHON%" -m pip install -r requirements.txt -r requirements-ui.txt -r requirements-dev.txt -r requirements-llm.txt -r requirements-web.txt -r requirements-annotations.txt
+  "%PYTHON%" -m pip install -r requirements.txt -r requirements-ui.txt -r requirements-dev.txt -r requirements-llm.txt -r requirements-web.txt -r requirements-annotations.txt -r requirements-semantic.txt -r requirements-browser-tests.txt
   if errorlevel 1 goto failed
   echo ready>"%MARKER%"
 )
