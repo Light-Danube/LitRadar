@@ -24,7 +24,7 @@
 
 **Done when:** CI is green on the candidate commit, a compact feature/regression checklist exists, and no known data-loss or workflow-blocking defect remains.
 
-Audit evidence: Linux combined suite **430 Python / 38 JS passed, 0 failed, 0 skipped**. Actual baseline Windows API/DOM/native Chrome checks succeeded, but clean built-artifact Windows installation and Narrator remain open. Gate 1 is not closed: final candidate CI and the installed-wheel workflow blocker need resolution. The checklist recommends a bounded SQLite backup/new-destination restore PR for Gate 2; no recovery implementation or version bump is included here.
+Audit evidence: Linux combined suite **430 Python / 38 JS passed, 0 failed, 0 skipped**. Actual baseline Windows API/DOM/native Chrome checks succeeded, but clean built-artifact Windows installation and Narrator remain open. Gate 1 is not closed: final candidate CI remains open. The focused packaging fix resolves the reproduced import/default-path failure in local Linux installed-artifact smoke; actual Windows wheel CI is still unverified. The bounded SQLite backup/new-destination restore PR remains the next Gate 2 step; no version bump is included.
 
 ## Gate 2 — Local data integrity and recovery (P0)
 

@@ -31,7 +31,9 @@ from research_digest import (
 )
 from storage.sqlite import PaperStore
 
-ROOT = Path(__file__).resolve().parent
+from litradar_runtime import WORKSPACE_ROOT, CODE_ROOT
+
+ROOT = WORKSPACE_ROOT
 DEFAULT_STATE = ROOT / "data" / "telegram_bot_state.json"
 MAX_TOPIC_QUERIES = 10
 MAX_QUERY_CHARS = 200
@@ -443,7 +445,7 @@ class LitRadarTelegramBot:
             return self.schedule_runner(frequency, when)
         if os.name != "nt":
             return True, ""
-        command = [sys.executable, str(ROOT / "cli.py"), "schedule", "install", "--job", "digest", "--frequency", frequency, "--time", when]
+        command = [sys.executable, str(CODE_ROOT / "cli.py"), "schedule", "install", "--job", "digest", "--frequency", frequency, "--time", when]
         try:
             completed = subprocess.run(command, cwd=ROOT, capture_output=True, text=True, timeout=45, check=False)
         except (OSError, subprocess.TimeoutExpired) as exc:
@@ -457,7 +459,7 @@ class LitRadarTelegramBot:
     def _remove_scheduled_jobs(self, job: str) -> tuple[bool, str]:
         if self.schedule_remover is not None:
             return self.schedule_remover(job)
-        command = [sys.executable, str(ROOT / "cli.py"), "schedule", "remove", "--job", job]
+        command = [sys.executable, str(CODE_ROOT / "cli.py"), "schedule", "remove", "--job", job]
         try:
             completed = subprocess.run(command, cwd=ROOT, capture_output=True, text=True, timeout=45, check=False)
         except (OSError, subprocess.TimeoutExpired) as exc:

@@ -55,7 +55,7 @@ No open PRs or issues were returned before this audit PR was created. PRs [#18](
 - [ ] **P1 practical accessibility (Gate 5):** execute Windows Terminal + Narrator fixture/manual check; document blocking keyboard/assistive limitations honestly.
 - [ ] **P0 release artifact/docs (Gate 6):** clean installation, full artifact exclusions, backup/upgrade guide and final candidate checklist. Keep 0.8.0 until candidate verification and explicit release approval; no merge/tag/version bump in this PR.
 
-**Gate 1 is not declared complete:** candidate CI and packaging/workflow blocker resolution remain open. Real-model evaluation and optional Docker production optimization are outside the frozen 1.0 release scope, despite older handoff language.
+**Gate 1 is not declared complete:** candidate CI remains open; reproduced packaging failure is fixed locally, while Windows built-artifact and other release gates remain unverified. Real-model evaluation and optional Docker production optimization are outside the frozen 1.0 release scope, despite older handoff language.
 
 [Further venue verification](research/venue-verification.md): **447 Python / 38 JS passed, 0 failed, 0 skipped** on a dedicated branch, with additional HTTP-transport CLI/API identity/filter/preservation tests. Explicit live lookup encountered the cloud proxy tunnel 403 before OpenAlex. A repeatable public probe is available; live search remains pending. User-reported working retrieval is not promoted to an independently observed pass.
 
@@ -69,3 +69,9 @@ Recommend **`fix(recovery): consistent local backup and restore to a new destina
 4. Synthetic acceptance tests: committed snapshot with active WAL; round-trip notes/tags/status/IDs, citations/feedback, annotation/evidence revisions and tombstones; elected artifacts; corrupt/missing/duplicate-path rejection; injected failure cleanup; restored legacy database upgrade twice with stable IDs/history and integrity checks. No services/models/personal data.
 
 This is a recommendation only; implementation belongs in the next Draft PR. Packaging can be a separate small defect PR. Gate 2 stays open until the recovery and legacy-upgrade evidence actually exists.
+
+## Packaging follow-up evidence (2026-10-15)
+
+Focused branch `codex/local-wheel-packaging`, based on main `448a6ea0`. Built with `python -m pip wheel --no-deps --no-build-isolation --wheel-dir work/wheels .`, installed into an empty disposable target with `pip install --no-deps --target`, and executed `scripts/built_wheel_smoke.py` using only that target plus cached test dependencies. This is local Linux evidence; CI separately creates clean virtual environments on Ubuntu/Windows and installs the wheel with its declared web dependencies. No Windows execution is claimed.
+
+Wheel inventory confirmed required assets and no `.env`, SQLite, PDFs, logs, model weights or work artifacts. Windows Task Scheduler and launchers remain source-checkout-only; this is explicitly reported for wheel users. **Executed local results:** `python -m pytest -q -ra`: **435 passed / 0 failed / 0 skipped**, 25.91s, one existing Starlette deprecation warning. `npm test --prefix tests/web` with the pinned cached dependencies: **38 passed / 0 failed / 0 skipped**. Both the directly built wheel and the wheel rebuilt from `python setup.py sdist` passed the outside-checkout smoke. An additional clean Linux venv installed the sdist-built wheel with `pip install --no-deps`, using cached test dependencies through PYTHONPATH, and passed the same smoke including an independent custom database. `git diff --check` passed. No live API/model, personal data, Windows, Narrator or final-head CI result is implied.

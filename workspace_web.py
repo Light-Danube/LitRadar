@@ -25,10 +25,11 @@ from starlette.concurrency import run_in_threadpool
 
 from storage.sqlite import PaperStore, STATUSES
 
-ROOT = Path(__file__).resolve().parent
-WEB_ROOT = ROOT / "web"
+from litradar_runtime import WORKSPACE_ROOT, CODE_ROOT, DEFAULT_DB, ensure_user_defaults
+
+ROOT = WORKSPACE_ROOT
+WEB_ROOT = CODE_ROOT / "web"
 STATIC_ROOT = WEB_ROOT / "static"
-DEFAULT_DB = ROOT / "data" / "litradar.sqlite3"
 
 
 class PaperPatch(BaseModel):
@@ -207,6 +208,7 @@ def _make_clusters(rows: list[sqlite3.Row]) -> dict[str, Any]:
 
 def create_app(db_path: str | Path = DEFAULT_DB, *, semantic_enabled: bool | None = None, semantic_embedder=None,
                research_results_root: str | Path | None = None) -> FastAPI:
+    ensure_user_defaults()
     app = FastAPI(title="LitBeacon Research Workspace", version="0.8.0")
     app.state.db_path = str(db_path)
     from web.research_api import register_research_routes
@@ -650,8 +652,8 @@ def create_app(db_path: str | Path = DEFAULT_DB, *, semantic_enabled: bool | Non
         import subprocess
         import sys
         commands = [
-            [sys.executable, str(ROOT / "cli.py"), "schedule", "install", "--job", "scan", "--frequency", "daily", "--time", "07:30"],
-            [sys.executable, str(ROOT / "cli.py"), "schedule", "install", "--job", "digest", "--frequency", "weekly", "--time", "09:00"],
+            [sys.executable, str(CODE_ROOT / "cli.py"), "schedule", "install", "--job", "scan", "--frequency", "daily", "--time", "07:30"],
+            [sys.executable, str(CODE_ROOT / "cli.py"), "schedule", "install", "--job", "digest", "--frequency", "weekly", "--time", "09:00"],
         ]
         outputs: list[str] = []
         for command in commands:
@@ -668,7 +670,7 @@ def create_app(db_path: str | Path = DEFAULT_DB, *, semantic_enabled: bool | Non
         import subprocess
         import sys
         completed = subprocess.run(
-            [sys.executable, str(ROOT / "cli.py"), "schedule", "remove", "--job", job],
+            [sys.executable, str(CODE_ROOT / "cli.py"), "schedule", "remove", "--job", job],
             cwd=ROOT, capture_output=True, text=True, timeout=60, check=False,
         )
         output = (completed.stdout or completed.stderr or "").strip()

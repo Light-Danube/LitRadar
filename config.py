@@ -9,7 +9,9 @@ try:
 except ImportError:  # pragma: no cover - optional import fallback
     load_dotenv = None
 
-ROOT = Path(__file__).resolve().parent
+from litradar_runtime import WORKSPACE_ROOT
+
+ROOT = WORKSPACE_ROOT
 ENV_PATH = ROOT / ".env"
 DEFAULT_SOURCES = ("openalex", "semantic_scholar", "arxiv")
 
