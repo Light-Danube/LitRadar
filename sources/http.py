@@ -1,10 +1,12 @@
 from __future__ import annotations
 
+import math
 import time
 import urllib.error
 import urllib.request
 
 RETRYABLE_STATUS_CODES = {429, 500, 502, 503, 504}
+MAX_RETRY_DELAY = 60.0
 
 
 def fetch_bytes(
@@ -38,9 +40,19 @@ def fetch_bytes(
 
 
 def _retry_delay(attempt: int, backoff: float, retry_after: str | None) -> float:
+    """Treat provider delay hints as untrusted; never wait over one minute."""
     if retry_after:
         try:
-            return max(float(retry_after), 0.0)
-        except ValueError:
+            requested = float(retry_after)
+            if math.isfinite(requested):
+                return min(max(requested, 0.0), MAX_RETRY_DELAY)
+        except (ValueError, OverflowError):
             pass
-    return max(backoff, 0.0) * (2**attempt)
+    # Invalid/non-finite server hints fall back to the local bounded policy.
+    if math.isnan(backoff):
+        return 0.0
+    try:
+        delay = max(backoff, 0.0) * (2**attempt)
+    except OverflowError:
+        return MAX_RETRY_DELAY if backoff > 0 else 0.0
+    return min(delay, MAX_RETRY_DELAY)
