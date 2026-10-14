@@ -47,7 +47,7 @@ No open PRs or issues were returned before this audit PR was created. PRs [#18](
 - [x] **Gate 1 inventory/backlog:** freeze implemented workflows; no open feature PR to reconcile at audit time.
 - [x] **Gate 1 source regressions:** combined Python/JS pass, Research and five-section EN/UK/draft/consent contracts covered by synthetic tests; dependency skips explained by CI profile.
 - [ ] **Gate 1 candidate CI:** inspect actual checks at the Draft PR's final head. Baseline green checks do not close this item.
-- [ ] **P0 packaging defect (Gates 3/6):** explicit `pyproject.toml` module list omits `config.py`, which `cli.py` imports. CLI also reads sibling `VERSION`; profile/digest defaults are sibling JSON files, absent from the wheel. Add a focused packaging fix and clean installed-artifact CLI/web smoke outside the checkout; verify package-owned assets and writable user-data paths.
+- [x] **Reproduced packaging defect fixed locally (Gates 3/6):** include `config.py`, canonical VERSION/profile/digest assets and preserve static assets. Linux installed-wheel smoke outside the checkout now executes CLI help/version/init/ingest/list, all static requests, synthetic web edit/restart persistence and no-overwrite default seeding. Writable paths use per-user storage; source defaults remain compatible. Windows clean-install Actions is configured but its actual result remains pending; this does not close Gates 3/6.
 - [ ] **P0 recovery gap (Gate 2):** no consistent SQLite backup or database restore command exists. CLI `restore` changes paper status only. Document and test database plus elected durable research/offline artifacts; current note/annotation recovery cannot replace this.
 - [ ] **P0 upgrade integrity (Gate 2):** extend existing legacy migration fixtures to comprehensive identity/manual-field/history preservation; check foreign keys and integrity before/after repeated upgrade.
 - [ ] **P0 Windows install/use (Gate 3):** built-artifact clean install, launcher/update, CLI/TUI, offline persistence/exports, scheduler disable/remove and duplicate-listener checks. Existing Windows browser source-checkout tests cover only a subset.
@@ -55,7 +55,7 @@ No open PRs or issues were returned before this audit PR was created. PRs [#18](
 - [ ] **P1 practical accessibility (Gate 5):** execute Windows Terminal + Narrator fixture/manual check; document blocking keyboard/assistive limitations honestly.
 - [ ] **P0 release artifact/docs (Gate 6):** clean installation, full artifact exclusions, backup/upgrade guide and final candidate checklist. Keep 0.8.0 until candidate verification and explicit release approval; no merge/tag/version bump in this PR.
 
-**Gate 1 is not declared complete:** candidate CI and packaging/workflow blocker resolution remain open. Real-model evaluation and optional Docker production optimization are outside the frozen 1.0 release scope, despite older handoff language.
+**Gate 1 is not declared complete:** candidate CI remains open; reproduced packaging failure is fixed locally, while Windows built-artifact and other release gates remain unverified. Real-model evaluation and optional Docker production optimization are outside the frozen 1.0 release scope, despite older handoff language.
 
 ## Smallest next PR — local recovery, not a new subsystem
 
@@ -67,3 +67,9 @@ Recommend **`fix(recovery): consistent local backup and restore to a new destina
 4. Synthetic acceptance tests: committed snapshot with active WAL; round-trip notes/tags/status/IDs, citations/feedback, annotation/evidence revisions and tombstones; elected artifacts; corrupt/missing/duplicate-path rejection; injected failure cleanup; restored legacy database upgrade twice with stable IDs/history and integrity checks. No services/models/personal data.
 
 This is a recommendation only; implementation belongs in the next Draft PR. Packaging can be a separate small defect PR. Gate 2 stays open until the recovery and legacy-upgrade evidence actually exists.
+
+## Packaging follow-up evidence (2026-10-15)
+
+Focused branch `codex/local-wheel-packaging`, based on main `448a6ea0`. Built with `python -m pip wheel --no-deps --no-build-isolation --wheel-dir work/wheels .`, installed into an empty disposable target with `pip install --no-deps --target`, and executed `scripts/built_wheel_smoke.py` using only that target plus cached test dependencies. This is local Linux evidence; CI separately creates clean virtual environments on Ubuntu/Windows and installs the wheel with its declared web dependencies. No Windows execution is claimed.
+
+Wheel inventory confirmed required assets and no `.env`, SQLite, PDFs, logs, model weights or work artifacts. Windows Task Scheduler and launchers remain source-checkout-only; this is explicitly reported for wheel users. **Executed local results:** `python -m pytest -q -ra`: **435 passed / 0 failed / 0 skipped**, 25.91s, one existing Starlette deprecation warning. `npm test --prefix tests/web` with the pinned cached dependencies: **38 passed / 0 failed / 0 skipped**. Both the directly built wheel and the wheel rebuilt from `python setup.py sdist` passed the outside-checkout smoke. An additional clean Linux venv installed the sdist-built wheel with `pip install --no-deps`, using cached test dependencies through PYTHONPATH, and passed the same smoke including an independent custom database. `git diff --check` passed. No live API/model, personal data, Windows, Narrator or final-head CI result is implied.

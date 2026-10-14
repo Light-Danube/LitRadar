@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased — installed-wheel packaging blocker fix
+
+- Include `config.py` and bundle canonical VERSION/profile/digest defaults; retain packaged HTML/JS/CSS/icons. Separate immutable code/assets from per-user editable data, caches, offline artifacts, `.env` and logs; source checkout defaults and legacy names remain compatible.
+- Support `python -m cli` outside the checkout and seed missing user defaults without replacing edits. Keep Windows launchers/Task Scheduler helper source-only with an explicit wheel diagnostic; no version bump or scheduler redesign.
+- Executed Linux validation: **435 Python / 38 JS passed, 0 failed, 0 skipped**, one existing Starlette deprecation warning; direct wheel and sdist-built wheel smoke passed outside checkout, including clean-venv installation with cached test dependencies. Actual Windows built-wheel Actions evidence remains pending. New Linux/Windows clean-venv artifact workflow uses only synthetic data and no provider/model requests.
+
+
 ## Unreleased — local-only 1.0 Gate 1 audit
 
 - Freeze major feature development and add an [evidence-based release checklist](docs/LOCAL-1.0-RELEASE-CHECKLIST.md) covering existing workflows, merged PRs, CI profile skips and remaining gates.

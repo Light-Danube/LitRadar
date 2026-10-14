@@ -6,6 +6,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Callable
 
+from litradar_runtime import DEFAULT_PROFILE
 from config import RadarConfig
 from ranking.keywords import KeywordProfile
 from ranking.scoring import rank_papers
@@ -153,7 +154,7 @@ def explore_citation_graph(
         raise ValueError(f"Paper id {paper_id} was not found in this library")
     config = config or RadarConfig.load()
     ttl = int(getattr(config, "citation_cache_ttl", 604800))
-    profile_file = Path(profile_path) if profile_path else Path(__file__).resolve().parent / "research_profile.json"
+    profile_file = Path(profile_path) if profile_path else DEFAULT_PROFILE
     try:
         profile = KeywordProfile.from_json(profile_file)
     except (OSError, ValueError, KeyError, TypeError):

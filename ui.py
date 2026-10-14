@@ -8,6 +8,7 @@ import sys
 import webbrowser
 from pathlib import Path
 
+from litradar_runtime import DEFAULT_PROFILE, DEFAULT_SCAN_CONFIG, WORKSPACE_ROOT, ensure_user_defaults
 from config import RadarConfig
 from ranking.keywords import KeywordProfile
 from ranking.personalization import build_model, explain_candidate, neutral_results, score_rows
@@ -137,10 +138,11 @@ class ScheduleScreen(ModalScreen[None]):
     BINDINGS = [Binding("escape", "close", "Close", show=False), Binding("q", "close", "Close", show=False)]
 
     def __init__(self, config_path: str | Path | None = None, language: str = "en") -> None:
+        ensure_user_defaults()
         super().__init__()
         self.language = normalize_language(language)
         self._busy = False
-        self.config_path = Path(config_path or (Path(__file__).resolve().parent / "digest_config.json"))
+        self.config_path = Path(config_path or DEFAULT_SCAN_CONFIG)
 
     def _t(self, key: str, **kwargs) -> str:
         return tr(self.language, key, **kwargs)
@@ -206,7 +208,7 @@ class ScheduleScreen(ModalScreen[None]):
             "--job", job, "--frequency", frequency, "--time", when, "--config", str(self.config_path),
         ]
         try:
-            completed = subprocess.run(command, cwd=Path(__file__).resolve().parent, capture_output=True, text=True, timeout=60, check=False)
+            completed = subprocess.run(command, cwd=WORKSPACE_ROOT, capture_output=True, text=True, timeout=60, check=False)
             message = (completed.stdout or "").strip()
             if completed.stderr:
                 message = (message + "\n" + completed.stderr.strip()).strip()
@@ -265,6 +267,7 @@ class LitRadarApp(App[None]):
     ]
 
     def __init__(self, db_path: str | Path, language: str | None = None) -> None:
+        ensure_user_defaults()
         super().__init__()
         self.language = normalize_language(language or os.environ.get("LITBEACON_TUI_LANGUAGE", os.environ.get("LITRADAR_TUI_LANGUAGE", "en")))
         self.sub_title = self._t(self.SUB_TITLE)
@@ -273,7 +276,7 @@ class LitRadarApp(App[None]):
         self.store = PaperStore(db_path)
         self.current_rows = []
         self.current_display_scores: dict[int, float] = {}
-        self.profile = KeywordProfile.from_json(Path(__file__).resolve().parent / "research_profile.json")
+        self.profile = KeywordProfile.from_json(DEFAULT_PROFILE)
         self._personal_model = None
         self._personalization_model_active = False
         self._search_query = ""
@@ -549,7 +552,7 @@ class LitRadarApp(App[None]):
             summary, _ranked = search_and_ingest(
                 query,
                 db_path=self.db_path,
-                profile_path=Path(__file__).resolve().parent / "research_profile.json",
+                profile_path=DEFAULT_PROFILE,
                 semantic=True,
                 sources=config.enabled_sources,
                 per_source=20,

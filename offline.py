@@ -13,7 +13,9 @@ from typing import Any
 
 from bibliography import row_to_bibtex
 
-ROOT = Path(__file__).resolve().parent
+from litradar_runtime import WORKSPACE_ROOT
+
+ROOT = WORKSPACE_ROOT
 DEFAULT_OFFLINE_DIR = ROOT / "data" / "offline"
 DEFAULT_OA_CACHE_DIR = ROOT / "data" / "oa_cache"
 MAX_DOWNLOAD_BYTES = 100 * 1024 * 1024

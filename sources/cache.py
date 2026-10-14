@@ -9,7 +9,9 @@ from pathlib import Path
 
 from .base import Paper
 
-DEFAULT_CACHE_DIR = Path(__file__).resolve().parents[1] / "data" / "source_cache"
+from litradar_runtime import DATA_ROOT
+
+DEFAULT_CACHE_DIR = DATA_ROOT / "source_cache"
 
 
 def cache_path(source: str, query: str, per_source: int, cache_dir: str | Path = DEFAULT_CACHE_DIR) -> Path:

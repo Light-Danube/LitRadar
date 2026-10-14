@@ -1,5 +1,12 @@
 # Codex development handoff — LitBeacon Research Workspace
 
+## Unreleased — installed-wheel packaging blocker fix
+
+- Include `config.py` and bundle canonical VERSION/profile/digest defaults; retain packaged HTML/JS/CSS/icons. Separate immutable code/assets from per-user editable data, caches, offline artifacts, `.env` and logs; source checkout defaults and legacy names remain compatible.
+- Support `python -m cli` outside the checkout and seed missing user defaults without replacing edits. Keep Windows launchers/Task Scheduler helper source-only with an explicit wheel diagnostic; no version bump or scheduler redesign.
+- Executed Linux validation: **435 Python / 38 JS passed, 0 failed, 0 skipped**, one existing Starlette deprecation warning; direct wheel and sdist-built wheel smoke passed outside checkout, including clean-venv installation with cached test dependencies. Actual Windows built-wheel Actions evidence remains pending. New Linux/Windows clean-venv artifact workflow uses only synthetic data and no provider/model requests.
+
+
 ## Current — local-only 1.0 freeze, Gate 1 audit
 
 - Branch `codex/local-v1-gate1-audit`, baseline main `b8b42ff4`. Read [release checklist](docs/LOCAL-1.0-RELEASE-CHECKLIST.md) and current ROADMAP before following historical suggestions below. No major features or version bump; 0.8.0 remains current. Real-model quality evaluation and Docker production optimization are not frozen 1.0 blockers.

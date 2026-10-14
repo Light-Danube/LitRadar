@@ -545,3 +545,11 @@ LitBeacon also supports a local-only Docker Compose deployment for the browser w
 For security-conscious development, the repo includes an opt-in **offline Docker test runner**: `docker compose -f compose.isolated-dev.yaml run --build --rm dev`. It runs without network, bind mounts, host secrets, or privileged access. This protects the **test process**; it does not sandbox Codex itself or the Docker daemon. Run Codex CLI inside a dedicated Linux VM without Windows shared folders, or use Codex Cloud with narrowly scoped GitHub access. See [docs/ISOLATED-DEV.md](ISOLATED-DEV.md) for the threat model, safeguards and limitations.
 
 The dev image uses lightweight core/web CI dependencies, disposable CLI fixtures, and a writable pytest cache under `/tmp`. Optional Textual/Node checks remain covered by the regular CI jobs. The `Isolated Docker tests` workflow builds and runs the restricted image on PRs. See [the Docker audit](DOCKER-AUDIT.md) for executed checks and outstanding production-image/remote-CI gates.
+
+## Wheel installation
+
+Install a built wheel with `python -m pip install "path/to/litradar-0.8.0-py3-none-any.whl[web]"`, then run `python -m cli init` and `python -m cli web`. Commands work outside a source checkout. Static browser assets and canonical default JSON/version files are bundled; no real library, `.env`, PDFs or model weights are shipped.
+
+Source checkouts preserve their existing root-level defaults. Wheel installations store editable profiles/digest configuration, `.env`, database, artifacts, caches and logs under `%LOCALAPPDATA%\LitBeacon` on Windows, `$XDG_DATA_HOME/LitBeacon` (default `~/.local/share/LitBeacon`) on Linux, or `~/Library/Application Support/LitBeacon` on macOS. Set `LITBEACON_HOME` (legacy `LITRADAR_HOME`) before launch to select a different directory. Missing profile/digest defaults are seeded at explicit startup; existing edits are never replaced. Existing libraries are not moved automatically: pass `--db PATH` explicitly when needed.
+
+Windows `.bat` launchers and Task Scheduler installation/status/removal still require the source checkout and its `.venv`; a wheel reports this limitation explicitly. Wheel users can invoke `python -m cli scheduled-run` through an independently configured scheduler. Actual Windows built-artifact smoke remains a release gate until its Actions result is observed.

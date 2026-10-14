@@ -27,10 +27,9 @@ from research_digest import (
 from telegram_bot import LitRadarTelegramBot
 from storage.sqlite import PaperStore, SORT_CHOICES, STATUSES
 
-ROOT = Path(__file__).resolve().parent
-DEFAULT_DB = ROOT / "data" / "litradar.sqlite3"
-DEFAULT_PROFILE = ROOT / "research_profile.json"
-VERSION = (ROOT / "VERSION").read_text(encoding="utf-8").strip()
+from litradar_runtime import (WORKSPACE_ROOT, CODE_ROOT, SOURCE_CHECKOUT, DEFAULT_DB, DEFAULT_PROFILE, VERSION, ensure_user_defaults)
+
+ROOT = WORKSPACE_ROOT
 
 
 def _load_profile(path: str | None) -> KeywordProfile:
@@ -874,7 +873,10 @@ def cmd_schedule(args: argparse.Namespace) -> int:
     if os.name != "nt":
         print("Windows Task Scheduler install/status is only available on Windows. On Linux/macOS, use cron/launchd and `python cli.py schedule remove --job scan|digest|all` to disable stale jobs safely.", file=sys.stderr)
         return 2
-    script = ROOT / "schedule_litradar.ps1"
+    if not SOURCE_CHECKOUT:
+        print("Windows Task Scheduler setup requires the source checkout and Windows launchers; wheel installations support manual scheduled-run only.", file=sys.stderr)
+        return 2
+    script = CODE_ROOT / "schedule_litradar.ps1"
     command = [
         "powershell.exe", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", str(script),
         "-Action", args.action, "-TaskSet", args.job, "-Frequency", args.frequency, "-Time", args.time,
@@ -1173,4 +1175,5 @@ Most commands have their own help page, e.g.:
 
 if __name__ == "__main__":
     args = build_parser().parse_args()
+    ensure_user_defaults()
     raise SystemExit(args.func(args))
