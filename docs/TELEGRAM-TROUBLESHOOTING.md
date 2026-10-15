@@ -8,13 +8,13 @@ Start one listener per bot token:
 python cli.py telegram-run
 ```
 
-For a support/debug session, choose an existing writable directory and a separate file for this listener:
+For a support/debug session, choose a separate log filename for this listener:
 
 ```sh
 python cli.py telegram-run --debug --log-file telegram-listener.log
 ```
 
-An installed wheel uses the same commands with `python -m cli`. Console diagnostics are timestamped with the process's local time and UTC offset. Normal logging includes lifecycle, warnings and failures; `--debug` adds safe API method, outcome and elapsed-time records. File logging is opt-in, UTF-8 and append-only between rotations: 1 MiB per file, three older files (`.1`–`.3`). An existing file may contain older content from another program; review it before sharing. Ctrl+C closes the listener and log handles. A logging setup failure returns exit code 2 before starting the listener.
+An installed wheel uses the same commands with `python -m cli`. Console diagnostics are timestamped with the process's local time and UTC offset. Normal logging includes lifecycle, warnings and failures; `--debug` adds safe API method, outcome and elapsed-time records. File logging is opt-in and writes under `WORKSPACE_ROOT/log/`: checkout `log/`, or the installed LitBeacon user directory's `log/`. Filenames and `log/filename` are accepted; absolute paths must stay inside that directory. Traversal/symlink escapes are rejected. [Shared logging convention](LOGGING.md). Files use UTF-8 and append between rotations: 1 MiB per file, three older files (`.1`–`.3`). An existing file may contain older content from another program; review it before sharing. Ctrl+C closes the listener and log handles. A logging path/setup failure returns exit code 2 before starting the listener.
 
 The listener omits tokens, token-bearing URLs, chat/update IDs, request/response bodies, message/research content and raw exceptions from its diagnostics, including DEBUG. Unknown local failures use a fixed message rather than a traceback. Keep the original problem's safe status/method/time when reporting it; do not send `.env`, database files or bot credentials. These logs are operational diagnostics, not an audit trail of every user action.
 

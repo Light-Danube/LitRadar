@@ -11,6 +11,7 @@ from fastapi.responses import FileResponse
 from config import RadarConfig
 from evidence_matrix import export_csv, export_markdown
 from sources import venues
+from sources.http import format_provider_error
 from storage.evidence import EvidenceStore
 from storage.sqlite import PaperStore
 import venue_discovery
@@ -66,7 +67,7 @@ def _errors():
         raise HTTPException(409, {'status': 'conflict', 'message': str(exc)}) from exc
     except (urllib.error.URLError, TimeoutError, venues.VenueMetadataError) as exc:
         status = venue_discovery.error_status(exc)
-        raise HTTPException(502, {'status': status, 'message': 'Discovery provider request failed; retry or inspect local configuration'}) from exc
+        raise HTTPException(502, {'status': status, 'message': format_provider_error(exc)}) from exc
     except ValueError as exc:
         conflict = 'changed' in str(exc).lower()
         raise HTTPException(409 if conflict else 422, {'status': 'conflict' if conflict else 'invalid_request', 'message': str(exc)}) from exc
@@ -96,8 +97,9 @@ def register_research_routes(app, db_path, results_root=None):
             with _store(db_path) as store:
                 try:
                     found = venue_discovery.lookup(store, query, limit=limit, config=RadarConfig.load())
-                except OSError as exc:
-                    raise HTTPException(502, {'status':venue_discovery.error_status(exc), 'message':'Discovery provider request failed'}) from exc
+                except (OSError, json.JSONDecodeError, UnicodeError) as exc:
+                    status = 'malformed_metadata' if isinstance(exc, (json.JSONDecodeError, UnicodeError)) else venue_discovery.error_status(exc)
+                    raise HTTPException(502, {'status':status, 'message':format_provider_error(exc)}) from exc
             return {'status': 'ambiguous_venue' if len(found) > 1 else 'ok' if found else 'zero_results', 'venues': [item.to_dict() for item in found],
                     'next_step': 'Select a concrete source identity before searching'}
 
@@ -125,8 +127,9 @@ def register_research_routes(app, db_path, results_root=None):
                         year_from=payload.get('year_from'), year_to=payload.get('year_to'),
                         limit=payload.get('limit',20), page=payload.get('page',1),
                             force=payload.get('refresh',False), config=RadarConfig.load())
-                    except OSError as exc:
-                        raise HTTPException(502, {'status':venue_discovery.error_status(exc), 'message':'Discovery provider request failed'}) from exc
+                    except (OSError, json.JSONDecodeError, UnicodeError) as exc:
+                        status = 'malformed_metadata' if isinstance(exc, (json.JSONDecodeError, UnicodeError)) else venue_discovery.error_status(exc)
+                        raise HTTPException(502, {'status':status, 'message':format_provider_error(exc)}) from exc
                 result['artifact'] = _saved(reserved, 'venue_search', {'search.json':result},
                     {'source_id':source_id,'query':query,'paper_ids':result['paper_ids'],'status':result['status']}, saved_in_database=True)
                 return result

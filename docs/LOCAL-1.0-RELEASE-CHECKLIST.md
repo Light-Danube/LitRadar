@@ -1,11 +1,12 @@
 # LitBeacon 1.0 — active release checklist
 
-Baseline main `044358b8` (merged PR #26). Version stays **0.8.0**; no merge/tag/release authorization is implied.
+Baseline main `4e2486d3` (merged PR #27 plus owner ignore update). Version stays **0.8.0**; no merge/tag/release authorization is implied.
 
 - **Gate 1: closed.** [Archived feature inventory and closure evidence](archive/gate1/release-checklist-2026-10-15.md). Windows daily use and optional Narrator were accepted by the user; automated results remain separate.
 - **Gate 2: complete for this candidate.** Read-only SQLite backup, new-destination restore, elected artifacts/checksums and legacy upgrade are tested. Actual [Ubuntu/Windows extracted setup-wheel recovery checks](https://github.com/Light-Danube/LitRadar/actions/runs/38744388702) passed at implementation head `a9c64fb2`; no personal data or services were used.
-- **Gate 3: two explicit items remain.** Scheduler/optional Telegram duplicate-listener and disable/remove behavior; provider timeout/429/offline failure preservation. Daily-use acceptance and clean package installation are already recorded.
+- **Gate 3: scheduler lifecycle remains open.** Scheduler/optional Telegram duplicate-listener and disable/remove verification remains. Provider timeout/429/offline failure preservation and continued local-workspace use passed synthetic Windows checks at `3dfe583e`; daily-use acceptance and clean package installation are recorded.
 - Gate 3 current increment: [Telegram conflicts and safe listener diagnostics](GATE3-TELEGRAM-DIAGNOSTICS.md), with [operator troubleshooting](TELEGRAM-TROUBLESHOOTING.md). Scheduler and full provider-failure gates remain open.
+- Gate 3 next increment: [safe provider failures and local-workspace preservation](GATE3-PROVIDER-FAILURES.md); [shared ignored log location](LOGGING.md). Actual Windows targeted and Ubuntu/Windows package checks passed at `3dfe583e`; final documentation-head checks are tracked in PR #28. Scheduler verification remains open.
 - Gates 4–6 remain governed by [ROADMAP](../ROADMAP.md), including focused safety checks and final release approval.
 
 ## This small Draft PR

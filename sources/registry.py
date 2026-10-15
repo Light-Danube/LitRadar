@@ -8,6 +8,7 @@ import time
 from config import RadarConfig
 from .base import Paper
 from .cache import load_cached, save_cached
+from .http import format_provider_error
 
 SearchFn = Callable[[str, int, RadarConfig], list[Paper]]
 
@@ -144,6 +145,6 @@ def search_all_sources(
                 emit("completed", definition.name, f"received {len(papers)} papers")
             except Exception as exc:
                 errors[definition.name] = exc
-                emit("error", definition.name, str(exc))
+                emit("error", definition.name, format_provider_error(exc))
 
     return results, errors

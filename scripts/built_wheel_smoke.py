@@ -123,13 +123,25 @@ def main() -> None:
         import telegram_bot
         from sources import cache
         from fastapi.testclient import TestClient
-        from litradar_runtime import CODE_ROOT, WORKSPACE_ROOT, DEFAULT_DB, DEFAULT_PROFILE, DEFAULT_SCAN_CONFIG, VERSION
+        from litradar_runtime import CODE_ROOT, WORKSPACE_ROOT, DEFAULT_DB, DEFAULT_PROFILE, DEFAULT_SCAN_CONFIG, VERSION, LOG_ROOT, resolve_log_path
         from workspace_web import create_app, STATIC_ROOT
 
         assert not (CODE_ROOT / "pyproject.toml").exists(), "Smoke must import the installed wheel, not the checkout"
         assert Path(cli.__file__).parent == CODE_ROOT
         expected_home = (root / "user").resolve()
         assert WORKSPACE_ROOT == expected_home, f"Actual workspace {WORKSPACE_ROOT!s}; expected {expected_home!s}; temporary {temporary!s}"
+        assert LOG_ROOT == WORKSPACE_ROOT / "log" and not LOG_ROOT.exists()
+        assert resolve_log_path("package-smoke.log") == LOG_ROOT / "package-smoke.log"
+        with telegram_bot.configure_listener_logging(log_file="package-smoke.log") as logger:
+            logger.info("Synthetic installed-package log location check")
+        assert "Synthetic installed-package" in (LOG_ROOT / "package-smoke.log").read_text(encoding="utf-8")
+        try:
+            resolve_log_path(root / "outside.log")
+        except ValueError:
+            pass
+        else:
+            raise AssertionError("Installed logger must reject paths outside its log directory")
+        assert not (root / "outside.log").exists()
         assert cli.build_parser().parse_args(["web", "--no-open-browser"]).host == "127.0.0.1"
         assert cli.DEFAULT_DB == DEFAULT_DB
         assert config.ENV_PATH == WORKSPACE_ROOT / ".env"

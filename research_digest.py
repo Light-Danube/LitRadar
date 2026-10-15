@@ -15,6 +15,7 @@ from typing import Any, Callable, Iterable
 
 from config import RadarConfig
 from pipeline import SearchSummary, search_and_ingest
+from sources.http import format_provider_error
 from storage.sqlite import PaperStore
 
 from litradar_runtime import WORKSPACE_ROOT, DEFAULT_SCAN_CONFIG, DEFAULT_PROFILE, DEFAULT_DB, ensure_user_defaults
@@ -224,7 +225,7 @@ def run_scheduled_scan(
             if progress:
                 progress("completed", f"{query.name}: fetched={summary.fetched}; new={summary.newly_stored}; total={summary.library_total}")
         except Exception as exc:
-            message = f"{query.name}: {exc}"
+            message = f"{query.name}: {format_provider_error(exc)}"
             errors.append(message)
             query_summaries.append({"name": query.name, "query": query.query, "error": message})
             if progress:

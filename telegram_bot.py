@@ -36,7 +36,7 @@ from research_digest import (
 )
 from storage.sqlite import PaperStore
 
-from litradar_runtime import WORKSPACE_ROOT, CODE_ROOT
+from litradar_runtime import WORKSPACE_ROOT, CODE_ROOT, resolve_log_path
 
 ROOT = WORKSPACE_ROOT
 DEFAULT_STATE = ROOT / "data" / "telegram_bot_state.json"
@@ -57,7 +57,13 @@ def configure_listener_logging(*, debug: bool = False, log_file: str | Path | No
         console = logging.StreamHandler(sys.stderr)
         owned.append(console)
         if log_file is not None:
-            owned.append(RotatingFileHandler(log_file, mode="a", maxBytes=1024 * 1024,
+            log_path = resolve_log_path(log_file)
+            # Validate rotated siblings too; do not reuse linked diagnostic files.
+            for index in range(1, 4):
+                resolve_log_path(str(log_path) + f".{index}")
+            log_path.parent.mkdir(parents=True, exist_ok=True)
+            log_path = resolve_log_path(log_file)
+            owned.append(RotatingFileHandler(log_path, mode="a", maxBytes=1024 * 1024,
                                              backupCount=3, encoding="utf-8", errors="backslashreplace"))
         for handler in owned:
             handler.setLevel(logging.DEBUG if debug else logging.INFO)

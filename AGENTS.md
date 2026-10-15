@@ -51,3 +51,9 @@
 - On 2026-10-15 the user confirmed Windows daily use and Narrator work okay and accepted both as “yes”. Record user-reported acceptance without inventing versions/task observations. Narrator is optional for this release; a detailed cross-reader certification is not a Gate 1 blocker. Keep later release approval/versioning separate.
 - Version `0.8.5` is authorized only after the requested patch gates are actually complete. Until Windows and real-model evaluation are confirmed, keep the existing release version and describe changes as unreleased. On a later approved bump inspect VERSION, pyproject metadata, CLI/TUI/Telegram labels, FastAPI metadata/health, web version labels, packaging/tests and current-release documentation; retain historical changelog versions and legacy paths.
 - Update README, ROADMAP, CHANGELOG and CODEX-HANDOFF for each increment. Keep implemented features, user acceptance, executed checks and pending evidence clearly separate.
+
+## Application logging convention
+
+- All new or extended file logging, across CLI, web, Textual TUI, Telegram and provider adapters, belongs under `WORKSPACE_ROOT/log/` (project `log/` for a checkout; the writable LitBeacon user directory's `log/` for installed wheels). Use the shared runtime path helper; never put logs beside installed code or arbitrarily in the current directory.
+- Do not commit generated logs, rotated log files or private diagnostic content. Keep `log/` and log extensions ignored/excluded from Git, build contexts and release artifacts. Preserve existing owner ignore rules. Legacy scheduled-job `logs/` paths stay compatible until a dedicated migration; do not silently move/delete existing files.
+- Diagnostics must omit credentials, authenticated URLs, request/response bodies and private library/message content. Use fixed safe messages for provider failures and bounded, opt-in file logging; no implicit HTTP wire traces or external telemetry.

@@ -42,7 +42,9 @@ def test_release_tag_mismatch_does_not_create_output(wheel, tmp_path, tag):
 
 @pytest.mark.parametrize('extra', ['docs/legacy.md', '.env', 'web/.env.local',
                                    'storage/library.sqlite3-wal', 'storage/library.sqlite3',
-                                   'web/personal.pdf', '../outside', 'storage/../outside'])
+                                   'web/personal.pdf', '../outside', 'storage/../outside',
+                                   'web/log/session.txt', 'storage/logs/trace.txt',
+                                   'litradar_runtime/trace.log.1', 'web/TRACE.LOG.2'])
 def test_unrelated_or_local_data_never_shipped(wheel, tmp_path, extra):
     with ZipFile(wheel, 'a') as archive:
         archive.writestr(extra, 'Synthetic only')

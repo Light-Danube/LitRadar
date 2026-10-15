@@ -12,6 +12,7 @@ from ranking.keywords import KeywordProfile
 from ranking.scoring import rank_papers
 from sources import openalex, semantic_scholar
 from sources.base import Paper
+from sources.http import format_provider_error
 from storage.sqlite import PaperStore
 
 Progress = Callable[[str, str], None]
@@ -289,7 +290,7 @@ def explore_citation_graph(
                             f"{provider} {item_direction}: received {len(neighbor_papers)}, stored {stored_count}",
                         )
                     except Exception as exc:
-                        message = f"{provider} {item_direction} for paper {current_id}: {exc}"
+                        message = f"{provider} {item_direction} for paper {current_id}: {format_provider_error(exc)}"
                         errors.append(message)
                         store.record_citation_fetch(
                             current_id, provider, item_direction, 0, message, requested_limit=int(limit)

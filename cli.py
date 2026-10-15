@@ -947,7 +947,7 @@ def cmd_telegram_run(args: argparse.Namespace) -> int:
                              "file permissions and available disk space; private error details are omitted.")
                 return 2
     except (ValueError, OSError):
-        print("Could not initialize Telegram diagnostics. Choose a writable log file and check its directory permissions.",
+        print("Could not initialize Telegram diagnostics. Choose a writable log filename under the LitBeacon log/ directory and check its permissions.",
               file=sys.stderr)
         return 2
 
@@ -1088,7 +1088,7 @@ Most commands have their own help page, e.g.:
     p_telegram_run.add_argument("--profile", default=str(DEFAULT_PROFILE), help="research profile JSON")
     p_telegram_run.add_argument("--poll-timeout", type=int, default=25, help="Telegram long-poll timeout in seconds (0–25)")
     p_telegram_run.add_argument("--debug", action="store_true", help="include safe listener API timing/outcome diagnostics (no request/response contents)")
-    p_telegram_run.add_argument("--log-file", type=Path, help="append UTF-8 listener diagnostics to a rotating local file (1 MiB, 3 backups)")
+    p_telegram_run.add_argument("--log-file", type=Path, help="append UTF-8 diagnostics under the LitBeacon log/ directory (filename or log/name; 1 MiB, 3 backups)")
     p_telegram_run.set_defaults(func=cmd_telegram_run)
 
     p_search = sub.add_parser("search", help="search sources, score papers, and store results")

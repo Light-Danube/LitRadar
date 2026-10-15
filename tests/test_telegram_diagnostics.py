@@ -15,6 +15,12 @@ import pytest
 import telegram_bot as telegram
 
 
+@pytest.fixture(autouse=True)
+def disposable_log_root(tmp_path, monkeypatch):
+    import litradar_runtime
+    monkeypatch.setattr(litradar_runtime, "LOG_ROOT", tmp_path / "log")
+
+
 TOKEN = "synthetic-token-never-real"
 POISON = "REMOTE_PRIVATE_CONTENT_DO_NOT_LOG"
 URL = f"https://api.telegram.org/bot{TOKEN}/getUpdates"
@@ -159,7 +165,7 @@ def test_unserializable_local_payload_has_safe_fatal_diagnostic(monkeypatch):
 
 
 def test_debug_api_diagnostics_only_expose_operation_and_outcome(tmp_path, monkeypatch, capsys):
-    log_file = tmp_path / "api-diagnostics.log"
+    log_file = tmp_path / "log" / "api-diagnostics.log"
     with telegram.configure_listener_logging(debug=True, log_file=log_file):
         error = http_failure(monkeypatch, 401)
     output = capsys.readouterr()
@@ -292,7 +298,7 @@ def test_listener_logging_is_scoped_timestamped_and_debug_is_opt_in(tmp_path, ca
     assert "synthetic-debug-marker" not in text
     assert (logger.handlers, logger.level, logger.propagate) == previous
 
-    log_file = tmp_path / "diagnostics.log"
+    log_file = tmp_path / "log" / "diagnostics.log"
     with pytest.raises(RuntimeError, match="synthetic context failure"):
         with telegram.configure_listener_logging(debug=True, log_file=log_file):
             rotating = [h for h in logger.handlers if isinstance(h, RotatingFileHandler)]
@@ -322,7 +328,7 @@ def test_debug_error_paths_never_log_or_send_untrusted_exception_text(tmp_path, 
         raise RuntimeError(f"{POISON} {URL}")
     monkeypatch.setattr(bot, {"update": "process_update", "callback": "_dispatch_action",
                              "command": "_dispatch_command"}[route], fail)
-    log_file = tmp_path / "diagnostics.log"
+    log_file = tmp_path / "log" / "diagnostics.log"
     with telegram.configure_listener_logging(debug=True, log_file=log_file):
         if route == "update":
             assert bot.poll_once() == 1
@@ -359,7 +365,7 @@ def test_digest_delivery_failure_persists_failed_status_without_private_error(tm
         attempts.append(text)
         raise RuntimeError(f"{POISON} {TOKEN} {URL}")
     monkeypatch.setattr(telegram, "send_telegram", fail_delivery)
-    log_file = tmp_path / "digest-diagnostics.log"
+    log_file = tmp_path / "log" / "digest-diagnostics.log"
     with telegram.configure_listener_logging(debug=True, log_file=log_file):
         bot._send_digest("daily")
 

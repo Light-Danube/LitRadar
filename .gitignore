@@ -39,3 +39,7 @@ models/
 # Disposable development and artifact smoke workspaces
 work/
 *.log
+
+# Application diagnostics, including rotated files
+log/
+*.log.*
