@@ -1,6 +1,6 @@
 # Windows workspace workflow validation
 
-Current evidence: actual [Windows API/DOM/native Chrome run](https://github.com/Light-Danube/LitRadar/actions/runs/38651164554) succeeded, including recovery/legacy upgrade (**49 passed, 1 case-insensitive-filesystem skip**) and four sandboxed EN/UK desktop/narrow Chrome scenarios. [Clean installed-wheel Ubuntu/Windows smoke](https://github.com/Light-Danube/LitRadar/actions/runs/38656486258) also succeeded. Later setup-package candidates require their own checks.
+Current evidence: actual [Windows API/DOM/native Chrome run](https://github.com/Light-Danube/LitRadar/actions/runs/38651164554) succeeded, including recovery/legacy upgrade (**49 passed, 1 case-insensitive-filesystem skip**) and four sandboxed EN/UK desktop/narrow Chrome scenarios. [Clean installed-wheel Ubuntu/Windows smoke](https://github.com/Light-Danube/LitRadar/actions/runs/38656486258) also succeeded. Actual [Ubuntu/Windows extracted setup-wheel recovery smoke](https://github.com/Light-Danube/LitRadar/actions/runs/38744388702) succeeded at code head `a9c64fb2`, including durable rows/histories/tombstones, elected files/checksums, integrity and no overwrite. Later candidates require their own checks.
 
 On **2026-10-15 the user confirmed Windows daily use and Narrator work okay**. This is accepted as user-reported evidence; exact Windows/terminal/reader versions and detailed task observations were not supplied. Narrator is optional. This is separate from synthetic CI and does not imply certification or a reproduced real scheduler/token test.
 

@@ -3,7 +3,7 @@
 ## Unreleased — Gate 1 archive and packaged recovery verification
 
 - Archive completed Gate 1 plans, audits, validation records, historical screenshots and handoff; retain current setup, user and recovery guides. Repair affected links and shorten the active release checklist.
-- Extend the existing installed setup-wheel smoke on Ubuntu/Windows with disposable CLI backup/new-destination restore, durable row/history/tombstone preservation, elected artifacts/checksums, integrity and no-overwrite checks. Runtime behavior and version remain unchanged; candidate results are recorded in the active release checklist.
+- Extend the existing installed setup-wheel smoke on Ubuntu/Windows with disposable CLI backup/new-destination restore, durable row/history/tombstone preservation, elected artifacts/checksums, integrity and no-overwrite checks. Runtime behavior and version remain unchanged. Local candidate checks: 518 Python / 38 JS passed, zero failures/skips; fresh Linux setup-wheel smoke passed. Actual [Ubuntu/Windows packaged recovery CI](https://github.com/Light-Danube/LitRadar/actions/runs/38744388702) succeeded at implementation head `a9c64fb2`; the active checklist records limits and final-head check status.
 
 ## Unreleased — small package setup and Gate 1 closure
 
@@ -113,7 +113,7 @@ Browser venue-discovery controls remain planned; retrieved paper IDs are availab
 - Added a read-only-permissions GitHub Actions workflow to build and run isolated Docker tests on PRs.
 - Local Python 3.12: **144 passed, 0 failed, 0 skipped**; Node: **4 passed, 0 failed, 0 skipped**.
 - Restricted Python 3.11 container with locally downloaded wheels: **139 passed, 0 failed, 5 expected skips** (4 Textual, 1 Node). Its boot helper served a synthetic paper through the web API with no network or host mounts.
-- Stock Docker build networking and GitHub API access are unavailable in this cloud session. Production-image build and current/historical CI logs remain unverified; see `docs/DOCKER-AUDIT.md`.
+- Stock Docker build networking and GitHub API access are unavailable in this cloud session. Production-image build and current/historical CI logs remain unverified; see `docs/archive/gate1/DOCKER-AUDIT.md`.
 
 ## Unreleased — v0.8.x workspace workflows and Ukrainian Web UI
 
@@ -148,7 +148,7 @@ Browser venue-discovery controls remain planned; retrieved paper IDs are availab
 ### Validation
 - Windows/Python 3.10.11 local suite: **129 passed**, no skips; one existing Starlette/httpx TestClient deprecation warning. Supported Python 3.11/3.12 checks run in CI.
 - Tests cover idempotent legacy-note migration, note/revision rollback, unchanged and cleared notes, Unicode, provider refresh preservation, validation, cascade behavior and stable API pagination.
-- Repository compileall excluding `.venv`, JavaScript syntax and whitespace checks passed. Loopback browser fixture smoke verified origin labels, source references, advisory suggestions, Unicode/literal markup display, persistence after reload, and research-note saving without clearing a supplemental draft. No browser console errors observed; screenshot: `docs/screenshots/annotation-provenance.png`.
+- Repository compileall excluding `.venv`, JavaScript syntax and whitespace checks passed. Loopback browser fixture smoke verified origin labels, source references, advisory suggestions, Unicode/literal markup display, persistence after reload, and research-note saving without clearing a supplemental draft. No browser console errors observed; screenshot: `docs/archive/gate1/screenshots/annotation-provenance.png`.
 
 
 ## Unreleased — v0.8.x citation-map usability
@@ -169,7 +169,7 @@ Browser venue-discovery controls remain planned; retrieved paper IDs are availab
 ### Validation
 - Windows local run: **117 passed**, no skips; one existing Starlette/httpx TestClient deprecation warning. Local `.venv` uses Python 3.10.11; supported Python 3.11/3.12 validation remains with CI.
 - Repository `compileall` (excluding `.venv`), JavaScript syntax check, and `git diff --check` passed.
-- In-app browser smoke test on loopback with a disposable SQLite fixture verified arrows, merged provenance, Enter/Space selection, recenter/open-paper navigation, filters/reset/empty results, zoom, and background pan/reset. No browser console errors were observed. Screenshot: `docs/screenshots/citation-map-provenance.png`.
+- In-app browser smoke test on loopback with a disposable SQLite fixture verified arrows, merged provenance, Enter/Space selection, recenter/open-paper navigation, filters/reset/empty results, zoom, and background pan/reset. No browser console errors were observed. Screenshot: `docs/archive/gate1/screenshots/citation-map-provenance.png`.
 
 ## 0.8.0 — LitBeacon browser research workspace — 2026-10-12
 

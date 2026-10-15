@@ -21,7 +21,7 @@
 
 Reopen for a reproduced workflow/data-loss defect. Live venue access remains cloud-environment-limited (proxy 403); user-reported CLI success is separate evidence. Active setup, recovery and operational guides remain current; completed planning and validation records are indexed in the [Gate 1 archive](docs/archive/gate1/README.md). Feature stability does not authorize a release/version bump.
 
-## Gate 2 — Local data integrity and recovery (P0)
+## Gate 2 — Local data integrity and recovery (P0): complete for this candidate
 
 - [x] Provide a documented **consistent SQLite backup** using SQLite's backup API and a read-only source without source migrations; committed active-WAL snapshot tested.
 - [x] Implement bounded `library-backup`/`library-restore`, explicitly elected Research/offline roots, manifest/SHA-256 and exclusions. Artifact inclusion requires an explicit stopped-writers acknowledgment. [Instructions and limits](docs/USER-GUIDE.md#consistent-local-backup-and-restore-unreleased).
@@ -30,7 +30,7 @@ Reopen for a reproduced workflow/data-loss defect. Live venue access remains clo
 
 **Done when:** automated tests verify backup, restore and upgrade without contacting services or touching personal data; USER-GUIDE documents restore steps and exclusions.
 
-Source recovery and additive legacy upgrade are implemented and covered by synthetic tests. The remaining evidence gap is recovery from the installed setup wheel on Ubuntu and Windows, now included in `scripts/built_wheel_smoke.py`. [Current candidate evidence](docs/LOCAL-1.0-RELEASE-CHECKLIST.md) records executed results and pending CI separately. No personal data or live services are used.
+Source recovery and additive legacy upgrade are implemented and covered by synthetic tests. Actual [Ubuntu/Windows extracted setup-wheel recovery checks](https://github.com/Light-Danube/LitRadar/actions/runs/38744388702) succeeded at implementation head `a9c64fb2`, closing the package evidence gap through `scripts/built_wheel_smoke.py`. [Current candidate evidence](docs/LOCAL-1.0-RELEASE-CHECKLIST.md) records executed results and pending CI separately. No personal data or live services are used.
 
 ## Gate 3 — Windows-first install, launch and normal use (P0)
 
