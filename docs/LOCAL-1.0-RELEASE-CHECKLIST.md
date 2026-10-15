@@ -1,10 +1,11 @@
 # LitBeacon 1.0 — active release checklist
 
-Baseline main `0052e202` (merged PR #25). Version stays **0.8.0**; no merge/tag/release authorization is implied.
+Baseline main `044358b8` (merged PR #26). Version stays **0.8.0**; no merge/tag/release authorization is implied.
 
 - **Gate 1: closed.** [Archived feature inventory and closure evidence](archive/gate1/release-checklist-2026-10-15.md). Windows daily use and optional Narrator were accepted by the user; automated results remain separate.
 - **Gate 2: complete for this candidate.** Read-only SQLite backup, new-destination restore, elected artifacts/checksums and legacy upgrade are tested. Actual [Ubuntu/Windows extracted setup-wheel recovery checks](https://github.com/Light-Danube/LitRadar/actions/runs/38744388702) passed at implementation head `a9c64fb2`; no personal data or services were used.
 - **Gate 3: two explicit items remain.** Scheduler/optional Telegram duplicate-listener and disable/remove behavior; provider timeout/429/offline failure preservation. Daily-use acceptance and clean package installation are already recorded.
+- Gate 3 current increment: [Telegram conflicts and safe listener diagnostics](GATE3-TELEGRAM-DIAGNOSTICS.md), with [operator troubleshooting](TELEGRAM-TROUBLESHOOTING.md). Scheduler and full provider-failure gates remain open.
 - Gates 4–6 remain governed by [ROADMAP](../ROADMAP.md), including focused safety checks and final release approval.
 
 ## This small Draft PR
@@ -21,4 +22,4 @@ The recovery implementation remains bounded; no new subsystem, destructive migra
 - `npm ci --prefix tests/web --ignore-scripts` (shared scratch cache), then `npm test --prefix tests/web` — **38 passed, 0 failed, 0 skipped**.
 - `python -m pip wheel --no-deps --no-build-isolation --wheel-dir work/wheels .`; `python -m scripts.build_user_bundle ... --output-dir work/bundles`; extract ZIP, create fresh venv, install extracted wheel `[web]` plus smoke-only `httpx`, execute `scripts/built_wheel_smoke.py` from outside checkout — **passed on Linux**, including recovery CLI, exact durable table/history/tombstone comparison, elected files/checksums, integrity and no overwrite. FTS-derived tables are excluded from row comparison; legacy upgrade is covered by source tests.
 - Documentation link/anchor scan: **221 targets resolved**; `python -m py_compile scripts/built_wheel_smoke.py` and `git diff --check` passed.
-- Actual [Ubuntu/Windows installed-wheel CI](https://github.com/Light-Danube/LitRadar/actions/runs/38744388702) **succeeded** at implementation head `a9c64fb2`. Both job logs report the recovery round-trip and general CLI/assets/web/edit/restart smoke passed; reviewable setup ZIP artifacts uploaded. This closes Gate 2 package evidence. A later documentation-only evidence commit still requires its own final PR-head checks. This is not release approval.
+- Actual [Ubuntu/Windows installed-wheel CI](https://github.com/Light-Danube/LitRadar/actions/runs/38744388702) **succeeded** at implementation head `a9c64fb2`. Both job logs report the recovery round-trip and general CLI/assets/web/edit/restart smoke passed; reviewable setup ZIP artifacts uploaded. This closes Gate 2 package evidence. Final head `430ffcf0` had 20/20 successful checks before PR #26 was merged. This is not release approval.
