@@ -58,3 +58,5 @@ Chrome scenarios have since succeeded in the linked Actions run. This does not
 claim a cloud-browser pass or an exhaustive visual/accessibility audit.
 The Node test command uses explicit file paths to avoid relying on Windows
 shell wildcard expansion.
+
+Gate 3 provider/log convention increment: actual [Windows provider failure/shared log paths](https://github.com/Light-Danube/LitRadar/actions/runs/38769390328/job/116540919705) and existing Telegram diagnostics steps passed at `3dfe583e`; [Ubuntu/Windows installed-wheel smoke](https://github.com/Light-Danube/LitRadar/actions/runs/38769390392) also passed, including writable user `log/` checks. [Preservation scope and limits](GATE3-PROVIDER-FAILURES.md). Enclosing/final-head CI was still being observed when recorded; consult PR #28 for final status.

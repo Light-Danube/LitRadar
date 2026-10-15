@@ -2,7 +2,7 @@
 
 ## Unreleased — Gate 3 provider failures and shared log location
 
-- Use fixed actionable provider HTTP/network diagnostics in registry progress, search/scan summaries, citation failure history and Research API transport failures. Preserve retries, exception identity, partial success and local manual library/evidence data. Executed local candidate: **656 Python / 38 JS passed**, zero failures/skips, one existing Starlette warning; extracted setup-wheel log/CLI/web/recovery smoke passed on Linux. Windows/candidate CI remains separate.
+- Use fixed actionable provider HTTP/network diagnostics in registry progress, search/scan summaries, citation failure history and Research API transport failures. Preserve retries, exception identity, partial success and local manual library/evidence data. Executed local candidate: **656 Python / 38 JS passed**, zero failures/skips, one existing Starlette warning; extracted setup-wheel log/CLI/web/recovery smoke passed on Linux. Actual Windows provider/log-path and Telegram diagnostics steps plus Ubuntu/Windows installed package checks passed at `3dfe583e`; final documentation-head checks remain separate.
 - Standardize new file logging across all interfaces on `WORKSPACE_ROOT/log/`; adapt Telegram filename/path handling, reject escapes, and preserve legacy scheduled-job `logs/` paths. Keep generated/rotated logs ignored and excluded from Docker contexts and validated setup wheels. No existing files are moved.
 - [User logging convention](docs/LOGGING.md); [candidate evidence](docs/GATE3-PROVIDER-FAILURES.md). No major feature, personal data, merge, version bump or release.
 
