@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased — Gate 4 local web launch verification
+
+- Add loopback/default-port-selection and external-bind rejection regressions, including a real CLI listener on an ephemeral port with a disposable library. Check that `UVICORN_HOST` does not override the CLI and that Compose has only its expected host-loopback publication, without host networking. No application behavior or version change.
+- Clarify CLI, source launcher and Docker boundaries and their authentication/Origin/Host limitations. [Local evidence](docs/GATE4-LOCAL-BOUNDARY.md); hosted Actions are deferred by user instruction because account billing prevents jobs starting. Remaining Gate 4 path/upload/export, SQLite integrity and network-use checks stay open.
+
 ## Unreleased — Gate 3 lifecycle closure
 
 - Make idle Telegram polling, menu startup and retry waits interruptible without waiting for a pending HTTP response; retain main-thread update/offset writes and discard abandoned results. The launcher still pauses after exit; active commands retain their own bounded waits.

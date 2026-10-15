@@ -1,12 +1,17 @@
 """Offline safety and packaging checks for optional Docker support."""
 from pathlib import Path
+import re
 
 ROOT = Path(__file__).resolve().parents[1]
 
 
 def test_compose_binds_browser_only_to_host_loopback():
     compose = (ROOT / "compose.yaml").read_text(encoding="utf-8")
-    assert '"127.0.0.1:8765:8765"' in compose
+    # Match the whole publication block: one safe mapping must not hide a
+    # second wildcard/LAN mapping. Host networking would bypass it entirely.
+    assert len(re.findall(r"(?m)^ *ports:", compose)) == 1
+    assert re.search(r'(?m)^    ports:\n      - "127\.0\.0\.1:8765:8765"\n    \S', compose)
+    assert "network_mode:" not in compose
     assert 'profiles: ["bot"]' in compose
     assert "./data:/app/data" in compose
     assert "./reports:/app/reports" in compose

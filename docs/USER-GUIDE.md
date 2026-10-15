@@ -574,6 +574,8 @@ Keep the project `.env` readable by the user running the scheduled job.
 
 Run `run_web.bat` on Windows or `python cli.py web` from the prepared virtual environment, then open `http://127.0.0.1:8765`. Use `--port 8787` if the default port is occupied. The server binds only to localhost; do not expose it to your LAN or the public internet because this first release has no account/auth layer. The shipped UI uses HTML/CSS, vanilla JavaScript and native SVG; API routes use FastAPI and Uvicorn and read/write through the existing `PaperStore` layer. No Node/npm, CDN, React, or new database is required at runtime.
 
+The CLI defaults to numeric `127.0.0.1`; its only accepted `--host` values are `127.0.0.1` and `localhost`. Docker uses a separate container-internal listener and relies on the shipped Compose host-loopback port mapping. Direct Uvicorn invocation, edited port mappings, reverse proxies and tunnels can bypass this launch boundary and are outside the supported local-only setup. Loopback binding provides no authentication, browser Origin/Host validation or protection from other local programs. [Verification scope and results](GATE4-LOCAL-BOUNDARY.md).
+
 Install only the web dependencies manually with `python -m pip install -r requirements-web.txt` if needed. The shared Windows setup helper installs core, UI, development, LLM and web requirement sets. The UI can edit status, notes and tags; it can visualise citation/related edges that are already stored locally. If a map is empty, run Citation Discovery using the CLI/TUI first. Cluster labels are explicitly heuristic (tags, repeated venues, shared title/abstract terms), not embedding-based semantic similarity or evidence of research novelty.
 
 ### Brand name note
