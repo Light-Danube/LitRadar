@@ -40,10 +40,7 @@ Source recovery and additive legacy upgrade are implemented and covered by synth
 
 - [x] Synthetic 403/404/429/503/timeout/offline provider failures preserve stored library/evidence state and partial success; subsequent local workspace read/edit/export/reopen works. Actual Windows targeted checks succeeded at `3dfe583e`. [Evidence and limits](docs/GATE3-PROVIDER-FAILURES.md); no live provider availability claim.
 
-Focused Telegram increment: typed fatal polling conflict/configuration errors, transient retries and safe timestamped optional debug/file logging are implemented, and the actual Windows targeted diagnostics step passed at `ed87c805`. [Scope and candidate evidence](docs/GATE3-TELEGRAM-DIAGNOSTICS.md). This does not close scheduler disable/remove or full provider-failure verification.
-
-
-Current focused increment: [safe provider failures and continued local-library use](docs/GATE3-PROVIDER-FAILURES.md), with a shared ignored `log/` convention for new logging across all interfaces. Local regressions and actual Windows provider/log-path checks passed at `3dfe583e`; final-head checks remain tracked in PR #28. Scheduler disable/remove remains separate.
+The provider/diagnostics increments are merged. Current [Gate 3 lifecycle closure candidate](docs/GATE3-LIFECYCLE.md) verifies scheduler install/status/remove/disable, selected paths, duplicate-task settings and reproduced Telegram shutdown delays. Local fixes are implemented; actual Windows/native scheduler and final candidate checks are pending. No gate/release approval is inferred from authored tests alone.
 
 **Done when:** exact Windows environment and reproducible manual/automated results are recorded in docs/WINDOWS-WORKSPACE-SMOKE.md or a release-check file. Linux-only checks do not satisfy this gate.
 

@@ -56,7 +56,7 @@ def test_cli_polling_conflict_exits_without_sleep_or_offset_changes(tmp_path, mo
         return Reply()
 
     monkeypatch.setattr(telegram_bot.urllib.request, 'urlopen', urlopen)
-    monkeypatch.setattr(telegram_bot.time, 'sleep', lambda *_: pytest.fail('Conflict must not retry'))
+    monkeypatch.setattr(telegram_bot, '_wait_before_retry', lambda *_: pytest.fail('Conflict must not retry'))
     real_bot = telegram_bot.LitRadarTelegramBot
     monkeypatch.setattr(cli, 'LitRadarTelegramBot', lambda **kwargs: real_bot(**kwargs, state_path=state))
     log = tmp_path / 'log' / 'listener.log'

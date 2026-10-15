@@ -825,40 +825,69 @@ def cmd_digest(args: argparse.Namespace) -> int:
 
 def _write_job_enablement(config_path: str | Path, action: str, job: str, *, frequency: str = "daily", when: str = "08:00") -> None:
     """Persist whether a scheduled job is desired, even on OSes with manual cron setup."""
+    import stat
+    import tempfile
+
     path = Path(config_path)
-    try:
-        payload = json.loads(path.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError):
-        return
+    payload = json.loads(path.read_text(encoding="utf-8"))
     if not isinstance(payload, dict):
-        return
+        raise ValueError("Schedule configuration must be a JSON object")
+    if action not in {"install", "remove"} or job not in {"scan", "digest", "all"}:
+        raise ValueError("Invalid scheduler action or job")
     selected = ("scan", "digest") if job == "all" else (job,)
     for selected_job in selected:
-        if selected_job == "scan":
-            payload.setdefault("scan", {})["enabled"] = action == "install"
-        elif selected_job == "digest":
-            delivery = payload.setdefault("delivery", {})
-            delivery["enabled"] = action == "install"
-            if action == "install":
-                delivery["frequency"] = frequency
-                delivery["time"] = when
-    path.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+        key = "scan" if selected_job == "scan" else "delivery"
+        settings = payload.setdefault(key, {})
+        if not isinstance(settings, dict):
+            raise ValueError("Schedule settings must be JSON objects")
+        settings["enabled"] = action == "install"
+        if selected_job == "digest" and action == "install":
+            settings.update(frequency=frequency, time=when)
+    mode = stat.S_IMODE(path.stat().st_mode)
+    temporary = None
+    try:
+        with tempfile.NamedTemporaryFile(mode="w", encoding="utf-8", dir=path.parent,
+                                         prefix=f".{path.name}.", suffix=".tmp", delete=False) as handle:
+            temporary = Path(handle.name)
+            handle.write(json.dumps(payload, ensure_ascii=False, indent=2) + "\n")
+            handle.flush()
+            os.fsync(handle.fileno())
+        os.chmod(temporary, mode)
+        os.replace(temporary, path)
+    finally:
+        if temporary is not None:
+            temporary.unlink(missing_ok=True)
 
 
 def cmd_scheduled_run(args: argparse.Namespace) -> int:
     try:
         schedule_config = json.loads(Path(args.config).read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError):
-        schedule_config = {}
-    job_settings = schedule_config.get("scan" if args.job == "scan" else "delivery", {})
-    if isinstance(job_settings, dict) and job_settings.get("enabled", True) is False:
+        if not isinstance(schedule_config, dict):
+            raise ValueError("Schedule configuration must be an object")
+        job_settings = schedule_config.get("scan" if args.job == "scan" else "delivery", {})
+        if not isinstance(job_settings, dict) or not isinstance(job_settings.get("enabled", True), bool):
+            raise ValueError("Schedule settings must contain a boolean enablement flag")
+    except (OSError, ValueError):
+        print("Scheduled job did not run: configuration is missing, unreadable or invalid. Repair it before retrying.", file=sys.stderr)
+        return 2
+    if job_settings.get("enabled", True) is False:
         print(f"Scheduled job '{args.job}' is disabled in {args.config}; skipping.")
         return 0
-    log_dir = ROOT / "logs"
-    log_dir.mkdir(parents=True, exist_ok=True)
-    log_path = log_dir / f"scheduled-{args.job}.log"
+    from litradar_runtime import resolve_log_path
+    try:
+        log_path = resolve_log_path(f"scheduled-{args.job}.log")
+        log_path.parent.mkdir(parents=True, exist_ok=True)
+    except (OSError, ValueError):
+        print("Scheduled job did not run: the LitBeacon log/ directory is unavailable.", file=sys.stderr)
+        return 2
+    try:
+        log_path = resolve_log_path(log_path)
+        log_handle = log_path.open("a", encoding="utf-8")
+    except (OSError, ValueError):
+        print("Scheduled job did not run: its log/ file could not be opened.", file=sys.stderr)
+        return 2
     exit_code = 0
-    with log_path.open("a", encoding="utf-8") as log:
+    with log_handle as log:
         with redirect_stdout(log), redirect_stderr(log):
             print("\n" + "=" * 72)
             print(f"Scheduled LitBeacon job={args.job} at {datetime.now(timezone.utc).isoformat()}")
@@ -883,22 +912,31 @@ def cmd_scheduled_run(args: argparse.Namespace) -> int:
                     if not configured:
                         print("Telegram is not configured; the digest was saved locally only.")
                 print(f"Job exit code: {exit_code}")
-            except Exception as exc:
-                print(f"Scheduled job crashed: {type(exc).__name__}: {exc}")
+            except Exception:
+                print("Scheduled job failed; check local configuration and permissions. Private error details are omitted.")
                 exit_code = 1
     print(f"Scheduled {args.job} job finished with exit code {exit_code}. Log: {log_path}")
     return exit_code
 
 
 def cmd_schedule(args: argparse.Namespace) -> int:
-    if args.action == "remove":
-        # Disable at application level too: stale cron/launchd entries become harmless.
-        _write_job_enablement(args.config, "remove", args.job, frequency=args.frequency, when=args.time)
-        if os.name != "nt":
-            print(f"Disabled scheduled-run configuration for {args.job}. Remove the corresponding cron/launchd entry manually if one exists.")
-            return 0
+    try:
+        if args.action == "remove":
+            # Persist the guard first: an OS removal failure must not re-enable network work.
+            _write_job_enablement(args.config, "remove", args.job, frequency=args.frequency, when=args.time)
+        elif args.action == "install":
+            payload = json.loads(Path(args.config).read_text(encoding="utf-8"))
+            keys = ("scan", "delivery") if args.job == "all" else ("scan" if args.job == "scan" else "delivery",)
+            if not isinstance(payload, dict) or any(not isinstance(payload.get(key, {}), dict) for key in keys):
+                raise ValueError("Invalid schedule configuration")
+    except (OSError, ValueError):
+        print("Schedule configuration was not updated; repair its JSON structure and write permissions before retrying.", file=sys.stderr)
+        return 2
+    if args.action == "remove" and os.name != "nt":
+        print(f"Disabled scheduled-run configuration for {args.job}. Remove the corresponding cron/launchd entry manually if one exists.")
+        return 0
     if os.name != "nt":
-        print("Windows Task Scheduler install/status is only available on Windows. On Linux/macOS, use cron/launchd and `python cli.py schedule remove --job scan|digest|all` to disable stale jobs safely.", file=sys.stderr)
+        print("Windows Task Scheduler install/status is only available on Windows. Use your system scheduler and schedule remove to disable stale jobs safely.", file=sys.stderr)
         return 2
     if not SOURCE_CHECKOUT:
         print("Windows Task Scheduler setup requires the source checkout and Windows launchers; wheel installations support manual scheduled-run only.", file=sys.stderr)
@@ -907,14 +945,19 @@ def cmd_schedule(args: argparse.Namespace) -> int:
     command = [
         "powershell.exe", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", str(script),
         "-Action", args.action, "-TaskSet", args.job, "-Frequency", args.frequency, "-Time", args.time,
+        "-ConfigPath", str(Path(args.config).resolve()), "-DatabasePath", str(Path(args.db).resolve()),
+        "-ProfilePath", str(Path(getattr(args, "profile", DEFAULT_PROFILE)).resolve()),
+        "-PythonPath", sys.executable, "-WorkspaceRoot", str(ROOT),
     ]
     try:
         code = subprocess.run(command, cwd=ROOT, check=False).returncode
         if code == 0 and args.action == "install":
             _write_job_enablement(args.config, "install", args.job, frequency=args.frequency, when=args.time)
+        if code and args.action == "remove":
+            print("OS task removal failed; application configuration remains disabled. Retry OS cleanup after fixing permissions.", file=sys.stderr)
         return code
-    except OSError as exc:
-        print(f"Could not invoke Windows Task Scheduler helper: {exc}", file=sys.stderr)
+    except (OSError, ValueError):
+        print("Scheduler action failed. Check the helper, configuration write permissions and Task Scheduler access; retry before relying on it.", file=sys.stderr)
         return 1
 
 

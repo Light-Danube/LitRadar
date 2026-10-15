@@ -103,7 +103,7 @@ Discovery indexes, preprints, venue metadata and citations do not certify peer r
 
 ## Documentation
 
-- [User guide and configuration](docs/USER-GUIDE.md) · [environment template](.env.example) · [Telegram diagnostics](docs/TELEGRAM-TROUBLESHOOTING.md) · [Local logs](docs/LOGGING.md)
+- [User guide and configuration](docs/USER-GUIDE.md) · [environment template](.env.example) · [Telegram diagnostics](docs/TELEGRAM-TROUBLESHOOTING.md) · [Local logs](docs/LOGGING.md) · [Shutdown and scheduler checks](docs/GATE3-LIFECYCLE.md)
 - [Краткий CLI-сценарий (RU)](docs/research/cli-workflow-ru.md) · [Venue discovery and evidence](docs/research/venue-discovery.md) · [literature comparison and verification limits](docs/archive/gate1/research/erc-context-novelty-matrix-2026.md)
 - [Annotations and recovery](docs/V08-ANNOTATION-WORKFLOWS.md) · [semantic exploration](docs/SEMANTIC-WORKSPACE.md)
 - [Docker deployment](DOCKER.md) · [isolated development](docs/ISOLATED-DEV.md)

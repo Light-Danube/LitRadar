@@ -16,7 +16,7 @@ The filename resolves to `log/telegram-listener.log` under the application works
 
 Generated logs and rotations are local data: `log/`, legacy `logs/`, `*.log` and `*.log.*` are ignored by Git and excluded from Docker build contexts. The setup ZIP contains only its validated runtime wheel and guide; wheel validation rejects log directories and rotated log files even under a runtime package. Do not force-add logs to Git or attach them automatically to a release. Review and sanitize any diagnostics before sharing.
 
-Existing scheduled-job scripts keep their historical `logs/` paths for compatibility. They are already ignored; migrating those paths requires a separate change. This PR establishes the shared location and adapts the new Telegram file logger; it does not enable file logging throughout every interface or install a global logging framework.
+Extended scheduled-run logging now uses the shared `log/` directory too. Historical `logs/` files remain untouched and ignored; no existing files are moved or deleted. Compose retains its old mount and adds the new directory. Scheduled command output retains its separate behavior; this does not enable global file logging or promise that every legacy output stream is sanitized.
 
 New file diagnostics must omit credentials, authenticated URLs, raw request/response bodies and private research/message content. `sources.http.format_provider_error()` supplies fixed actionable provider-error messages without reading remote response bodies or rendering exception text. Registry progress, search summaries, citation failure history, scan failure summaries and Research API transport errors use it. Retries, exception objects and partial-provider success remain unchanged.
 

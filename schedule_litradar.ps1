@@ -6,67 +6,75 @@ param(
     [string]$TaskSet = 'all',
     [ValidateSet('daily', 'weekly')]
     [string]$Frequency = 'daily',
-    [string]$Time = '08:00'
+    [string]$Time = '08:00',
+    [string]$ConfigPath,
+    [string]$DatabasePath,
+    [string]$ProfilePath,
+    [string]$PythonPath,
+    [string]$WorkspaceRoot
 )
 
 $ErrorActionPreference = 'Stop'
 $Root = $PSScriptRoot
-$TaskNames = @{
-    scan = 'LitRadar-Scan'
-    digest = 'LitRadar-Digest'
-}
+$TaskNames = @{ scan = 'LitRadar-Scan'; digest = 'LitRadar-Digest' }
 $Selected = if ($TaskSet -eq 'all') { @('scan', 'digest') } else { @($TaskSet) }
 
+function Find-LitRadarTask([string]$Name) {
+    try {
+        return Get-ScheduledTask -TaskName $Name -TaskPath '\' -ErrorAction Stop
+    } catch {
+        if ($_.CategoryInfo.Category -eq [System.Management.Automation.ErrorCategory]::ObjectNotFound) { return $null }
+        throw
+    }
+}
+
 try {
-    $At = [datetime]::ParseExact($Time, 'HH:mm', [Globalization.CultureInfo]::InvariantCulture)
-} catch {
-    Write-Error "Invalid time '$Time'. Use local 24-hour HH:mm, e.g. 08:00."
-    exit 2
-}
-
-if ($Action -eq 'status') {
-    foreach ($Job in $Selected) {
-        $Name = $TaskNames[$Job]
-        $Task = Get-ScheduledTask -TaskName $Name -ErrorAction SilentlyContinue
-        if ($null -eq $Task) {
-            Write-Output "$Name : not installed"
-        } else {
-            $Info = Get-ScheduledTaskInfo -TaskName $Name
-            Write-Output ("{0} : state={1}; last={2}; next={3}; last-result={4}" -f $Name, $Task.State, $Info.LastRunTime, $Info.NextRunTime, $Info.LastTaskResult)
+    if ($Action -eq 'status') {
+        foreach ($Job in $Selected) {
+            $Name = $TaskNames[$Job]
+            $Task = Find-LitRadarTask $Name
+            if ($null -eq $Task) { Write-Output "$Name : not installed" } else {
+                $Info = Get-ScheduledTaskInfo -TaskName $Name -TaskPath '\' -ErrorAction Stop
+                Write-Output ("{0} : state={1}; last={2}; next={3}; last-result={4}" -f $Name, $Task.State, $Info.LastRunTime, $Info.NextRunTime, $Info.LastTaskResult)
+            }
         }
+        exit 0
     }
-    exit 0
-}
-
-if ($Action -eq 'remove') {
+    if ($Action -eq 'remove') {
+        foreach ($Job in $Selected) {
+            $Name = $TaskNames[$Job]
+            if ($null -ne (Find-LitRadarTask $Name)) {
+                Unregister-ScheduledTask -TaskName $Name -TaskPath '\' -Confirm:$false -ErrorAction Stop
+            }
+            Write-Output "Removed (if it existed): $Name"
+        }
+        exit 0
+    }
+    $At = [datetime]::ParseExact($Time, 'HH:mm', [Globalization.CultureInfo]::InvariantCulture)
+    if (-not $PythonPath) { $PythonPath = Join-Path $Root '.venv\Scripts\python.exe' }
+    if (-not (Test-Path -LiteralPath $PythonPath -PathType Leaf)) { throw 'Python environment is missing' }
+    if (-not $WorkspaceRoot) { $WorkspaceRoot = $Root }
+    if (-not $ConfigPath) { $ConfigPath = Join-Path $Root 'digest_config.json' }
+    if (-not $DatabasePath) { $DatabasePath = Join-Path $Root 'data\litradar.sqlite3' }
+    if (-not $ProfilePath) { $ProfilePath = Join-Path $Root 'research_profile.json' }
+    $Cli = Join-Path $Root 'cli.py'
+    foreach ($PathValue in @($Cli, $DatabasePath, $ConfigPath, $ProfilePath, $PythonPath, $WorkspaceRoot)) {
+        if ($PathValue.Contains('"')) { throw 'Invalid quoted path' }
+    }
+    $Settings = New-ScheduledTaskSettingsSet -StartWhenAvailable -MultipleInstances IgnoreNew -ExecutionTimeLimit (New-TimeSpan -Hours 2)
+    $Principal = New-ScheduledTaskPrincipal -UserId "$env:USERDOMAIN\$env:USERNAME" -LogonType Interactive -RunLevel Limited
     foreach ($Job in $Selected) {
         $Name = $TaskNames[$Job]
-        Unregister-ScheduledTask -TaskName $Name -Confirm:$false -ErrorAction SilentlyContinue
-        Write-Output "Removed (if it existed): $Name"
+        $Arguments = ('"{0}" --db "{1}" scheduled-run --job {2} --period {3} --config "{4}" --profile "{5}"' -f $Cli, $DatabasePath, $Job, $Frequency, $ConfigPath, $ProfilePath)
+        $TaskAction = New-ScheduledTaskAction -Execute $PythonPath -Argument $Arguments -WorkingDirectory $WorkspaceRoot
+        if ($Frequency -eq 'weekly') {
+            $Trigger = New-ScheduledTaskTrigger -Weekly -DaysOfWeek Sunday -At $At
+        } else { $Trigger = New-ScheduledTaskTrigger -Daily -At $At }
+        Register-ScheduledTask -TaskName $Name -TaskPath '\' -Action $TaskAction -Trigger $Trigger -Settings $Settings -Principal $Principal -Description 'LitBeacon scheduled job; local interactive user; diagnostics under the LitBeacon log/ directory.' -Force -ErrorAction Stop | Out-Null
+        Write-Output "Installed $Name ($Frequency at $Time local time)."
     }
-    exit 0
+    Write-Output 'Tasks start when available; the computer must be on and the user logged in. Check with: python cli.py schedule status --job all'
+} catch {
+    [Console]::Error.WriteLine('Task Scheduler action failed. Check task access, Python environment, paths and local HH:mm time; private error details are omitted.')
+    exit 1
 }
-
-$Python = Join-Path $Root '.venv\Scripts\python.exe'
-if (-not (Test-Path $Python)) {
-    Write-Error "Project virtual environment not found. Run run_litradar.bat once first so LitBeacon creates .venv and installs dependencies."
-    exit 2
-}
-$Cli = Join-Path $Root 'cli.py'
-$Settings = New-ScheduledTaskSettingsSet -StartWhenAvailable -MultipleInstances IgnoreNew -ExecutionTimeLimit (New-TimeSpan -Hours 2)
-$Principal = New-ScheduledTaskPrincipal -UserId "$env:USERDOMAIN\$env:USERNAME" -LogonType Interactive -RunLevel Limited
-
-foreach ($Job in $Selected) {
-    $Name = $TaskNames[$Job]
-    $Period = if ($Job -eq 'scan') { $Frequency } else { $Frequency }
-    $Arguments = ('"{0}" scheduled-run --job {1} --period {2}' -f $Cli, $Job, $Period)
-    $TaskAction = New-ScheduledTaskAction -Execute $Python -Argument $Arguments -WorkingDirectory $Root
-    if ($Frequency -eq 'weekly') {
-        $Trigger = New-ScheduledTaskTrigger -Weekly -DaysOfWeek Sunday -At $At
-    } else {
-        $Trigger = New-ScheduledTaskTrigger -Daily -At $At
-    }
-    Register-ScheduledTask -TaskName $Name -Action $TaskAction -Trigger $Trigger -Settings $Settings -Principal $Principal -Description "LitBeacon v0.8 scheduled $Job; runs only under the current user's interactive session and logs to $Root\logs." -Force | Out-Null
-    Write-Output "Installed $Name ($Frequency at $Time local time)."
-}
-Write-Output "Tasks start when available if a scheduled time is missed, but the computer must be on and the user logged in. Check with: python cli.py schedule status --job all"

@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased — Gate 3 lifecycle closure candidate
+
+- Make idle Telegram polling, menu startup and retry waits interruptible without waiting for a pending HTTP response; retain main-thread update/offset writes and discard abandoned results. The launcher still pauses after exit; active commands retain their own bounded waits.
+- Fix false scheduler success, fail closed on invalid settings, atomically persist per-job disable guards before OS removal, and forward selected database/config/profile/interpreter paths from CLI/TUI/Telegram into registered actions. Keep stable task names and `IgnoreNew`.
+- Extended scheduled-run output uses shared ignored `log/`; historical `logs/` files remain untouched, with both Compose mounts retained. Add synthetic shutdown/interface/lifecycle tests, a fault-injection PowerShell harness and a hosted-CI-only native unique-task harness. [Candidate evidence and limits](docs/GATE3-LIFECYCLE.md); full/Windows results are pending. No merge, version bump or release.
+
 ## Unreleased — Gate 3 provider failures and shared log location
 
 - Use fixed actionable provider HTTP/network diagnostics in registry progress, search/scan summaries, citation failure history and Research API transport failures. Preserve retries, exception identity, partial success and local manual library/evidence data. Executed local candidate: **656 Python / 38 JS passed**, zero failures/skips, one existing Starlette warning; extracted setup-wheel log/CLI/web/recovery smoke passed on Linux. Actual Windows provider/log-path and Telegram diagnostics steps plus Ubuntu/Windows installed package checks passed at `3dfe583e`; final documentation-head checks remain separate.

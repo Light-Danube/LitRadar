@@ -526,6 +526,8 @@ If Telegram is not configured, scheduled digest jobs save a Markdown report loca
 
 #### Interactive Telegram command bot
 
+[Stopping the listener with Ctrl+C](TELEGRAM-TROUBLESHOOTING.md#stopping-the-listener): idle HTTP/menu/retry waits now allow prompt interruption; the Windows launcher can remain open at its exit-status pause. Active commands retain their own bounded waits.
+
 The scheduled Task Scheduler job sends digests without a permanently running bot process. To use slash commands and inline menu buttons, configure both `LITRADAR_TELEGRAM_BOT_TOKEN` and `LITRADAR_TELEGRAM_CHAT_ID`, then run `run_telegram_bot.bat` and keep that window open. The polling process receives commands only from the configured chat ID and saves its update offset under `data/telegram_bot_state.json`. Do not run multiple `telegram-run` instances or use `telegram-chats` concurrently with the listener; Telegram allows only one active `getUpdates` poller per bot token.
 
 All new file logging uses the application workspace's ignored `log/` directory across CLI/web/TUI/Telegram/provider integrations; installed packages use their writable user directory. [Locations, exclusions and legacy compatibility](LOGGING.md).
@@ -597,3 +599,11 @@ Install a built wheel with `python -m pip install "path/to/litradar-0.8.0-py3-no
 Source checkouts preserve their existing root-level defaults. Wheel installations store editable profiles/digest configuration, `.env`, database, artifacts, caches and logs under `%LOCALAPPDATA%\LitBeacon` on Windows, `$XDG_DATA_HOME/LitBeacon` (default `~/.local/share/LitBeacon`) on Linux, or `~/Library/Application Support/LitBeacon` on macOS. Set `LITBEACON_HOME` (legacy `LITRADAR_HOME`) before launch to select a different directory. Missing profile/digest defaults are seeded at explicit startup; existing edits are never replaced. Existing libraries are not moved automatically: pass `--db PATH` explicitly when needed.
 
 Windows `.bat` launchers and Task Scheduler installation/status/removal still require the source checkout and its `.venv`; a wheel reports this limitation explicitly. Wheel users can invoke `python -m cli scheduled-run` through an independently configured scheduler. Actual Ubuntu/Windows installed-wheel smoke has succeeded ([baseline run](https://github.com/Light-Danube/LitRadar/actions/runs/38656486258)); each later candidate still needs its own artifact checks.
+
+### Scheduler lifecycle and selected libraries
+
+Scheduler install/status/remove use the selected `--config`, database and profile paths, including calls from the TUI and Telegram. Reinstall updates the stable `LitRadar-Scan`/`LitRadar-Digest` names; Task Scheduler uses `IgnoreNew` to avoid overlapping instances of each job. The built-in Windows installer requires a source checkout; wheel users can configure their own scheduler using `python -m cli --db PATH scheduled-run ...`.
+
+`python cli.py schedule remove --job scan|digest|all` first atomically persists the selected disabled flags. If Windows removal fails, the CLI reports failure but that application-level guard remains; repair permissions/service access and retry cleanup. Missing or malformed configuration cannot silently confirm disablement. `scheduled-run` fails closed on unreadable/invalid settings, and disabled runs exit before provider/Telegram work.
+
+New scheduled-run output is under workspace `log/scheduled-scan.log` or `log/scheduled-digest.log`; old `logs/` files are retained, not moved or deleted. Docker Compose mounts both directories. Captured scheduled-command output retains its existing behavior; review logs before sharing. See [lifecycle evidence and limits](GATE3-LIFECYCLE.md).
