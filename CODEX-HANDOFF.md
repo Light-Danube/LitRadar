@@ -7,6 +7,7 @@
 - User confirmed Windows daily use and Narrator work okay on 2026-10-15; record as accepted user-reported evidence, without unprovided versions/task observations or certification. Narrator is optional; broader detailed audit remains optional. Live venue access is still blocked by cloud proxy 403, not a known universal provider defect.
 - Gate 1 is complete for this feature-stability candidate once its actual required CI is green; final release approval/versioning, scheduler-specific verification and remaining focused safety checks stay separate. See [current checklist](docs/LOCAL-1.0-RELEASE-CHECKLIST.md) and [package setup](docs/PACKAGE-SETUP.md).
 - Executed local full suite: **518 Python / 38 JS passed, 0 failed, 0 skipped**, one Starlette warning. Clean Linux venv installed the extracted setup ZIP's actual wheel with declared web dependencies (plus smoke-only httpx) and passed CLI/assets/web edit/restart/custom DB/default preservation smoke. Syntax/link/whitespace checks passed. Final-head CI must be observed; do not infer Windows setup-ZIP success from these Linux results.
+- Actual [Ubuntu/Windows extracted setup ZIP checks](https://github.com/Light-Danube/LitRadar/actions/runs/38657414211) succeeded at code head `3cb012b1`, and both review artifacts uploaded. [Draft PR #25](https://github.com/Light-Danube/LitRadar/pull/25) contains this focused change; use its final head checks to close Gate 1. The later evidence-recording commit changes documentation only.
 
 ## Current — bounded Gate 2 recovery (unreleased)
 

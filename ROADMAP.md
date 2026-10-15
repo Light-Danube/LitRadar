@@ -26,6 +26,8 @@
 
 **Gate 1 closure:** the prior defect/verification PRs #22–24 are merged, the wheel blocker is fixed, and current baseline CI includes successful Ubuntu/Windows installed-wheel smoke. The package-setup candidate adds a wheel-only setup ZIP, fresh complete regressions and extracted-package CI. Gate 1 is accepted when this candidate's required checks are green; reopen it for a reproduced workflow/data-loss defect. This is feature-stability completion, not 1.0 release approval. Live venue access remains environment-limited (proxy 403), with user-reported CLI success kept separate.
 
+Actual [Ubuntu/Windows setup ZIP checks](https://github.com/Light-Danube/LitRadar/actions/runs/38657414211) succeeded at code head `3cb012b1`; [PR #25 checks](https://github.com/Light-Danube/LitRadar/pull/25/checks) are the final Gate 1 closure evidence.
+
 On 2026-10-15 the user confirmed Windows daily use and Narrator work okay and accepted them as “yes”. Record this as **user-reported acceptance**; Narrator is optional for this release, and no detailed screen-reader certification or unprovided platform/version observations are inferred.
 
 ## Gate 2 — Local data integrity and recovery (P0)
