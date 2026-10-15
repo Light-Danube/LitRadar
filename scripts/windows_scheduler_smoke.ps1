@@ -87,7 +87,7 @@ try {
     $null = Invoke-Helper 'install' 'scan'
     $null = Invoke-Helper 'install' 'digest'
     $null = Invoke-Helper 'install' 'all'
-    $Tasks = Tasks
+    $Tasks = @(Tasks)
     if ($Tasks.Count -ne 2) { throw 'Repeated install created duplicate tasks' }
     foreach ($Task in $Tasks) {
         if ($Task.Settings.MultipleInstances -ne 'IgnoreNew' -or $Task.Principal.LogonType -ne 'Interactive') { throw 'Unsafe task settings' }
@@ -106,9 +106,12 @@ try {
     $null = Invoke-Helper 'install' 'scan' 'install' 1
     $null = Invoke-Helper 'install' 'scan' '' 1 'invalid-time'
     $null = Invoke-Helper 'remove' 'scan'
-    if ((Tasks).Count -ne 1 -or (Tasks)[0].TaskName -ne 'LitRadar-Digest') { throw 'Per-job removal affected the other task' }
+    $Remaining = @(Tasks)
+    if ($Remaining.Count -ne 1 -or $Remaining[0].TaskName -ne 'LitRadar-Digest') {
+        throw ('Per-job removal expected one synthetic digest task; count={0}; names={1}' -f $Remaining.Count, (($Remaining | ForEach-Object { $_.TaskName }) -join ','))
+    }
     $null = Invoke-Helper 'remove' 'scan'
     $null = Invoke-Helper 'remove' 'all'
-    if ((Tasks).Count -ne 0) { throw 'Remove all left tasks behind' }
+    if (@(Tasks).Count -ne 0) { throw 'Remove all left tasks behind' }
     Write-Output 'Actual scheduler helper passed isolated fake-cmdlet lifecycle/failure checks; no OS tasks accessed.'
 } finally { Remove-Item -LiteralPath $Root -Recurse -Force }
