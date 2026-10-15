@@ -8,7 +8,7 @@ The user supplied the Telegram mascot as the visual reference: a friendly reader
 
 A new transparent PNG was generated with the image-generation tool and visually inspected as an image. It simplifies the composition to the robot head, open book and antenna lamp, without the wordmark or landscape. The original Telegram asset is not replaced. The new mark is used locally in the web sidebar and favicon; the image is decorative inside the already labelled home link. The wordmark retains readable HTML text in both interface languages.
 
-<img src="../../web/static/brand/litbeacon-mark.png" width="160" alt="Generated LitBeacon reader robot with a book and golden beacon lamp">
+<img src="../../../../web/static/brand/litbeacon-mark.png" width="160" alt="Generated LitBeacon reader robot with a book and golden beacon lamp">
 
 ## Palette and roles
 

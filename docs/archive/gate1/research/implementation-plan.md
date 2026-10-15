@@ -6,7 +6,7 @@ Base: main `08f8ca660a093c84546c3ec4690ef85755180a68`, verified identical throug
 - Orchestrator: CLI integration (`cli.py`), venue persistence (`storage/sqlite.py`), service (`venue_discovery.py`), packaging, README/ROADMAP/CHANGELOG/CODEX-HANDOFF and combined verification.
 - Venue agent: `sources/venues.py`, `tests/test_venue_sources.py`. Reuse OpenAlex `_get_json`, `_work_to_paper`, shared bounded HTTP retries; leave broad registry/search unchanged.
 - Evidence agent: `storage/evidence.py`, `evidence_matrix.py`, `tests/test_evidence_matrix.py`. Separate additive worksheet tables on the existing PaperStore connection; never update papers.notes. No LLM calls.
-- Review agent: `docs/research/erc-context-novelty-matrix-2026.md` and research source ledger only. Bibliographic facts must be verified; blocked sources and candidates remain explicit.
+- Review agent: `docs/archive/gate1/research/erc-context-novelty-matrix-2026.md` and research source ledger only. Bibliographic facts must be verified; blocked sources and candidates remain explicit.
 
 ## Interfaces and contracts
 Venue adapter: lookup_venues(query, *, limit=10, timeout=20, retries=2, backoff=1, api_key=None) -> list[Venue]; get_venue(source_id, same HTTP kwargs) -> Venue; search_venue(query, source_id, *, year_from=None, year_to=None, limit=20, page=1, same HTTP kwargs) -> VenueSearchResult. Venue/result expose to_dict() or dataclasses.asdict. Concrete source IDs only (S + digits); structured primary_location.source.id filter, bounded pages/results, no name-based match or generic-search post-filter. Provider exceptions propagate distinctly. Venue provenance never certifies review or Scopus/WoS.

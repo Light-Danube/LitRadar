@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased — Gate 1 archive and packaged recovery verification
+
+- Archive completed Gate 1 plans, audits, validation records, historical screenshots and handoff; retain current setup, user and recovery guides. Repair affected links and shorten the active release checklist.
+- Extend the existing installed setup-wheel smoke on Ubuntu/Windows with disposable CLI backup/new-destination restore, durable row/history/tombstone preservation, elected artifacts/checksums, integrity and no-overwrite checks. Runtime behavior and version remain unchanged. Local candidate checks: 518 Python / 38 JS passed, zero failures/skips; fresh Linux setup-wheel smoke passed. Actual [Ubuntu/Windows packaged recovery CI](https://github.com/Light-Danube/LitRadar/actions/runs/38744388702) succeeded at implementation head `a9c64fb2`; the active checklist records limits and final-head check status.
+
 ## Unreleased — small package setup and Gate 1 closure
 
 - Build a version-checked setup ZIP containing only the runtime wheel and short `SETUP.txt`, with explicit venv commands, data locations and upgrade/backup guidance. Future published releases attach this ZIP and wheel after smoke validation; ordinary users need no source checkout/legacy docs. No version/tag/release is created here.
@@ -26,7 +31,7 @@
 - Add EN/UK TUI language selection, translated app bindings/status/sort/detail/help/activity/job controls and notifications. Preserve raw paper data, provider/CLI diagnostics and identifiers; startup language can use `LITBEACON_TUI_LANGUAGE` or its legacy alias.
 - Fix scheduler thread results dispatched through App, prevent repeated commands while busy, recover controls after errors/timeouts and ignore late results after dialog closure. Refresh new tags in the filter immediately after saving.
 - Keep the TUI alive on offline-storage errors and retain the localized failure in the activity panel; test PDF/metadata outcomes and intercepted PDF/DOI opening.
-- Add keyboard-scrollable help/details/jobs, explicit help Close, visible focus, vertically stacked job controls, a flexible online input and two-row toolbar below 110 columns. Keep the full grouped-menu redesign as a [draft](docs/TUI-MENU-DRAFT.md).
+- Add keyboard-scrollable help/details/jobs, explicit help Close, visible focus, vertically stacked job controls, a flexible online input and two-row toolbar below 110 columns. Keep the full grouped-menu redesign as a [draft](docs/archive/gate1/TUI-MENU-DRAFT.md).
 - Require Textual >=1.0,<2 in both UI installation paths and include the localization module in package metadata. Existing release version remains 0.8.0.
 - Add synthetic workflow/localization tests and a disposable [Windows Terminal + Narrator audit fixture](docs/TUI-ACCESSIBILITY-AUDIT.md). **430 Python passed / 0 failed / 0 skipped; 6 Node files passed / 0 failed / 0 skipped**; 29 TUI tests, ANSI PTY and fixture smoke passed. One existing Starlette deprecation warning. Full assistive-technology audit and remote CI remain unverified; no README changes.
 
@@ -48,9 +53,9 @@
 
 A CLI-first vertical slice adds opt-in OpenAlex venue lookup and structured source/year search, separate from existing broad discovery. Concrete source IDs distinguish same-name venues. One bounded page is cached with all filters; source metadata, query URL and UTC retrieval time are retained separately from canonical papers. Provider metadata does not certify peer review or Scopus/WoS membership. Existing paper IDs, notes, tags, status, relations and scores survive enrichment; conflicting DOI/provider aliases fail atomically.
 
-Human-editable evidence worksheets retain per-field provenance and revision history, independently of personal notes. Markdown/CSV exports include unknown evidence, venue observations and unverified gap candidates; no LLM calls occur. [Usage, bounds and recovery](docs/research/venue-discovery.md), [implementation contracts](docs/research/implementation-plan.md), and [literature review](docs/research/erc-context-novelty-matrix-2026.md).
+Human-editable evidence worksheets retain per-field provenance and revision history, independently of personal notes. Markdown/CSV exports include unknown evidence, venue observations and unverified gap candidates; no LLM calls occur. [Usage, bounds and recovery](docs/research/venue-discovery.md), [implementation contracts](docs/archive/gate1/research/implementation-plan.md), and [literature review](docs/archive/gate1/research/erc-context-novelty-matrix-2026.md).
 
-Local validation: **298 Python tests passed / 0 failed / 0 skipped; 5 Node test files passed / 0 failed / 0 skipped**. [Executed checks and pending evidence](docs/research/delivery-validation.md).
+Local validation: **298 Python tests passed / 0 failed / 0 skipped; 5 Node test files passed / 0 failed / 0 skipped**. [Executed checks and pending evidence](docs/archive/gate1/research/delivery-validation.md).
 
 Browser venue-discovery controls remain planned; retrieved paper IDs are available in the existing Literature inbox. Release version stays 0.8.0. Live OpenAlex and Crossref requests failed at the proxy with `Tunnel connection failed: 403 Forbidden`; fixture tests do not verify live metadata or coverage. Windows, rendered-browser and neural-model evaluations are not claimed.
 
@@ -59,7 +64,7 @@ Browser venue-discovery controls remain planned; retrieved paper IDs are availab
 - Add OFF-default local-only embedding related edges/complete-link clusters, bounded cohorts, explicit UI selection and computed provenance. Existing citation records and heuristic defaults are retained.
 - Add deterministic node/label collision settling, ordinary click capture fix, accessible export dropdown and retained keyboard zoom/selection controls.
 - Extend mixed OpenAlex/Semantic Scholar/API/EN/UK DOM tests and a Windows native-Chrome workflow with synthetic screenshot artifacts. Expand AGENTS.md for continuation.
-- Local validation: Python 186 passed / 0 failed / 0 skipped; Node 28 / 0 / 0; restricted Docker 179 / 0 / 7 expected optional skips. Native Windows and real neural-model evaluation remain pending; no conditional 0.8.5 bump yet. See [patch status](docs/V08-PATCH-PROGRESS.md).
+- Local validation: Python 186 passed / 0 failed / 0 skipped; Node 28 / 0 / 0; restricted Docker 179 / 0 / 7 expected optional skips. Native Windows and real neural-model evaluation remain pending; no conditional 0.8.5 bump yet. See [patch status](docs/archive/gate1/V08-PATCH-PROGRESS.md).
 
 ## Unreleased — annotation adapters, recovery and graph layout
 
@@ -74,7 +79,7 @@ Browser venue-discovery controls remain planned; retrieved paper IDs are availab
 - Add a generated, transparent reader-robot/book/beacon mark inspired by the supplied Telegram icon; use it in the sidebar and favicon, and include it in Python package data.
 - Refine light/dark semantic palettes around navy, ocean blue, cyan and gold while retaining EN/UK, the five sections and existing workflow/API contracts. Palette tests include the wordmark contrast.
 - Fix isolated-runner workflow tests that tried to execute a temporary fake `gh` under `/tmp:noexec`; use a Bash function without changing Docker security settings.
-- Local checks: Python **147 passed, 0 failed, 0 skipped**; Node **11 passed, 0 failed, 0 skipped**; restricted Docker **142 passed, 0 failed, 5 expected skips** (4 Textual, 1 Node). Generated-icon inspection and wheel asset inclusion verified; application browser rendering remains blocked by Chromium sandbox configuration. See [brand notes](docs/ux-research/brand-beacon.md).
+- Local checks: Python **147 passed, 0 failed, 0 skipped**; Node **11 passed, 0 failed, 0 skipped**; restricted Docker **142 passed, 0 failed, 5 expected skips** (4 Textual, 1 Node). Generated-icon inspection and wheel asset inclusion verified; application browser rendering remains blocked by Chromium sandbox configuration. See [brand notes](docs/archive/gate1/ux-research/brand-beacon.md).
 
 ## Unreleased — automatic draft PR workflow
 
@@ -88,7 +93,7 @@ Browser venue-discovery controls remain planned; retrieved paper IDs are availab
 - Added localized System/Light/Dark appearance selection, applied before CSS and persisted locally; appearance changes preserve editor DOM, unsaved inputs and graph viewport.
 - Kept the five sections, existing API/database contracts, EN/UK, shortcuts and all documented feature contracts; standalone graph exports retain their self-contained palette.
 - Added locked test-only DOM regressions and palette/graph checks to web CI. Local validation: Python **144 passed, 0 failed, 0 skipped**; JavaScript **11 passed, 0 failed, 0 skipped**.
-- Read current public competitor sources and documented their evidence limits. Secure Chromium rendering remains blocked by the environment sandbox configuration; visual acceptance/screenshots and GitHub CI status are unverified. See [Phase 1 notes](docs/ux-research/phase-1.md).
+- Read current public competitor sources and documented their evidence limits. Secure Chromium rendering remains blocked by the environment sandbox configuration; visual acceptance/screenshots and GitHub CI status are unverified. See [Phase 1 notes](docs/archive/gate1/ux-research/phase-1.md).
 
 ## Documentation draft — web readability research
 
@@ -108,7 +113,7 @@ Browser venue-discovery controls remain planned; retrieved paper IDs are availab
 - Added a read-only-permissions GitHub Actions workflow to build and run isolated Docker tests on PRs.
 - Local Python 3.12: **144 passed, 0 failed, 0 skipped**; Node: **4 passed, 0 failed, 0 skipped**.
 - Restricted Python 3.11 container with locally downloaded wheels: **139 passed, 0 failed, 5 expected skips** (4 Textual, 1 Node). Its boot helper served a synthetic paper through the web API with no network or host mounts.
-- Stock Docker build networking and GitHub API access are unavailable in this cloud session. Production-image build and current/historical CI logs remain unverified; see `docs/DOCKER-AUDIT.md`.
+- Stock Docker build networking and GitHub API access are unavailable in this cloud session. Production-image build and current/historical CI logs remain unverified; see `docs/archive/gate1/DOCKER-AUDIT.md`.
 
 ## Unreleased — v0.8.x workspace workflows and Ukrainian Web UI
 
@@ -143,7 +148,7 @@ Browser venue-discovery controls remain planned; retrieved paper IDs are availab
 ### Validation
 - Windows/Python 3.10.11 local suite: **129 passed**, no skips; one existing Starlette/httpx TestClient deprecation warning. Supported Python 3.11/3.12 checks run in CI.
 - Tests cover idempotent legacy-note migration, note/revision rollback, unchanged and cleared notes, Unicode, provider refresh preservation, validation, cascade behavior and stable API pagination.
-- Repository compileall excluding `.venv`, JavaScript syntax and whitespace checks passed. Loopback browser fixture smoke verified origin labels, source references, advisory suggestions, Unicode/literal markup display, persistence after reload, and research-note saving without clearing a supplemental draft. No browser console errors observed; screenshot: `docs/screenshots/annotation-provenance.png`.
+- Repository compileall excluding `.venv`, JavaScript syntax and whitespace checks passed. Loopback browser fixture smoke verified origin labels, source references, advisory suggestions, Unicode/literal markup display, persistence after reload, and research-note saving without clearing a supplemental draft. No browser console errors observed; screenshot: `docs/archive/gate1/screenshots/annotation-provenance.png`.
 
 
 ## Unreleased — v0.8.x citation-map usability
@@ -164,7 +169,7 @@ Browser venue-discovery controls remain planned; retrieved paper IDs are availab
 ### Validation
 - Windows local run: **117 passed**, no skips; one existing Starlette/httpx TestClient deprecation warning. Local `.venv` uses Python 3.10.11; supported Python 3.11/3.12 validation remains with CI.
 - Repository `compileall` (excluding `.venv`), JavaScript syntax check, and `git diff --check` passed.
-- In-app browser smoke test on loopback with a disposable SQLite fixture verified arrows, merged provenance, Enter/Space selection, recenter/open-paper navigation, filters/reset/empty results, zoom, and background pan/reset. No browser console errors were observed. Screenshot: `docs/screenshots/citation-map-provenance.png`.
+- In-app browser smoke test on loopback with a disposable SQLite fixture verified arrows, merged provenance, Enter/Space selection, recenter/open-paper navigation, filters/reset/empty results, zoom, and background pan/reset. No browser console errors were observed. Screenshot: `docs/archive/gate1/screenshots/citation-map-provenance.png`.
 
 ## 0.8.0 — LitBeacon browser research workspace — 2026-10-12
 

@@ -14,23 +14,14 @@
 - **Network-dependent extras must fail gracefully.** Offline library access must work without provider, Telegram, embeddings or LLM services.
 - **Use explicit evidence.** Mark each gate complete only with exact test command/results or an identified manual smoke-test record. Do not infer a Windows/browser/CI pass from Linux/jsdom tests.
 
-## Gate 1 — Stabilize the current feature set (P0)
+## Gate 1 — Stabilize the current feature set (P0): complete
 
-- [x] Record an accurate feature inventory and list of known defects from current main and open PRs. [Gate 1 audit](docs/LOCAL-1.0-RELEASE-CHECKLIST.md): baseline `b8b42ff4`, no open PR backlog, reproduced installed-wheel CLI failure. Implemented, user-accepted and externally unverified behavior are separated.
-- [x] Run the full Python and JS suites on the candidate, fix reproducible failures and explain profile-dependent CI skips. [Current executed evidence and candidate checks](docs/LOCAL-1.0-RELEASE-CHECKLIST.md).
-- [x] Verify **Research** venue search/evidence, original five sections, EN/UK and draft persistence with synthetic API/DOM/native Windows workflows; page load/preset selection makes no provider/LLM POST.
+- [x] Feature inventory, regression checks and reproduced blockers closed through merged PRs #21–25. [Archived audit and closure evidence](docs/archive/gate1/release-checklist-2026-10-15.md), including actual Ubuntu/Windows setup ZIP checks, remain available.
+- [x] Windows daily use and optional Narrator accepted by the user on 2026-10-15; no formal accessibility certification or unprovided platform observations are inferred.
 
-[Venue verification](docs/research/venue-verification.md) adds CLI/API checks through the mocked HTTP transport boundary: identity/year validation, cache/persistence and failed-request preservation. Combined checks: **447 Python / 38 JS passed, 0 failed, 0 skipped**. An explicit public live lookup failed at the cloud proxy tunnel (403); further live-provider/browser verification is pending and user-reported success remains separate.
+Reopen for a reproduced workflow/data-loss defect. Live venue access remains cloud-environment-limited (proxy 403); user-reported CLI success is separate evidence. Active setup, recovery and operational guides remain current; completed planning and validation records are indexed in the [Gate 1 archive](docs/archive/gate1/README.md). Feature stability does not authorize a release/version bump.
 
-**Done when:** CI is green on the candidate commit, a compact feature/regression checklist exists, and no known data-loss or workflow-blocking defect remains.
-
-**Gate 1 closure:** the prior defect/verification PRs #22–24 are merged, the wheel blocker is fixed, and current baseline CI includes successful Ubuntu/Windows installed-wheel smoke. The package-setup candidate adds a wheel-only setup ZIP, fresh complete regressions and extracted-package CI. Gate 1 is accepted when this candidate's required checks are green; reopen it for a reproduced workflow/data-loss defect. This is feature-stability completion, not 1.0 release approval. Live venue access remains environment-limited (proxy 403), with user-reported CLI success kept separate.
-
-Actual [Ubuntu/Windows setup ZIP checks](https://github.com/Light-Danube/LitRadar/actions/runs/38657414211) succeeded at code head `3cb012b1`; [PR #25 checks](https://github.com/Light-Danube/LitRadar/pull/25/checks) are the final Gate 1 closure evidence.
-
-On 2026-10-15 the user confirmed Windows daily use and Narrator work okay and accepted them as “yes”. Record this as **user-reported acceptance**; Narrator is optional for this release, and no detailed screen-reader certification or unprovided platform/version observations are inferred.
-
-## Gate 2 — Local data integrity and recovery (P0)
+## Gate 2 — Local data integrity and recovery (P0): complete for this candidate
 
 - [x] Provide a documented **consistent SQLite backup** using SQLite's backup API and a read-only source without source migrations; committed active-WAL snapshot tested.
 - [x] Implement bounded `library-backup`/`library-restore`, explicitly elected Research/offline roots, manifest/SHA-256 and exclusions. Artifact inclusion requires an explicit stopped-writers acknowledgment. [Instructions and limits](docs/USER-GUIDE.md#consistent-local-backup-and-restore-unreleased).
@@ -39,7 +30,7 @@ On 2026-10-15 the user confirmed Windows daily use and Narrator work okay and ac
 
 **Done when:** automated tests verify backup, restore and upgrade without contacting services or touching personal data; USER-GUIDE documents restore steps and exclusions.
 
-Implementation evidence: Linux Python 3.12.14 recovery **49 passed / 0 failed / 0 skipped**; full recovery branch **479 Python / 38 JS passed, 0 failed, 0 skipped**. A disposable integration of the separate packaging/recovery/venue changes passed **501 Python tests** and installed-wheel recovery/web smoke. Gate 2 source checks are implemented; final recovery-head CI and Windows recovery remain to be observed. This does not close Gate 1 or authorize a release/version bump.
+Source recovery and additive legacy upgrade are implemented and covered by synthetic tests. Actual [Ubuntu/Windows extracted setup-wheel recovery checks](https://github.com/Light-Danube/LitRadar/actions/runs/38744388702) succeeded at implementation head `a9c64fb2`, closing the package evidence gap through `scripts/built_wheel_smoke.py`. [Current candidate evidence](docs/LOCAL-1.0-RELEASE-CHECKLIST.md) records executed results and pending CI separately. No personal data or live services are used.
 
 ## Gate 3 — Windows-first install, launch and normal use (P0)
 
