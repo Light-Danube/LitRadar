@@ -139,7 +139,7 @@ async def test_jobs_all_actions_use_thread_safe_ui_dispatch(tmp_path, monkeypatc
             await pilot.press("enter")
             await app.workers.wait_for_complete()
             await pilot.pause()
-            assert calls[-1][3] == action
+            assert calls[-1][calls[-1].index("schedule") + 1] == action
             assert calls[-1][calls[-1].index("--job") + 1] == job
         await pilot.press("escape")
         assert not isinstance(app.screen, ScheduleScreen)

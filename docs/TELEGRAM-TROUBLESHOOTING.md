@@ -35,3 +35,13 @@ A rejected command-menu setup is a warning; commands can still work. A failure w
 This increment covers `telegram-run` diagnostics and the fixed replies/persisted failure records for caught listener exceptions. Existing provider scan summaries and scheduler subprocess result messages retain their separate behavior. It does not introduce global debug logging, capture HTTP wire traffic, or replace the independent scheduled-digest/`telegram-chats` transports. In particular, their existing diagnostics are not covered by this listener-only privacy guarantee. Do not run chat discovery while polling. A remote 409 response stops contention; it is not a cross-machine lock that prevents two processes from starting simultaneously.
 
 Gate 3 scheduler disable/remove and full provider-failure/local-workspace checks remain separate. See the [release checklist](LOCAL-1.0-RELEASE-CHECKLIST.md) and [increment validation](GATE3-TELEGRAM-DIAGNOSTICS.md).
+
+## Stopping the listener
+
+Press Ctrl+C once. During an idle long poll, command-menu setup or retry/rate-limit wait, the main thread checks for interruption at short intervals instead of waiting for the HTTP response or entire retry interval. Network transport runs separately; update processing and database/offset writes stay on the main thread. An interrupted poll result is discarded and cannot advance the saved offset. Process exit does not join the outstanding daemon request.
+
+An already-started remote request is not undone. If embedding the bot in a still-running process, its transport may finish later; it cannot process updates or write application files/logs after the listener stops. Reusing that same instance while its old request is pending is rejected. This is not a promise to instantly cancel an active scan/digest or arbitrary command handler; those operations retain their own bounded waits and cleanup.
+
+`run_telegram_bot.bat` intentionally pauses after Python exits to display the exit status. An open launcher window therefore does not mean the listener is still running. Look for the stopped/exited message, then press a key to close it. A Windows batch console may also ask whether to terminate the batch job after Ctrl+C.
+
+Synthetic measurements and actual candidate Windows results belong in the [Gate 3 lifecycle record](GATE3-LIFECYCLE.md); they are not a diagnosis of the user's specific network or Telegram service.

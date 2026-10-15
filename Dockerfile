@@ -12,7 +12,7 @@ COPY requirements.txt requirements-web.txt ./
 RUN python -m pip install --no-cache-dir -r requirements.txt -r requirements-web.txt
 
 COPY . /app
-RUN mkdir -p /app/data /app/reports /app/logs
+RUN mkdir -p /app/data /app/reports /app/log /app/logs
 
 EXPOSE 8765
 

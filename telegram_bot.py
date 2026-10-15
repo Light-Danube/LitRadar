@@ -14,6 +14,7 @@ import socket
 import ssl
 import subprocess
 import sys
+import threading
 import time
 import urllib.error
 import urllib.parse
@@ -44,6 +45,7 @@ MAX_TOPIC_QUERIES = 10
 MAX_QUERY_CHARS = 200
 MAX_API_BYTES = 4 * 1024 * 1024
 LOGGER = logging.getLogger("litradar.telegram")
+_TRANSPORT_LOG_STATE = threading.local()
 _METHODS = {"getUpdates", "sendMessage", "setMyCommands", "answerCallbackQuery"}
 _FORMATTER = logging.Formatter("%(asctime)s %(levelname)s %(message)s", datefmt="%Y-%m-%dT%H:%M:%S%z")
 
@@ -81,6 +83,10 @@ def configure_listener_logging(*, debug: bool = False, log_file: str | Path | No
 
 
 def _log(level: int, message: str, *args) -> None:
+    if getattr(_TRANSPORT_LOG_STATE, "quiet", False):
+        # A cancelled daemon may finish after scoped handlers are restored.
+        # Only the waiting main thread may emit listener transport diagnostics.
+        return
     if LOGGER.handlers:
         LOGGER.log(level, message, *args)
     elif level >= logging.INFO:
@@ -101,6 +107,14 @@ def _retry_delay(value) -> int:
     if type(value) is int and value > 3600:
         return 3600
     return value if type(value) is int and 1 <= value <= 3600 else 5
+
+
+def _wait_before_retry(delay: int) -> None:
+    """Keep the requested backoff while checking pending interrupts promptly."""
+    deadline = time.monotonic() + delay
+    wake = threading.Event()
+    while (remaining := deadline - time.monotonic()) > 0:
+        wake.wait(min(remaining, 0.1))
 
 
 def _diagnostic(method: str, status_code: int | None, outcome: str) -> str:
@@ -383,6 +397,65 @@ class LitRadarTelegramBot:
         self.schedule_remover = schedule_remover
         self.scan_runner = scan_runner
         self.offset = self._load_offset()
+        self._listener_active = False
+        self._transport_thread: threading.Thread | None = None
+        self._transport_ready: threading.Event | None = None
+
+    def _listener_api(self, method: str, payload: dict[str, Any], *, timeout: int | None = None):
+        """Wait interruptibly for transport only; update processing stays local.
+
+        Python can defer a pending KeyboardInterrupt while the main thread is
+        inside blocking socket/SSL code on Windows. A daemon request worker
+        avoids a process-exit join; short main-thread waits service the interrupt.
+        No worker processes updates, advances offsets or writes application data.
+        """
+        if not isinstance(method, str) or method not in {"getUpdates", "setMyCommands"}:
+            raise _api_error("request", outcome="method")
+        if self._transport_thread is not None and self._transport_thread.is_alive() and (
+                self._transport_ready is None or not self._transport_ready.is_set()):
+            # An abandoned request may still be in flight. Never overlap it with
+            # a replacement poll, even if this same bot instance is reused.
+            raise _api_error(method, outcome="local")
+        options = {} if timeout is None else {"timeout": timeout}
+        if not self._listener_active:
+            return self.api(self.token, method, payload, **options)
+        ready = threading.Event()
+        outcome = {}
+        api, token = self.api, self.token
+
+        def request():
+            _TRANSPORT_LOG_STATE.quiet = True
+            try:
+                outcome["response"] = api(token, method, payload, **options)
+            except BaseException as exc:
+                # Deliver even an injected KeyboardInterrupt to the main thread;
+                # never print a worker traceback or an untrusted exception.
+                outcome["error"] = exc
+            finally:
+                ready.set()
+
+        started = time.monotonic()
+        _log(logging.DEBUG, "API method=%s outcome=started", method)
+        worker = threading.Thread(target=request, name="litradar-telegram-transport", daemon=True)
+        self._transport_thread = worker
+        self._transport_ready = ready
+        worker.start()
+        try:
+            while not ready.wait(0.1):
+                pass
+        except BaseException:
+            # No continuation runs on the worker; its eventual result is simply
+            # abandoned. Keep its reference until completion to block overlap.
+            _log(logging.DEBUG, "API method=%s outcome=cancelled", method)
+            raise
+        error = outcome.get("error")
+        status = _safe_status(error.status_code) if type(error) in {TelegramAPIError, TelegramPollingConflict} else None
+        _log(logging.DEBUG, "API method=%s outcome=%s status=%s duration_ms=%d", method,
+             "failed" if error is not None else "success", status if status is not None else "none",
+             max(0, int((time.monotonic() - started) * 1000)))
+        if error is not None:
+            raise error
+        return outcome["response"]
 
     def _load_offset(self) -> int | None:
         try:
@@ -413,7 +486,7 @@ class LitRadarTelegramBot:
     def _set_commands(self) -> None:
         # Convenience only: command handling still works if Telegram rejects menu setup.
         try:
-            self.api(self.token, "setMyCommands", {"commands": BOT_COMMANDS})
+            self._listener_api("setMyCommands", {"commands": BOT_COMMANDS})
         except Exception as exc:
             _log(logging.WARNING, "Telegram command menu unavailable; commands remain usable. %s", listener_error_message(exc))
 
@@ -422,7 +495,7 @@ class LitRadarTelegramBot:
         payload: dict[str, Any] = {"timeout": wait, "allowed_updates": ["message", "callback_query"]}
         if self.offset is not None:
             payload["offset"] = self.offset
-        response = self.api(self.token, "getUpdates", payload, timeout=wait + 10)
+        response = self._listener_api("getUpdates", payload, timeout=wait + 10)
         if not isinstance(response, dict) or response.get("ok") is not True or not isinstance(response.get("result"), list):
             raise _api_error("getUpdates", outcome="payload")
         updates = response["result"]
@@ -444,6 +517,9 @@ class LitRadarTelegramBot:
         return processed
 
     def run_forever(self, *, timeout: int = 25) -> None:
+        if self._listener_active:
+            raise _api_error("getUpdates", outcome="local")
+        self._listener_active = True
         try:
             self._set_commands()
             _log(logging.INFO, "LitBeacon Telegram bot is listening. Press Ctrl+C to stop.")
@@ -457,13 +533,15 @@ class LitRadarTelegramBot:
                         raise
                     delay = _retry_delay(exc.retry_after)
                     _log(logging.WARNING, "Telegram polling failed; retrying in %d seconds. %s", delay, listener_error_message(exc))
-                    time.sleep(delay)
+                    _wait_before_retry(delay)
                 except Exception as exc:
                     _log(logging.WARNING, "Telegram polling failed; retrying in 5 seconds. %s", listener_error_message(exc))
-                    time.sleep(5)
+                    _wait_before_retry(5)
         except KeyboardInterrupt:
             _log(logging.INFO, "LitBeacon Telegram bot stopped.")
             return
+        finally:
+            self._listener_active = False
 
     def process_update(self, update: dict[str, Any]) -> None:
         callback = update.get("callback_query")
@@ -671,7 +749,9 @@ class LitRadarTelegramBot:
             return self.schedule_runner(frequency, when)
         if os.name != "nt":
             return True, ""
-        command = [sys.executable, str(CODE_ROOT / "cli.py"), "schedule", "install", "--job", "digest", "--frequency", frequency, "--time", when]
+        command = [sys.executable, str(CODE_ROOT / "cli.py"), "--db", str(self.db_path.resolve()),
+                   "schedule", "install", "--job", "digest", "--frequency", frequency, "--time", when,
+                   "--config", str(self.config_path.resolve()), "--profile", str(self.profile_path.resolve())]
         try:
             completed = subprocess.run(command, cwd=ROOT, capture_output=True, text=True, timeout=45, check=False)
         except (OSError, subprocess.TimeoutExpired):
@@ -685,7 +765,9 @@ class LitRadarTelegramBot:
     def _remove_scheduled_jobs(self, job: str) -> tuple[bool, str]:
         if self.schedule_remover is not None:
             return self.schedule_remover(job)
-        command = [sys.executable, str(CODE_ROOT / "cli.py"), "schedule", "remove", "--job", job]
+        command = [sys.executable, str(CODE_ROOT / "cli.py"), "--db", str(self.db_path.resolve()),
+                   "schedule", "remove", "--job", job,
+                   "--config", str(self.config_path.resolve()), "--profile", str(self.profile_path.resolve())]
         try:
             completed = subprocess.run(command, cwd=ROOT, capture_output=True, text=True, timeout=45, check=False)
         except (OSError, subprocess.TimeoutExpired):

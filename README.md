@@ -10,7 +10,7 @@ The project was formerly **LitRadar**. Existing module names, database paths, `L
 
 **Unreleased:** graph and annotation refinements, optional local semantic exploration, and venue discovery/evidence worksheets in the CLI and Research browser section. The release version stays 0.8.0 while validation gates remain open. See [CHANGELOG](CHANGELOG.md) and the [Gate 1 history archive](docs/archive/gate1/README.md).
 
-Feature development is frozen for local-only 1.0. Gate 1 is complete; the [active release checklist](docs/LOCAL-1.0-RELEASE-CHECKLIST.md) tracks recovery verification and the remaining release gates.
+Feature development is frozen for local-only 1.0. Gates 1–3 are complete for the current candidate; the [active release checklist](docs/LOCAL-1.0-RELEASE-CHECKLIST.md) tracks remaining safety, usability and final release gates.
 
 ## Quick start
 
@@ -103,7 +103,7 @@ Discovery indexes, preprints, venue metadata and citations do not certify peer r
 
 ## Documentation
 
-- [User guide and configuration](docs/USER-GUIDE.md) · [environment template](.env.example) · [Telegram diagnostics](docs/TELEGRAM-TROUBLESHOOTING.md) · [Local logs](docs/LOGGING.md)
+- [User guide and configuration](docs/USER-GUIDE.md) · [environment template](.env.example) · [Telegram diagnostics](docs/TELEGRAM-TROUBLESHOOTING.md) · [Local logs](docs/LOGGING.md) · [Shutdown and scheduler checks](docs/GATE3-LIFECYCLE.md)
 - [Краткий CLI-сценарий (RU)](docs/research/cli-workflow-ru.md) · [Venue discovery and evidence](docs/research/venue-discovery.md) · [literature comparison and verification limits](docs/archive/gate1/research/erc-context-novelty-matrix-2026.md)
 - [Annotations and recovery](docs/V08-ANNOTATION-WORKFLOWS.md) · [semantic exploration](docs/SEMANTIC-WORKSPACE.md)
 - [Docker deployment](DOCKER.md) · [isolated development](docs/ISOLATED-DEV.md)

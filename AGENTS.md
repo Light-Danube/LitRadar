@@ -55,5 +55,5 @@
 ## Application logging convention
 
 - All new or extended file logging, across CLI, web, Textual TUI, Telegram and provider adapters, belongs under `WORKSPACE_ROOT/log/` (project `log/` for a checkout; the writable LitBeacon user directory's `log/` for installed wheels). Use the shared runtime path helper; never put logs beside installed code or arbitrarily in the current directory.
-- Do not commit generated logs, rotated log files or private diagnostic content. Keep `log/` and log extensions ignored/excluded from Git, build contexts and release artifacts. Preserve existing owner ignore rules. Legacy scheduled-job `logs/` paths stay compatible until a dedicated migration; do not silently move/delete existing files.
+- Do not commit generated logs, rotated log files or private diagnostic content. Keep `log/` and log extensions ignored/excluded from Git, build contexts and release artifacts. Preserve existing owner ignore rules. Extended scheduled-run logging now uses shared `log/`; historical `logs/` files and the compatibility mount stay untouched. Do not silently move/delete existing files.
 - Diagnostics must omit credentials, authenticated URLs, request/response bodies and private library/message content. Use fixed safe messages for provider failures and bounded, opt-in file logging; no implicit HTTP wire traces or external telemetry.

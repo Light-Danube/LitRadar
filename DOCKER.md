@@ -17,7 +17,7 @@ docker compose logs -f web
 
 Open <http://127.0.0.1:8765>. Compose forwards only host loopback to the web process listening on the container's network. **Do not publish the web port publicly**: the current web UI has no authentication.
 
-`docker compose down` stops services but leaves host `data/`, `reports/`, `logs/` intact. Never delete these folders during an upgrade.
+`docker compose down` stops services but leaves host `data/`, `reports/`, `log/` and historical `logs/` intact. Never delete these folders during an upgrade.
 
 The first container start copies the repository's `digest_config.json` into `data/digest_config.json` if absent. After that, **the copy in `data/` is authoritative inside Docker**. This avoids unsafe bind-mounting an individual JSON file that the Telegram bot atomically replaces. Edit `data/digest_config.json` for container use. Docker and host Windows launchers do *not* automatically share subsequent digest-config edits.
 
@@ -62,3 +62,5 @@ docker compose exec web python -c "import urllib.request; print(urllib.request.u
 ```
 
 Linux bind-mount permissions may require matching the host UID/GID; avoid making private research data world-writable. Docker does not change the design assumption that the web app is local-only and single-user.
+
+New and extended file diagnostics, including scheduled-run logs, use the shared writable `log/` mount. Historical `logs/` files remain available; they are not moved or deleted.

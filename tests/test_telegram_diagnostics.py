@@ -200,7 +200,7 @@ def test_fatal_poll_failure_stops_without_retry_or_data_writes(tmp_path, monkeyp
         return {"ok": True, "result": True}
     bot = make_bot(tmp_path, api)
     before = files(tmp_path)
-    monkeypatch.setattr(telegram.time, "sleep", lambda *_: pytest.fail("Fatal errors must not retry"))
+    monkeypatch.setattr(telegram, "_wait_before_retry", lambda *_: pytest.fail("Fatal errors must not retry"))
     with pytest.raises(telegram.TelegramAPIError):
         bot.run_forever()
     assert len([c for c in calls if c[0] == "getUpdates"]) == 1
@@ -223,7 +223,7 @@ def test_rate_limit_above_automatic_wait_bound_stops_without_early_retry(tmp_pat
         return {"ok": True, "result": True}
     bot = make_bot(tmp_path, api)
     before = files(tmp_path)
-    monkeypatch.setattr(telegram.time, "sleep", lambda *_: pytest.fail("Must not retry before requested server delay"))
+    monkeypatch.setattr(telegram, "_wait_before_retry", lambda *_: pytest.fail("Must not retry before requested server delay"))
     with pytest.raises(telegram.TelegramAPIError):
         bot.run_forever()
     assert len(polls) == 1
@@ -251,7 +251,7 @@ def test_transient_poll_retries_preserving_offset_and_interrupt_stops(tmp_path, 
         return {"ok": True, "result": True}
     bot = make_bot(tmp_path, api)
     before = files(tmp_path)
-    monkeypatch.setattr(telegram.time, "sleep", sleeps.append)
+    monkeypatch.setattr(telegram, "_wait_before_retry", sleeps.append)
     assert bot.run_forever() is None
     assert sleeps == [delay]
     assert [poll["offset"] for poll in polls] == [41, 41]
@@ -267,7 +267,7 @@ def test_keyboard_interrupt_during_retry_backoff_is_clean(tmp_path, monkeypatch)
     bot = make_bot(tmp_path, api)
     def interrupt(*args):
         raise KeyboardInterrupt
-    monkeypatch.setattr(telegram.time, "sleep", interrupt)
+    monkeypatch.setattr(telegram, "_wait_before_retry", interrupt)
     assert bot.run_forever() is None
 
 

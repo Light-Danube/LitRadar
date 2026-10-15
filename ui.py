@@ -8,7 +8,7 @@ import sys
 import webbrowser
 from pathlib import Path
 
-from litradar_runtime import DEFAULT_PROFILE, DEFAULT_SCAN_CONFIG, WORKSPACE_ROOT, ensure_user_defaults
+from litradar_runtime import DEFAULT_DB, DEFAULT_PROFILE, DEFAULT_SCAN_CONFIG, WORKSPACE_ROOT, ensure_user_defaults
 from config import RadarConfig
 from ranking.keywords import KeywordProfile
 from ranking.personalization import build_model, explain_candidate, neutral_results, score_rows
@@ -137,12 +137,15 @@ class ScheduleScreen(ModalScreen[None]):
 
     BINDINGS = [Binding("escape", "close", "Close", show=False), Binding("q", "close", "Close", show=False)]
 
-    def __init__(self, config_path: str | Path | None = None, language: str = "en") -> None:
+    def __init__(self, config_path: str | Path | None = None, language: str = "en", *,
+                 db_path: str | Path = DEFAULT_DB, profile_path: str | Path = DEFAULT_PROFILE) -> None:
         ensure_user_defaults()
         super().__init__()
         self.language = normalize_language(language)
         self._busy = False
         self.config_path = Path(config_path or DEFAULT_SCAN_CONFIG)
+        self.db_path = Path(db_path)
+        self.profile_path = Path(profile_path)
 
     def _t(self, key: str, **kwargs) -> str:
         return tr(self.language, key, **kwargs)
@@ -204,8 +207,10 @@ class ScheduleScreen(ModalScreen[None]):
         worker = get_current_worker()
         app = self.app
         command = [
-            sys.executable, str(Path(__file__).resolve().parent / "cli.py"), "schedule", action,
-            "--job", job, "--frequency", frequency, "--time", when, "--config", str(self.config_path),
+            sys.executable, str(Path(__file__).resolve().parent / "cli.py"),
+            "--db", str(self.db_path.resolve()), "schedule", action,
+            "--job", job, "--frequency", frequency, "--time", when,
+            "--config", str(self.config_path.resolve()), "--profile", str(self.profile_path.resolve()),
         ]
         try:
             completed = subprocess.run(command, cwd=WORKSPACE_ROOT, capture_output=True, text=True, timeout=60, check=False)
@@ -736,7 +741,7 @@ class LitRadarApp(App[None]):
             self.refresh_rows()
 
     def action_manage_jobs(self) -> None:
-        self.push_screen(ScheduleScreen(language=self.language))
+        self.push_screen(ScheduleScreen(language=self.language, db_path=self.db_path))
 
     def action_help(self) -> None:
         self.push_screen(HelpScreen(language=self.language))

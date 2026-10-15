@@ -10,6 +10,7 @@ x-litbeacon-common: &litbeacon-common
     - ./data:/app/data
     - ./reports:/app/reports
     - ./logs:/app/logs
+    - ./log:/app/log
   init: true
 
 services:
