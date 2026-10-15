@@ -8,4 +8,4 @@
 - User accepted Windows daily use and optional Narrator. Cloud live-venue proxy 403 is an environment limit; user-reported successful CLI retrieval is separate evidence.
 - Version stays **0.8.0**. No merge, bump, tag/release, major new feature, personal database, credentials or model-cache access. Use disposable synthetic data; follow [AGENTS](AGENTS.md) and [ROADMAP](ROADMAP.md).
 
-Executed local final checks: **589 Python / 38 JS passed, 0 failed, 0 skipped**; one Starlette warning. Rebuilt installed-wheel smoke and syntax/link/whitespace checks passed. Candidate CI remains pending; see the increment validation record.
+Executed local final checks: **589 Python / 38 JS passed, 0 failed, 0 skipped**; one Starlette warning. Rebuilt installed-wheel smoke and syntax/link/whitespace checks passed. Actual implementation-head Ubuntu/Windows package CI and Windows listener diagnostics step passed at `ed87c805`; enclosing/final documentation-head checks remain separate in the increment validation record and PR #27.

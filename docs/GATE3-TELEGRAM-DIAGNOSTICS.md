@@ -14,8 +14,9 @@ Baseline main `044358b8` (merged #26). Gates 1–2 are complete; [Draft PR #27](
 - Final combined `PYTHONPATH=/workspace/LitRadar/work/test-deps python -m pytest -q -ra`: **589 passed, 0 failed, 0 skipped**, Linux Python 3.12; one existing Starlette deprecation warning. Includes 62 diagnostics and nine CLI regression cases in addition to the prior suite.
 - `npm ci --prefix tests/web --ignore-scripts` (scratch cache), then `npm test --prefix tests/web`: **38 passed, 0 failed, 0 skipped**.
 - Final `python -m pip wheel --no-deps --no-build-isolation ...`, setup bundle build, wheel installation in an isolated venv and `scripts/built_wheel_smoke.py` outside the checkout: **passed on Linux**, including CLI/defaults/static assets/web edit/restart and backup/restore. This existing smoke does not establish live Telegram behavior; fake-transport source tests cover the listener change.
-- Changed Python files compiled; documentation scan resolved **230 local links/anchors**; `git diff --check` passed. Independent code review found and verified fixes for lost HTTP status on body-read failure and premature retry of oversized rate-limit waits.
-- Candidate CI, including actual Windows listener checks, is pending until observed; Linux is not Windows evidence.
+- Changed Python files compiled; documentation scan resolved **231 local links/anchors**; `git diff --check` passed. Independent code review found and verified fixes for lost HTTP status on body-read failure and premature retry of oversized rate-limit waits.
+- Actual [Ubuntu/Windows installed-wheel CI](https://github.com/Light-Danube/LitRadar/actions/runs/38755491415) succeeded at implementation head `ed87c805`, including installed recovery and general CLI/assets/web smoke.
+- The actual [Windows listener diagnostics step](https://github.com/Light-Danube/LitRadar/actions/runs/38755491462/job/116492685489) succeeded at the same implementation head, using fake credentials only. The enclosing recovery/browser workflow was still running when this evidence was recorded; its final result and later documentation-head checks are tracked in PR #27. Linux is not Windows evidence.
 
 ## Boundaries and next increments
 

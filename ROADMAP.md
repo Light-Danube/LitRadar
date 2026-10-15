@@ -40,7 +40,7 @@ Source recovery and additive legacy upgrade are implemented and covered by synth
 
 - [ ] Confirm source APIs can fail (timeout, 429, unavailable internet) without losing stored papers or making the local UI unusable.
 
-Focused Telegram increment: typed fatal polling conflict/configuration errors, transient retries and safe timestamped optional debug/file logging are implemented; candidate CI is pending. [Scope and candidate evidence](docs/GATE3-TELEGRAM-DIAGNOSTICS.md). This does not close scheduler disable/remove or full provider-failure verification.
+Focused Telegram increment: typed fatal polling conflict/configuration errors, transient retries and safe timestamped optional debug/file logging are implemented, and the actual Windows targeted diagnostics step passed at `ed87c805`. [Scope and candidate evidence](docs/GATE3-TELEGRAM-DIAGNOSTICS.md). This does not close scheduler disable/remove or full provider-failure verification.
 
 
 **Done when:** exact Windows environment and reproducible manual/automated results are recorded in docs/WINDOWS-WORKSPACE-SMOKE.md or a release-check file. Linux-only checks do not satisfy this gate.

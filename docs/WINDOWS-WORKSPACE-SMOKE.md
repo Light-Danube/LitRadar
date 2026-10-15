@@ -2,6 +2,9 @@
 
 Current evidence: actual [Windows API/DOM/native Chrome run](https://github.com/Light-Danube/LitRadar/actions/runs/38651164554) succeeded, including recovery/legacy upgrade (**49 passed, 1 case-insensitive-filesystem skip**) and four sandboxed EN/UK desktop/narrow Chrome scenarios. [Clean installed-wheel Ubuntu/Windows smoke](https://github.com/Light-Danube/LitRadar/actions/runs/38656486258) also succeeded. Actual [Ubuntu/Windows extracted setup-wheel recovery smoke](https://github.com/Light-Danube/LitRadar/actions/runs/38744388702) succeeded at code head `a9c64fb2`, including durable rows/histories/tombstones, elected files/checksums, integrity and no overwrite. Later candidates require their own checks.
 
+
+Gate 3 diagnostics increment: the [new Windows fake-API listener step](https://github.com/Light-Danube/LitRadar/actions/runs/38755491462/job/116492685489) succeeded at implementation head `ed87c805`; [Ubuntu/Windows installed-wheel smoke](https://github.com/Light-Danube/LitRadar/actions/runs/38755491415) also succeeded. [Scope, commands and limits](GATE3-TELEGRAM-DIAGNOSTICS.md). The enclosing workspace run and final documentation-head checks were still being observed when recorded; consult PR #27 for final status.
+
 On **2026-10-15 the user confirmed Windows daily use and Narrator work okay**. This is accepted as user-reported evidence; exact Windows/terminal/reader versions and detailed task observations were not supplied. Narrator is optional. This is separate from synthetic CI and does not imply certification or a reproduced real scheduler/token test.
 
 The `Windows workspace smoke` GitHub Actions workflow uses `windows-latest`,
