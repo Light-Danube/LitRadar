@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import logging
 import os
 import sqlite3
 import sys
@@ -25,7 +26,7 @@ from notes import edit_note, export_notes_markdown
 from research_digest import (
     DEFAULT_SCAN_CONFIG, build_digest, run_scheduled_scan, send_telegram, telegram_chat_ids,
 )
-from telegram_bot import LitRadarTelegramBot
+from telegram_bot import LitRadarTelegramBot, TelegramAPIError, configure_listener_logging
 from storage.sqlite import PaperStore, SORT_CHOICES, STATUSES
 
 from litradar_runtime import (WORKSPACE_ROOT, CODE_ROOT, SOURCE_CHECKOUT, DEFAULT_DB, DEFAULT_PROFILE, VERSION, ensure_user_defaults)
@@ -919,21 +920,35 @@ def cmd_schedule(args: argparse.Namespace) -> int:
 
 def cmd_telegram_run(args: argparse.Namespace) -> int:
     try:
-        # Load project .env into the current process before reading bot credentials.
-        RadarConfig.load()
-        token = os.getenv("LITRADAR_TELEGRAM_BOT_TOKEN", "").strip()
-        chat_id = os.getenv("LITRADAR_TELEGRAM_CHAT_ID", "").strip()
-        bot = LitRadarTelegramBot(
-            token=token,
-            chat_id=chat_id,
-            config_path=args.config,
-            db_path=args.db,
-            profile_path=args.profile,
-        )
-        bot.run_forever(timeout=args.poll_timeout)
-        return 0
-    except (ValueError, OSError, RuntimeError) as exc:
-        print(f"Telegram bot could not start: {exc}", file=sys.stderr)
+        with configure_listener_logging(debug=getattr(args, "debug", False),
+                                        log_file=getattr(args, "log_file", None)):
+            logger = logging.getLogger("litradar.telegram")
+            try:
+                # Load project .env only for this explicitly invoked optional listener.
+                RadarConfig.load()
+                token = os.getenv("LITRADAR_TELEGRAM_BOT_TOKEN", "").strip()
+                chat_id = os.getenv("LITRADAR_TELEGRAM_CHAT_ID", "").strip()
+                if not token or not chat_id:
+                    logger.error("Telegram listener requires LITRADAR_TELEGRAM_BOT_TOKEN and "
+                                 "LITRADAR_TELEGRAM_CHAT_ID. Configure them locally before starting.")
+                    return 2
+                bot = LitRadarTelegramBot(token=token, chat_id=chat_id, config_path=args.config,
+                                          db_path=args.db, profile_path=args.profile)
+                bot.run_forever(timeout=args.poll_timeout)
+                return 0
+            except TelegramAPIError:
+                # The listener has already logged a bounded, actionable diagnostic.
+                return 2
+            except KeyboardInterrupt:
+                logger.info("Telegram listener stopped by user.")
+                return 0
+            except Exception:
+                logger.error("Telegram listener could not start or continue. Check local configuration, "
+                             "file permissions and available disk space; private error details are omitted.")
+                return 2
+    except (ValueError, OSError):
+        print("Could not initialize Telegram diagnostics. Choose a writable log file and check its directory permissions.",
+              file=sys.stderr)
         return 2
 
 
@@ -1072,6 +1087,8 @@ Most commands have their own help page, e.g.:
     p_telegram_run.add_argument("--config", default=str(DEFAULT_SCAN_CONFIG), help="digest/scheduled scan JSON configuration")
     p_telegram_run.add_argument("--profile", default=str(DEFAULT_PROFILE), help="research profile JSON")
     p_telegram_run.add_argument("--poll-timeout", type=int, default=25, help="Telegram long-poll timeout in seconds (0–25)")
+    p_telegram_run.add_argument("--debug", action="store_true", help="include safe listener API timing/outcome diagnostics (no request/response contents)")
+    p_telegram_run.add_argument("--log-file", type=Path, help="append UTF-8 listener diagnostics to a rotating local file (1 MiB, 3 backups)")
     p_telegram_run.set_defaults(func=cmd_telegram_run)
 
     p_search = sub.add_parser("search", help="search sources, score papers, and store results")

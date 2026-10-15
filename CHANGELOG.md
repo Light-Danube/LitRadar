@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased — Gate 3 Telegram listener diagnostics
+
+- Stop fatal Telegram polling conflicts/configuration failures with a nonzero CLI result, explain common HTTP/network failures safely, and preserve transient retries, Ctrl+C, offsets and nonfatal command-menu setup. A 409 can indicate another poller or a webhook; neither is changed automatically.
+- Add timestamped listener diagnostics with optional `telegram-run --debug --log-file PATH` and bounded UTF-8 file rotation. Omit credentials, URLs, IDs, payloads, research/message content and raw exceptions from listener diagnostics. Independent scheduled-digest/chat-discovery transports remain separate.
+- Add fake-transport/logging/CLI regression coverage and a targeted Windows CI step. Executed local checks: **589 Python / 38 JS passed**, zero failures/skips, one existing Starlette warning; final built-wheel smoke passed on Linux. Candidate Windows/CI remains pending in [increment validation](docs/GATE3-TELEGRAM-DIAGNOSTICS.md); no personal database, live token, merge, version bump or release.
+
 ## Unreleased — Gate 1 archive and packaged recovery verification
 
 - Archive completed Gate 1 plans, audits, validation records, historical screenshots and handoff; retain current setup, user and recovery guides. Repair affected links and shorten the active release checklist.

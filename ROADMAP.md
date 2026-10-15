@@ -37,7 +37,11 @@ Source recovery and additive legacy upgrade are implemented and covered by synth
 - [x] Clean Windows Python 3.12 installed-wheel smoke verifies CLI, bundled assets and local edit/restart persistence; the setup ZIP follows the same CI path. [Actual runs and limits](docs/WINDOWS-WORKSPACE-SMOKE.md).
 - [x] Windows daily use accepted by the user on 2026-10-15; detailed task/platform versions were not supplied. Synthetic API/DOM/native Chrome checks remain the separate automated evidence; this is not an invented per-task manual smoke transcript.
 - [ ] Verify jobs and optional Telegram do not start duplicate listeners on the same token; disable/remove schedule flows work. Require no Telegram credentials for normal offline use.
+
 - [ ] Confirm source APIs can fail (timeout, 429, unavailable internet) without losing stored papers or making the local UI unusable.
+
+Focused Telegram increment: typed fatal polling conflict/configuration errors, transient retries and safe timestamped optional debug/file logging are implemented; candidate CI is pending. [Scope and candidate evidence](docs/GATE3-TELEGRAM-DIAGNOSTICS.md). This does not close scheduler disable/remove or full provider-failure verification.
+
 
 **Done when:** exact Windows environment and reproducible manual/automated results are recorded in docs/WINDOWS-WORKSPACE-SMOKE.md or a release-check file. Linux-only checks do not satisfy this gate.
 

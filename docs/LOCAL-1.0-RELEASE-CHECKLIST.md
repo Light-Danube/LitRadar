@@ -5,6 +5,7 @@ Baseline main `0052e202` (merged PR #25). Version stays **0.8.0**; no merge/tag/
 - **Gate 1: closed.** [Archived feature inventory and closure evidence](archive/gate1/release-checklist-2026-10-15.md). Windows daily use and optional Narrator were accepted by the user; automated results remain separate.
 - **Gate 2: complete for this candidate.** Read-only SQLite backup, new-destination restore, elected artifacts/checksums and legacy upgrade are tested. Actual [Ubuntu/Windows extracted setup-wheel recovery checks](https://github.com/Light-Danube/LitRadar/actions/runs/38744388702) passed at implementation head `a9c64fb2`; no personal data or services were used.
 - **Gate 3: two explicit items remain.** Scheduler/optional Telegram duplicate-listener and disable/remove behavior; provider timeout/429/offline failure preservation. Daily-use acceptance and clean package installation are already recorded.
+- Gate 3 current increment: [Telegram conflicts and safe listener diagnostics](GATE3-TELEGRAM-DIAGNOSTICS.md), with [operator troubleshooting](TELEGRAM-TROUBLESHOOTING.md). Scheduler and full provider-failure gates remain open.
 - Gates 4–6 remain governed by [ROADMAP](../ROADMAP.md), including focused safety checks and final release approval.
 
 ## This small Draft PR
