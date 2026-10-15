@@ -1,6 +1,6 @@
 # Textual TUI accessibility and workflow audit
 
-Date: 2026-10-14. Scope: existing LitBeacon Textual TUI only; no CLI or WebUI feature expansion. This is an executed code/keyboard audit plus an assistive-technology test plan. **The full assistive-technology audit remains incomplete.**
+Historical audit: 2026-10-14. Scope: existing LitBeacon Textual TUI only. On **2026-10-15 the user confirmed Windows daily use and Narrator work okay and accepted them as “yes”**. This is user-reported acceptance; exact platform/reader versions and per-task observations were not supplied. Narrator is optional for this release. The broader detailed assistive-technology procedure below remains optional and incomplete; no formal certification is claimed.
 
 ## Executed evidence
 
@@ -30,7 +30,7 @@ Localization has separate EN/UK catalog and Pilot tests. Their final counts belo
 
 Final combined checks: **430 Python passed / 0 failed / 0 skipped**, **6 Node test files passed / 0 failed / 0 skipped**. TUI subset: **29 passed / 0 failed / 0 skipped**. A native ANSI PTY smoke at 80×24 also completed with Ukrainian synthetic content and mocked jobs; it verifies terminal execution, not spoken output or visual usability. The disposable audit fixture's `--smoke` check passed separately. Python reports one existing Starlette TestClient deprecation warning.
 
-Draft [PR #19](https://github.com/Light-Danube/LitRadar/pull/19) targets main. At head `85d841dc`, GitHub reported `action_required` for tests, isolated Docker and Windows workflows; the tests run had no jobs. This is an unresolved remote CI gate, not a CI pass or a test failure. Later heads require their own checks.
+Historical [PR #19](https://github.com/Light-Danube/LitRadar/pull/19) is merged. Its early head `85d841dc` had `action_required` with no jobs; this was not a test failure. Current executed CI is tracked in the [release checklist](LOCAL-1.0-RELEASE-CHECKLIST.md); historical pending status is not a current blocker.
 
 The implementation now requires **Textual >=1.0,<2**, consistently in `requirements-ui.txt` and the package UI extra. Testing the old declared minimum 0.50.1 exposed incompatible binding APIs; new runtime localization and focus APIs are supported and tested on 1.0.0. Upgrade UI dependencies before running this patch. No application release-version bump is made.
 
@@ -89,4 +89,4 @@ The fixture uses a temporary database with two synthetic papers. All scheduler, 
 
 Record one row per task: `environment | language/size | task | spoken output | pass/fail | obstacle | workaround`. A successful fixture launch is not a Narrator pass. Attach concrete results before checking the full roadmap audit item; any inaccessible task remains an open defect.
 
-The roadmap may mark Ukrainian TUI implementation and these regression tests complete. Keep the combined “full accessibility audit with assistive technology” gate unchecked until actual reader/terminal evidence is recorded.
+The roadmap records user-reported Narrator acceptance and its optional release status separately from these automated tests. A detailed cross-reader audit remains incomplete; do not turn this acceptance into invented speech/Braille/contrast observations or certification.

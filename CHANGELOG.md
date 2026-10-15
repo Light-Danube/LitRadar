@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased — small package setup and Gate 1 closure
+
+- Build a version-checked setup ZIP containing only the runtime wheel and short `SETUP.txt`, with explicit venv commands, data locations and upgrade/backup guidance. Future published releases attach this ZIP and wheel after smoke validation; ordinary users need no source checkout/legacy docs. No version/tag/release is created here.
+- Verify installation from the extracted ZIP on Ubuntu/Windows CI; refuse unrelated/private wheel content, version/tag disagreement and artifact overwrites. Existing source launchers and optional components remain available.
+- Consolidate merged Gate 1 fixes/evidence and the user's 2026-10-15 Windows daily-use/Narrator acceptance. Narrator is optional; user-reported acceptance is not a formal audit. Gate 1 closes with green candidate checks; later release gates and environment-blocked live venue verification stay explicit.
+- Executed local full suites: **518 Python / 38 JS passed, 0 failed, 0 skipped**, one existing Starlette warning; clean extracted-package dependency install and CLI/static-assets/web-edit/restart smoke passed. Actual [Ubuntu/Windows setup ZIP checks](https://github.com/Light-Danube/LitRadar/actions/runs/38657414211) succeeded at code head `3cb012b1`, with downloadable review artifacts; final PR-head checks remain the closure evidence.
+
 ## Unreleased — bounded local library recovery (Gate 2)
 
 - Add `library-backup`: SQLite backup API on a read-only source, no source migration, private new-directory bundle with versioned manifest/SHA-256 and explicitly elected Research/offline artifacts. Including files requires acknowledgment that artifact writers are stopped; credentials, logs/caches, models, profile/digest config and scheduler registrations are excluded.

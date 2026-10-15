@@ -1,5 +1,9 @@
 # Windows workspace workflow validation
 
+Current evidence: actual [Windows API/DOM/native Chrome run](https://github.com/Light-Danube/LitRadar/actions/runs/38651164554) succeeded, including recovery/legacy upgrade (**49 passed, 1 case-insensitive-filesystem skip**) and four sandboxed EN/UK desktop/narrow Chrome scenarios. [Clean installed-wheel Ubuntu/Windows smoke](https://github.com/Light-Danube/LitRadar/actions/runs/38656486258) also succeeded. Later setup-package candidates require their own checks.
+
+On **2026-10-15 the user confirmed Windows daily use and Narrator work okay**. This is accepted as user-reported evidence; exact Windows/terminal/reader versions and detailed task observations were not supplied. Narrator is optional. This is separate from synthetic CI and does not imply certification or a reproduced real scheduler/token test.
+
 The `Windows workspace smoke` GitHub Actions workflow uses `windows-latest`,
 Python 3.12 and Node 22. It runs on pull requests, `main`/`codex/**` pushes,
 and manual dispatch. A workflow definition is not evidence of a passing run:
@@ -46,8 +50,8 @@ synthetic SQLite database is created under ignored `.venv/`; no personal data,
 real scheduler, provider/model or external browser request is used. Only the
 four generated PNGs are uploaded as short-lived artifacts, not the profile/DB.
 
-The native script was syntax-checked here but **not executed**: the cloud
-Chromium sandbox limitation persists. Its actual Windows result is a release
-gate. A configured CI step or Linux DOM result is not a native Chrome pass.
+Earlier cloud Chromium could not start its sandbox, but actual sandboxed Windows
+Chrome scenarios have since succeeded in the linked Actions run. This does not
+claim a cloud-browser pass or an exhaustive visual/accessibility audit.
 The Node test command uses explicit file paths to avoid relying on Windows
 shell wildcard expansion.

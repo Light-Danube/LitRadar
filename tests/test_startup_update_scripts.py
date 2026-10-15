@@ -17,12 +17,15 @@ def test_cross_platform_launchers_and_updaters_exist():
     assert "update_exit_code" in batch_updater
 
 
-def test_release_workflow_attaches_a_clean_zip():
+def test_release_workflow_attaches_verified_runtime_package_after_publication():
     workflow = (ROOT / ".github" / "workflows" / "release.yml").read_text(encoding="utf-8")
     assert "release:" in workflow
-    assert "git archive" in workflow
+    assert "types: [published]" in workflow
+    assert "pip wheel --no-deps" in workflow
+    assert 'scripts.build_user_bundle' in workflow and '--tag "$RELEASE_TAG"' in workflow
+    assert 'built_wheel_smoke.py' in workflow
     assert "softprops/action-gh-release" in workflow
-    assert "LitBeacon-${{ github.event.release.tag_name }}.zip" in workflow
+    assert "dist/*.whl" in workflow and "dist/*-setup.zip" in workflow
 
 
 def test_windows_launcher_checks_errors_inside_parenthesized_blocks_safely():

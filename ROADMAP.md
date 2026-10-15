@@ -17,14 +17,18 @@
 ## Gate 1 — Stabilize the current feature set (P0)
 
 - [x] Record an accurate feature inventory and list of known defects from current main and open PRs. [Gate 1 audit](docs/LOCAL-1.0-RELEASE-CHECKLIST.md): baseline `b8b42ff4`, no open PR backlog, reproduced installed-wheel CLI failure. Implemented, user-accepted and externally unverified behavior are separated.
-- [ ] Run the full Python and JS suites on the release candidate. Fix all reproducible failures. Explain every expected skip; no unexplained failures/skips in required CI jobs.
-- [ ] Verify **Research** venue search and evidence worksheets, original five web sections, EN/UK switching and draft persistence with synthetic data. No automatic provider/LLM request from page load or preset selection.
+- [x] Run the full Python and JS suites on the candidate, fix reproducible failures and explain profile-dependent CI skips. [Current executed evidence and candidate checks](docs/LOCAL-1.0-RELEASE-CHECKLIST.md).
+- [x] Verify **Research** venue search/evidence, original five sections, EN/UK and draft persistence with synthetic API/DOM/native Windows workflows; page load/preset selection makes no provider/LLM POST.
 
 [Venue verification](docs/research/venue-verification.md) adds CLI/API checks through the mocked HTTP transport boundary: identity/year validation, cache/persistence and failed-request preservation. Combined checks: **447 Python / 38 JS passed, 0 failed, 0 skipped**. An explicit public live lookup failed at the cloud proxy tunnel (403); further live-provider/browser verification is pending and user-reported success remains separate.
 
 **Done when:** CI is green on the candidate commit, a compact feature/regression checklist exists, and no known data-loss or workflow-blocking defect remains.
 
-Audit evidence: Linux combined suite **430 Python / 38 JS passed, 0 failed, 0 skipped**. Actual baseline Windows API/DOM/native Chrome checks succeeded, but clean built-artifact Windows installation and Narrator remain open. Gate 1 is not closed: final candidate CI remains open. The focused packaging fix resolves the reproduced import/default-path failure in local Linux installed-artifact smoke; actual Windows wheel CI is still unverified. The bounded SQLite backup/new-destination restore PR remains the next Gate 2 step; no version bump is included.
+**Gate 1 closure:** the prior defect/verification PRs #22–24 are merged, the wheel blocker is fixed, and current baseline CI includes successful Ubuntu/Windows installed-wheel smoke. The package-setup candidate adds a wheel-only setup ZIP, fresh complete regressions and extracted-package CI. Gate 1 is accepted when this candidate's required checks are green; reopen it for a reproduced workflow/data-loss defect. This is feature-stability completion, not 1.0 release approval. Live venue access remains environment-limited (proxy 403), with user-reported CLI success kept separate.
+
+Actual [Ubuntu/Windows setup ZIP checks](https://github.com/Light-Danube/LitRadar/actions/runs/38657414211) succeeded at code head `3cb012b1`; [PR #25 checks](https://github.com/Light-Danube/LitRadar/pull/25/checks) are the final Gate 1 closure evidence.
+
+On 2026-10-15 the user confirmed Windows daily use and Narrator work okay and accepted them as “yes”. Record this as **user-reported acceptance**; Narrator is optional for this release, and no detailed screen-reader certification or unprovided platform/version observations are inferred.
 
 ## Gate 2 — Local data integrity and recovery (P0)
 
@@ -39,8 +43,8 @@ Implementation evidence: Linux Python 3.12.14 recovery **49 passed / 0 failed / 
 
 ## Gate 3 — Windows-first install, launch and normal use (P0)
 
-- [ ] Install a **built release artifact** (wheel and/or release ZIP, as actually distributed) into a clean Windows Python environment supported by pyproject.toml (Python 3.11+). Verify bundled HTML/JS/CSS/icons and package imports.
-- [ ] Execute a documented Windows smoke checklist: setup/update script, CLI help, TUI open/search, browser open on 127.0.0.1, select/edit paper, local annotations/evidence, graph, BibTeX/Markdown/CSV export, restart and persistence. Use a **synthetic test library**.
+- [x] Clean Windows Python 3.12 installed-wheel smoke verifies CLI, bundled assets and local edit/restart persistence; the setup ZIP follows the same CI path. [Actual runs and limits](docs/WINDOWS-WORKSPACE-SMOKE.md).
+- [x] Windows daily use accepted by the user on 2026-10-15; detailed task/platform versions were not supplied. Synthetic API/DOM/native Chrome checks remain the separate automated evidence; this is not an invented per-task manual smoke transcript.
 - [ ] Verify jobs and optional Telegram do not start duplicate listeners on the same token; disable/remove schedule flows work. Require no Telegram credentials for normal offline use.
 - [ ] Confirm source APIs can fail (timeout, 429, unavailable internet) without losing stored papers or making the local UI unusable.
 
@@ -58,7 +62,7 @@ Implementation evidence: Linux Python 3.12.14 recovery **49 passed / 0 failed / 
 ## Gate 5 — Local usability and accessibility evidence (P1; no scope expansion)
 
 - [ ] Review core keyboard workflows in the existing web UI and Textual TUI in both English and Ukrainian: navigation, focus, close/cancel, scrolling, error messages, and keeping unsaved drafts.
-- [ ] Run the planned **Windows Terminal + Narrator** manual TUI check using docs/TUI-ACCESSIBILITY-AUDIT.md and the synthetic fixture. Record actual observations and any workarounds. Do not claim WCAG/screen-reader certification; serious blockers to basic operation must be fixed or clearly declared unsupported before release.
+- [x] User-reported Windows/Narrator acceptance recorded on 2026-10-15; Narrator is optional for this release. The [detailed audit procedure](docs/TUI-ACCESSIBILITY-AUDIT.md) remains available for optional broader testing; no WCAG/screen-reader certification is claimed.
 - [ ] Confirm an ordinary user can locate venue search, open/save an evidence worksheet and export it, without having to learn the CLI.
 
 **Done when:** keyboard/smoke evidence and unresolved limitations are documented. A full accessibility certification, new UI design, new localization languages and TUI menu overhaul are **not** release gates.
