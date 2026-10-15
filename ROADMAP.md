@@ -43,6 +43,8 @@ Source recovery and additive legacy upgrade are implemented and covered by synth
 Focused Telegram increment: typed fatal polling conflict/configuration errors, transient retries and safe timestamped optional debug/file logging are implemented, and the actual Windows targeted diagnostics step passed at `ed87c805`. [Scope and candidate evidence](docs/GATE3-TELEGRAM-DIAGNOSTICS.md). This does not close scheduler disable/remove or full provider-failure verification.
 
 
+Current focused increment: [safe provider failures and continued local-library use](docs/GATE3-PROVIDER-FAILURES.md), with a shared ignored `log/` convention for new logging across all interfaces. Candidate tests/Windows evidence are pending. Scheduler disable/remove remains separate.
+
 **Done when:** exact Windows environment and reproducible manual/automated results are recorded in docs/WINDOWS-WORKSPACE-SMOKE.md or a release-check file. Linux-only checks do not satisfy this gate.
 
 ## Gate 4 — Safe local operating boundary (P0)

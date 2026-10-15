@@ -47,6 +47,8 @@ def wheel_version(wheel: Path, tag: str | None = None) -> str:
             if not path.parts or not (item.filename in modules or path.parts[0] in packages | {info_root}):
                 raise ValueError('Wheel contains unrelated source/development files')
             if (path.name.startswith('.env') or '__pycache__' in path.parts
+                    or any(part.casefold() in {'log', 'logs'} for part in path.parts)
+                    or re.search(r'\.log(?:\..*)?$', path.name, re.IGNORECASE)
                     or item.filename.endswith(('.sqlite', '.sqlite3', '.sqlite3-wal', '.sqlite3-shm',
                                                '.pdf', '.log', '.safetensors'))):
                 raise ValueError('Wheel contains excluded local data')
@@ -101,6 +103,9 @@ Linux data: $XDG_DATA_HOME/LitBeacon (default ~/.local/share/LitBeacon)
 macOS data: ~/Library/Application Support/LitBeacon
 Set LITBEACON_HOME before launching to choose another data directory.
 Missing editable defaults are seeded; existing profiles/configuration are retained.
+New application file logs belong in this data directory under log/, never in installed code.
+Optional Telegram diagnostics: -m cli telegram-run --debug --log-file telegram-listener.log
+This writes log/telegram-listener.log under that data directory; logs are not release files.
 Existing source-checkout libraries are not moved: use --db PATH before the command.
 
 Before upgrading, stop writers and use the OLD environment's interpreter with:

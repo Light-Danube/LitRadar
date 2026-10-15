@@ -11,6 +11,13 @@ import pytest
 import cli
 import telegram_bot
 
+
+@pytest.fixture(autouse=True)
+def disposable_log_root(tmp_path, monkeypatch):
+    import litradar_runtime
+    monkeypatch.setattr(litradar_runtime, "LOG_ROOT", tmp_path / "log")
+
+
 POISON = 'synthetic-private-note https://api.telegram.org/botfake-sensitive-token/getUpdates'
 
 
@@ -52,7 +59,7 @@ def test_cli_polling_conflict_exits_without_sleep_or_offset_changes(tmp_path, mo
     monkeypatch.setattr(telegram_bot.time, 'sleep', lambda *_: pytest.fail('Conflict must not retry'))
     real_bot = telegram_bot.LitRadarTelegramBot
     monkeypatch.setattr(cli, 'LitRadarTelegramBot', lambda **kwargs: real_bot(**kwargs, state_path=state))
-    log = tmp_path / 'listener.log'
+    log = tmp_path / 'log' / 'listener.log'
     args = listener_args(tmp_path, '--debug', '--log-file', str(log))
     assert args.func(args) == 2
     assert calls == ['setMyCommands', 'getUpdates']
@@ -71,7 +78,7 @@ def test_cli_local_startup_failure_omits_private_details(tmp_path, monkeypatch, 
     fake_credentials(monkeypatch)
     def fail(**kwargs): raise error
     monkeypatch.setattr(cli, 'LitRadarTelegramBot', fail)
-    log = tmp_path / 'listener.log'
+    log = tmp_path / 'log' / 'listener.log'
     args = listener_args(tmp_path, '--log-file', str(log))
     assert args.func(args) == 2
     text = capsys.readouterr().err + log.read_text(encoding='utf-8')
@@ -95,7 +102,7 @@ def test_cli_unwritable_log_fails_before_loading_credentials(tmp_path, monkeypat
     monkeypatch.setattr(cli.RadarConfig, 'load', lambda: pytest.fail('No credentials for failed log setup'))
     args = listener_args(tmp_path, '--log-file', str(tmp_path))
     assert args.func(args) == 2
-    assert 'writable log file' in capsys.readouterr().err
+    assert 'writable log filename' in capsys.readouterr().err
 
 
 def test_cli_user_stop_returns_success_and_does_not_log_private_text(tmp_path, monkeypatch, capsys):

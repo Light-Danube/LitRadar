@@ -9,6 +9,7 @@ from config import RadarConfig
 from ranking.keywords import KeywordProfile
 from ranking.scoring import Score, rank_papers, score_papers_semantic
 from sources.base import Paper
+from sources.http import format_provider_error
 from sources.registry import search_all_sources
 from storage.sqlite import PaperStore
 
@@ -35,11 +36,11 @@ def _rank(
             from ranking.embeddings import SentenceTransformerEmbedder
             embedder = SentenceTransformerEmbedder(profile.embedding_model)
             return score_papers_semantic(papers, profile, embedder)
-        except Exception as exc:
+        except Exception:
             # Semantic scoring is an enhancement, not a reason to lose a search.
             if progress is not None:
                 try:
-                    progress("warning", "ranking", f"semantic scoring unavailable; using keywords ({exc})")
+                    progress("warning", "ranking", "semantic scoring unavailable; using keywords")
                 except Exception:
                     pass
     return rank_papers(papers, profile)
@@ -68,7 +69,7 @@ def search_and_ingest(
     try:
         before = store.total_count()
         if progress is not None:
-            progress("phase", "search", f"Searching {len(requested_sources)} online source(s) for: {query}")
+            progress("phase", "search", f"Searching {len(requested_sources)} online source(s).")
         source_results, source_errors = search_all_sources(
             query,
             sources=requested_sources,
@@ -127,7 +128,7 @@ def search_and_ingest(
             newly_stored=max(after - before, 0),
             library_total=after,
             source_results=counts,
-            source_errors={name: str(error) for name, error in source_errors.items()},
+            source_errors={name: format_provider_error(error) for name, error in source_errors.items()},
             scoring_version=ranked[0][1].scoring_version if ranked else ("keyword-v0.1" if not semantic else "semantic-or-keyword"),
         )
         if progress is not None:

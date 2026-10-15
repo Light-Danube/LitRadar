@@ -528,6 +528,8 @@ If Telegram is not configured, scheduled digest jobs save a Markdown report loca
 
 The scheduled Task Scheduler job sends digests without a permanently running bot process. To use slash commands and inline menu buttons, configure both `LITRADAR_TELEGRAM_BOT_TOKEN` and `LITRADAR_TELEGRAM_CHAT_ID`, then run `run_telegram_bot.bat` and keep that window open. The polling process receives commands only from the configured chat ID and saves its update offset under `data/telegram_bot_state.json`. Do not run multiple `telegram-run` instances or use `telegram-chats` concurrently with the listener; Telegram allows only one active `getUpdates` poller per bot token.
 
+All new file logging uses the application workspace's ignored `log/` directory across CLI/web/TUI/Telegram/provider integrations; installed packages use their writable user directory. [Locations, exclusions and legacy compatibility](LOGGING.md).
+
 Listener failures now include safe, actionable status messages. For timestamped debug/file diagnostics, use `python cli.py telegram-run --debug --log-file telegram-listener.log`. [Common API errors, retry/exit behavior and logging limits](TELEGRAM-TROUBLESHOOTING.md). A polling conflict stops this listener; it does not automatically remove a webhook or stop another process.
 
 Useful commands:
