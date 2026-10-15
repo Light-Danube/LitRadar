@@ -4,12 +4,15 @@ param([switch]$Worker, [string]$Action = 'status', [string]$TaskSet = 'all',
 $ErrorActionPreference = 'Stop'
 $Target = Join-Path (Split-Path $PSScriptRoot -Parent) 'schedule_litradar.ps1'
 if ($Worker) {
-    $script:State = Get-Content -Raw -LiteralPath $StatePath | ConvertFrom-Json
-    function Save-State { $script:State | ConvertTo-Json -Depth 12 | Set-Content -LiteralPath $StatePath -Encoding UTF8 }
+    # The real helper runs in another script scope; keep fake state child-process local.
+    $global:LitBeaconSchedulerSmokeStatePath = $StatePath
+    $global:LitBeaconSchedulerSmokeFault = $Fault
+    $global:LitBeaconSchedulerSmokeState = Get-Content -Raw -LiteralPath $StatePath | ConvertFrom-Json
+    function Save-State { $global:LitBeaconSchedulerSmokeState | ConvertTo-Json -Depth 12 | Set-Content -LiteralPath $global:LitBeaconSchedulerSmokeStatePath -Encoding UTF8 }
     function Get-ScheduledTask {
         [CmdletBinding()]param($TaskName, $TaskPath)
-        if ($Fault -eq 'query') { throw 'Synthetic query permission failure' }
-        $Task = @($script:State.Tasks | Where-Object { $_.TaskName -eq $TaskName })
+        if ($global:LitBeaconSchedulerSmokeFault -eq 'query') { throw 'Synthetic query permission failure' }
+        $Task = @($global:LitBeaconSchedulerSmokeState.Tasks | Where-Object { $_.TaskName -eq $TaskName })
         if ($Task.Count -eq 0) {
             $Record = [System.Management.Automation.ErrorRecord]::new([Exception]::new('Synthetic missing task'), 'SyntheticMissing', [System.Management.Automation.ErrorCategory]::ObjectNotFound, $TaskName)
             $PSCmdlet.ThrowTerminatingError($Record)
@@ -17,12 +20,12 @@ if ($Worker) {
         return $Task[0]
     }
     function Get-ScheduledTaskInfo { [CmdletBinding()]param($TaskName, $TaskPath)
-        if ($Fault -eq 'info') { throw 'Synthetic info permission failure' }
+        if ($global:LitBeaconSchedulerSmokeFault -eq 'info') { throw 'Synthetic info permission failure' }
         return [pscustomobject]@{LastRunTime='synthetic'; NextRunTime='synthetic'; LastTaskResult=0}
     }
     function Unregister-ScheduledTask { [CmdletBinding(SupportsShouldProcess)]param($TaskName, $TaskPath)
-        if ($Fault -eq 'remove') { throw 'Synthetic removal permission failure' }
-        $script:State.Tasks = @($script:State.Tasks | Where-Object { $_.TaskName -ne $TaskName }); Save-State
+        if ($global:LitBeaconSchedulerSmokeFault -eq 'remove') { throw 'Synthetic removal permission failure' }
+        $global:LitBeaconSchedulerSmokeState.Tasks = @($global:LitBeaconSchedulerSmokeState.Tasks | Where-Object { $_.TaskName -ne $TaskName }); Save-State
     }
     function New-ScheduledTaskSettingsSet { param([switch]$StartWhenAvailable, $MultipleInstances, $ExecutionTimeLimit)
         return [pscustomobject]@{MultipleInstances=$MultipleInstances; StartWhenAvailable=[bool]$StartWhenAvailable}
@@ -37,16 +40,24 @@ if ($Worker) {
         return [pscustomobject]@{Weekly=[bool]$Weekly; Daily=[bool]$Daily}
     }
     function Register-ScheduledTask { [CmdletBinding()]param($TaskName, $TaskPath, $Action, $Trigger, $Settings, $Principal, $Description, [switch]$Force)
-        if ($Fault -eq 'install') { throw 'Synthetic registration permission failure' }
+        if ($global:LitBeaconSchedulerSmokeFault -eq 'install') { throw 'Synthetic registration permission failure' }
         if (-not $Force) { throw 'Repeated installation must replace the same task' }
-        $script:State.Tasks = @($script:State.Tasks | Where-Object { $_.TaskName -ne $TaskName }) + @([pscustomobject]@{
+        $global:LitBeaconSchedulerSmokeState.Tasks = @($global:LitBeaconSchedulerSmokeState.Tasks | Where-Object { $_.TaskName -ne $TaskName }) + @([pscustomobject]@{
             TaskName=$TaskName; State='Ready'; Action=$Action; Settings=$Settings; Principal=$Principal; Trigger=$Trigger
         }); Save-State
     }
     & $Target -Action $Action -TaskSet $TaskSet -Time $Time -PythonPath (Get-Process -Id $PID).Path `
         -ConfigPath (Join-Path $TemporaryRoot 'custom settings.json') -DatabasePath (Join-Path $TemporaryRoot 'custom database.sqlite3') `
         -ProfilePath (Join-Path $TemporaryRoot 'custom profile.json') -WorkspaceRoot $TemporaryRoot
-    exit $LASTEXITCODE
+    $ResultCode = $LASTEXITCODE
+    if ($ResultCode -ne 0 -and $Error.Count -gt 0) {
+        # Synthetic-only diagnostics: no exception messages, environment or request data.
+        $Record = $Error[0]
+        $Stack = [string]$Record.ScriptStackTrace
+        $Stack = $Stack.Substring(0, [Math]::Min($Stack.Length, 1024))
+        [Console]::Error.WriteLine(('Synthetic helper failure type={0}; id={1}; stack={2}' -f $Record.Exception.GetType().FullName, $Record.FullyQualifiedErrorId, $Stack))
+    }
+    exit $ResultCode
 }
 $Root = Join-Path ([IO.Path]::GetTempPath()) ('litbeacon-fake-scheduler-' + [guid]::NewGuid().ToString('N'))
 New-Item -ItemType Directory -Path $Root | Out-Null

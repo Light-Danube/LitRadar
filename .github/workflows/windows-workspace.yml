@@ -22,6 +22,12 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Isolated PowerShell scheduler error and lifecycle contracts
+        shell: powershell
+        run: .\scripts\windows_scheduler_smoke.ps1
+      - name: Hosted Windows native scheduler lifecycle (unique disposable tasks only)
+        shell: powershell
+        run: .\scripts\windows_scheduler_native_smoke.ps1
       - name: Install test dependencies (no embedding model download)
         run: python -m pip install -r requirements-dev.txt -r requirements-web.txt -r requirements-annotations.txt -r requirements-browser-tests.txt -r requirements-ui.txt
       - name: Inbox, clusters and mixed-provider graph API workflows
@@ -32,12 +38,6 @@ jobs:
         run: python -m pytest -q -ra tests/test_provider_failure_integrity.py tests/test_log_paths.py tests/test_user_bundle.py
       - name: Telegram shutdown and scheduler interface regressions
         run: python -m pytest -q -ra tests/test_telegram_shutdown.py tests/test_scheduler_lifecycle.py tests/test_scheduler_interfaces.py
-      - name: Isolated PowerShell scheduler error and lifecycle contracts
-        shell: powershell
-        run: .\scripts\windows_scheduler_smoke.ps1
-      - name: Hosted Windows native scheduler lifecycle (unique disposable tasks only)
-        shell: powershell
-        run: .\scripts\windows_scheduler_native_smoke.ps1
       - name: Synthetic local backup, new-destination restore and legacy upgrade
         run: python -m pytest -q -ra tests/test_library_recovery.py tests/test_migration.py
       - name: Install pinned DOM test dependencies
