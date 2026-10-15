@@ -32,17 +32,15 @@ Reopen for a reproduced workflow/data-loss defect. Live venue access remains clo
 
 Source recovery and additive legacy upgrade are implemented and covered by synthetic tests. Actual [Ubuntu/Windows extracted setup-wheel recovery checks](https://github.com/Light-Danube/LitRadar/actions/runs/38744388702) succeeded at implementation head `a9c64fb2`, closing the package evidence gap through `scripts/built_wheel_smoke.py`. [Current candidate evidence](docs/LOCAL-1.0-RELEASE-CHECKLIST.md) records executed results and pending CI separately. No personal data or live services are used.
 
-## Gate 3 — Windows-first install, launch and normal use (P0)
+## Gate 3 — Windows-first install, launch and normal use (P0): complete for this candidate
 
 - [x] Clean Windows Python 3.12 installed-wheel smoke verifies CLI, bundled assets and local edit/restart persistence; the setup ZIP follows the same CI path. [Actual runs and limits](docs/WINDOWS-WORKSPACE-SMOKE.md).
 - [x] Windows daily use accepted by the user on 2026-10-15; detailed task/platform versions were not supplied. Synthetic API/DOM/native Chrome checks remain the separate automated evidence; this is not an invented per-task manual smoke transcript.
-- [ ] Verify jobs and optional Telegram do not start duplicate listeners on the same token; disable/remove schedule flows work. Require no Telegram credentials for normal offline use.
+- [x] Stable scheduler task names/IgnoreNew, repeated install/status/per-job and all removal, explicit disabled guards/failures and selected paths verified by Windows fake/native unique-task checks. Optional Telegram duplicate-polling conflicts stop on 409; prompt idle/menu/retry Ctrl+C and normal offline use require no live Telegram credentials. [Lifecycle evidence and limits](docs/GATE3-LIFECYCLE.md). No cross-machine ownership lock or timed live delivery is claimed.
 
 - [x] Synthetic 403/404/429/503/timeout/offline provider failures preserve stored library/evidence state and partial success; subsequent local workspace read/edit/export/reopen works. Actual Windows targeted checks succeeded at `3dfe583e`. [Evidence and limits](docs/GATE3-PROVIDER-FAILURES.md); no live provider availability claim.
 
-The provider/diagnostics increments are merged. Current [Gate 3 lifecycle closure candidate](docs/GATE3-LIFECYCLE.md) verifies scheduler install/status/remove/disable, selected paths, duplicate-task settings and reproduced Telegram shutdown delays. Local fixes are implemented; actual Windows/native scheduler and final candidate checks are pending. No gate/release approval is inferred from authored tests alone.
-
-**Done when:** exact Windows environment and reproducible manual/automated results are recorded in docs/WINDOWS-WORKSPACE-SMOKE.md or a release-check file. Linux-only checks do not satisfy this gate.
+Gate 3 is complete for the bounded candidate: actual Windows 37-test lifecycle/interface evidence at `845a6255` and native/fault-injection PowerShell checks at `6ed0fc8d`, with unchanged runtime code between them. [Closure record](docs/GATE3-LIFECYCLE.md) separates synthetic/native registration from user-reported daily use and live/timed behavior. Final documentation-head checks are tracked in PR #29; reopen for a reproduced normal-use/data-loss defect. Release/version approval remains Gate 6.
 
 ## Gate 4 — Safe local operating boundary (P0)
 

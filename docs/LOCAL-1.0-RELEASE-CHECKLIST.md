@@ -4,9 +4,8 @@ Baseline main `20225a8e` (merged PR #28). Version stays **0.8.0**; no merge/tag/
 
 - **Gate 1: closed.** [Archived feature inventory and closure evidence](archive/gate1/release-checklist-2026-10-15.md). Windows daily use and optional Narrator were accepted by the user; automated results remain separate.
 - **Gate 2: complete for this candidate.** Read-only SQLite backup, new-destination restore, elected artifacts/checksums and legacy upgrade are tested. Actual [Ubuntu/Windows extracted setup-wheel recovery checks](https://github.com/Light-Danube/LitRadar/actions/runs/38744388702) passed at implementation head `a9c64fb2`; no personal data or services were used.
-- **Gate 3: scheduler lifecycle remains open.** Scheduler/optional Telegram duplicate-listener and disable/remove verification remains. Provider timeout/429/offline failure preservation and continued local-workspace use passed synthetic Windows checks at `3dfe583e`; daily-use acceptance and clean package installation are recorded.
-- Gate 3 current increment: [Telegram conflicts and safe listener diagnostics](GATE3-TELEGRAM-DIAGNOSTICS.md), with [operator troubleshooting](TELEGRAM-TROUBLESHOOTING.md). Scheduler and full provider-failure gates remain open.
-- Gate 3 next increment: [safe provider failures and local-workspace preservation](GATE3-PROVIDER-FAILURES.md); [shared ignored log location](LOGGING.md). Actual Windows targeted and Ubuntu/Windows package checks passed at `3dfe583e`; final documentation-head checks are tracked in PR #28. Scheduler verification remains open.
+- **Gate 3: complete for this candidate.** Clean package/daily-use/provider-preservation evidence plus Windows lifecycle/interface and native scheduler registration/remove checks. [Closure and limits](GATE3-LIFECYCLE.md). Final PR #29 head checks remain separate; no timed live delivery, universal listener lock or instant cancellation of arbitrary active commands is claimed.
+
 - Gates 4–6 remain governed by [ROADMAP](../ROADMAP.md), including focused safety checks and final release approval.
 
 ## This small Draft PR
@@ -25,4 +24,4 @@ The recovery implementation remains bounded; no new subsystem, destructive migra
 - Documentation link/anchor scan: **221 targets resolved**; `python -m py_compile scripts/built_wheel_smoke.py` and `git diff --check` passed.
 - Actual [Ubuntu/Windows installed-wheel CI](https://github.com/Light-Danube/LitRadar/actions/runs/38744388702) **succeeded** at implementation head `a9c64fb2`. Both job logs report the recovery round-trip and general CLI/assets/web/edit/restart smoke passed; reviewable setup ZIP artifacts uploaded. This closes Gate 2 package evidence. Final head `430ffcf0` had 20/20 successful checks before PR #26 was merged. This is not release approval.
 
-Current candidate: [Gate 3 lifecycle closure](GATE3-LIFECYCLE.md), covering scheduler false-success/selected-path fixes and prompt Telegram idle shutdown. Final full suite, Windows console and native scheduler evidence are pending; Gate 3 stays open until observed.
+Current candidate: [Gate 3 lifecycle closure](GATE3-LIFECYCLE.md). Actual Windows 37-test shutdown/interface checks and PowerShell native/failure contracts passed, along with local 693 Python / 38 JS checks. Consult Draft PR #29 for final documentation-head CI status.

@@ -1,6 +1,6 @@
-# Gate 3 lifecycle closure candidate
+# Gate 3 lifecycle closure
 
-Baseline main `20225a8e` (merged #28). [Draft PR #29](https://github.com/Light-Danube/LitRadar/pull/29) opened before subagent delegation. Version remains 0.8.0. Gate 3 closure requires actual Windows candidate results, not just authored tests.
+Baseline main `20225a8e` (merged #28). [Draft PR #29](https://github.com/Light-Danube/LitRadar/pull/29) opened before subagent delegation. Version remains 0.8.0. Gate 3 is complete for this bounded local-only candidate, using the executed evidence below. Final documentation-head CI remains tracked in PR #29; this is not release/version approval.
 
 ## Implemented fixes
 
@@ -17,11 +17,11 @@ Baseline main `20225a8e` (merged #28). [Draft PR #29](https://github.com/Light-D
 - `npm ci --prefix tests/web --ignore-scripts` (scratch cache), then `npm test --prefix tests/web`: **38 passed, 0 failed, 0 skipped**.
 - Fresh extracted setup wheel installed in an isolated venv, then `scripts/built_wheel_smoke.py` outside checkout: **passed on Linux**, covering CLI/assets/web/log location/recovery. Python syntax, local documentation paths/anchors, whitespace and no-tracked-logs checks passed.
 
-## Windows acceptance still pending
+## Actual Windows acceptance
 
-- `tests/test_telegram_shutdown.py` creates a child console and delivers actual Ctrl+C on Windows, isolated from pytest's console. Fake credentials and a loopback server only.
-- `scripts/windows_scheduler_smoke.ps1` executes the production helper against JSON-backed fake cmdlets to cover absent tasks, repeated install/remove, per-job isolation, denied queries/removal/registration and selected paths.
-- `scripts/windows_scheduler_native_smoke.ps1` is restricted to ephemeral GitHub-hosted Windows. It copies the helper, replaces exactly two task-name literals with generated UUID names, registers no-op actions, disables/checks/removes only those tasks, and cleans up in `finally`. It verifies native registration/settings/status/removal, not timed execution or live delivery. No default/personal tasks are touched.
-- Linux has no PowerShell here. Neither harness is claimed passed until its actual Windows run succeeds. Required candidate package and regression checks also remain pending.
+- Actual [Windows lifecycle/interface step](https://github.com/Light-Danube/LitRadar/actions/runs/38799700853/job/116645218528) passed **37 tests, zero failures/skips** at runtime implementation head `845a6255`, including a child console delivering real Ctrl+C, pending-interrupt/blocked-loopback cases, scheduler failure guards and selected-path interfaces. Later changes are PowerShell-harness/workflow corrections; runtime code is unchanged. Fake credentials and loopback only.
+- Actual [Windows PowerShell 5.1 scheduler checks](https://github.com/Light-Danube/LitRadar/actions/runs/38800665436/job/116648524877) succeeded at `6ed0fc8d`. The isolated harness executes the production helper against JSON-backed fake cmdlets for absent tasks, repeat install/remove, per-job isolation, denied query/removal/registration and selected paths. Child-process state is isolated, and collections retain array shape in PowerShell 5.1.
+- The native harness in that same actual successful Windows run is restricted to ephemeral GitHub-hosted Windows. It copies the helper, replaces exactly two task-name literals with generated UUID names, registers no-op actions, disables/checks/removes only those tasks, and cleans up in `finally`. It verifies native registration/settings/status/removal, not timed execution or live delivery. No default/personal tasks are touched.
+- PowerShell was unavailable locally; the above passing claims come from actual Windows steps. The enclosing recovery/browser workflow and final documentation-head checks were still running when recorded. Consult PR #29 for final status rather than inferring a full candidate pass from targeted steps.
 
-Gates 1–2 and provider-failure evidence remain complete. Gate 3 stays open until the above candidate checks succeed. No personal database, `.env`, token, live Telegram/provider request, major feature, merge, version bump, tag or release.
+Gates 1–3 are complete for this candidate within the stated synthetic/native-registration limits. Gates 4–6, final release approval/versioning and any reproduced new defect remain separate. No personal database, `.env`, token, live Telegram/provider request, major feature, merge, version bump, tag or release.
