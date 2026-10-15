@@ -2,7 +2,7 @@
 
 [Back to the project overview](../README.md). This guide holds detailed setup, configuration, workflow and maintenance instructions.
 
-The released version is **0.8.0**. Changes on the development branch remain **unreleased** until the documented gates and an approved release are complete. See [release history](../CHANGELOG.md), [patch progress](V08-PATCH-PROGRESS.md) and [venue delivery validation](research/delivery-validation.md) for evidence and limitations.
+The released version is **0.8.0**. Changes on the development branch remain **unreleased** until the documented gates and an approved release are complete. See the [active release checklist](LOCAL-1.0-RELEASE-CHECKLIST.md), [release history](../CHANGELOG.md) and [archived Gate 1 evidence](archive/gate1/README.md).
 
 ## Find a workflow
 
@@ -20,12 +20,12 @@ The released version is **0.8.0**. Changes on the development branch remain **un
 
 The graph now settles overlapping nodes/labels, supports ordinary mouse-click selection and groups exports in a keyboard-accessible menu. Optional local semantic edges/clusters are **off by default**: install `requirements-semantic.txt`, configure `LITBEACON_SEMANTIC_WORKSPACE=1` and an existing local model directory via `LITBEACON_EMBEDDING_MODEL_PATH`, then explicitly select the mode in the graph/groups UI. No model is downloaded automatically. [Semantic limits/evaluation](SEMANTIC-WORKSPACE.md).
 
-[Patch progress](V08-PATCH-PROGRESS.md) records smoke tests and pending native Windows/neural-model evidence. The conditional 0.8.5 version bump remains pending these gates; the current release version is unchanged.
+[Historical patch progress](archive/gate1/V08-PATCH-PROGRESS.md) preserves the original development checks and pending wording. Current release gates are in the [active checklist](LOCAL-1.0-RELEASE-CHECKLIST.md); no release-version change is implied.
 
 
-The [Beacon Blue refinement](ux-research/brand-beacon.md) adds a reader-robot/beacon mark and aligns the palettes with the Telegram identity: navy, blue, cyan and restrained gold.
+The [Beacon Blue refinement](archive/gate1/ux-research/brand-beacon.md) adds a reader-robot/beacon mark and aligns the palettes with the Telegram identity: navy, blue, cyan and restrained gold.
 
-Quiet Research Phase 1 adds a shared light/dark palette, responsive shell, clearer typography and keyboard focus. **Appearance** offers System, Light and Dark; the preference is stored locally and theme changes preserve open editors and graph state. English and Ukrainian remain available. See [implementation and verification notes](ux-research/phase-1.md). The user accepted the current WebUI on 2026-10-14; automated browser and accessibility audits remain separate gates.
+Quiet Research Phase 1 adds a shared light/dark palette, responsive shell, clearer typography and keyboard focus. **Appearance** offers System, Light and Dark; the preference is stored locally and theme changes preserve open editors and graph state. English and Ukrainian remain available. See [implementation and verification notes](archive/gate1/ux-research/phase-1.md). The user accepted the current WebUI on 2026-10-14; automated browser and accessibility audits remain separate gates.
 
 The citation map now supports pan by dragging the background, bounded zoom controls, relation/provider filters, and depth 1–2. Select a node with a click, Enter, or Space to inspect references, incoming citations, related works, and each edge's provider/timestamp. Open its paper or explicitly explore its neighborhood from the selection panel. Citation arrows point from citing paper to cited paper; related links are dashed and undirected. Multiple provider observations share one displayed edge without losing provenance.
 
@@ -473,9 +473,9 @@ GitHub Actions contains core, Textual UI, and browser-workspace test jobs. The w
 
 ## Roadmap
 
-The [UI/UX research](ux-research/README.md) includes a standalone concept, the 48-item feature-preservation checklist, and an incremental plan. [Phase 1](ux-research/phase-1.md) implements the theme and responsive shell foundation. [The public-source competitor review](ux-research/live-review-2026-10-13.md) now uses accessible official pages; hands-on competitor, browser and participant validation remain open.
+The archived [UI/UX research](archive/gate1/ux-research/README.md) includes a standalone concept, the 48-item feature-preservation checklist, and an incremental plan. [Phase 1](archive/gate1/ux-research/phase-1.md) implements the theme and responsive shell foundation. [The public-source competitor review](archive/gate1/ux-research/live-review-2026-10-13.md) now uses accessible official pages; its original hands-on competitor, browser and participant limitations remain recorded separately from later user acceptance and CI evidence.
 
-Release status and remaining work are maintained in [`ROADMAP.md`](../ROADMAP.md) and [patch progress](V08-PATCH-PROGRESS.md). Implemented graph controls and optional semantic modes should not be read as completed Windows or real-model evaluation gates.
+Release status and remaining work are maintained in [`ROADMAP.md`](../ROADMAP.md) and the [active checklist](LOCAL-1.0-RELEASE-CHECKLIST.md). The [Gate 1 archive](archive/gate1/README.md) holds completed feature history and design proposals. Optional semantic exploration remains experimental; historical real-model evaluation limits do not introduce a new release blocker.
 
 ## Changelog
 
@@ -572,7 +572,7 @@ Install only the web dependencies manually with `python -m pip install -r requir
 
 ### Brand name note
 
-The user-facing product name is now LitBeacon Research Workspace. Internal paths and configuration prefixes retain `LitRadar` until a dedicated compatibility migration is warranted. See [the brand reference](ux-research/brand-beacon.md) for the current visual identity.
+The user-facing product name is now LitBeacon Research Workspace. Internal paths and configuration prefixes retain `LitRadar` until a dedicated compatibility migration is warranted. See [the brand reference](archive/gate1/ux-research/brand-beacon.md) for the current visual identity.
 
 ## Docker (local browser workspace)
 
@@ -582,7 +582,7 @@ LitBeacon also supports a local-only Docker Compose deployment for the browser w
 
 For security-conscious development, the repo includes an opt-in **offline Docker test runner**: `docker compose -f compose.isolated-dev.yaml run --build --rm dev`. It runs without network, bind mounts, host secrets, or privileged access. This protects the **test process**; it does not sandbox Codex itself or the Docker daemon. Run Codex CLI inside a dedicated Linux VM without Windows shared folders, or use Codex Cloud with narrowly scoped GitHub access. See [docs/ISOLATED-DEV.md](ISOLATED-DEV.md) for the threat model, safeguards and limitations.
 
-The dev image uses lightweight core/web CI dependencies, disposable CLI fixtures, and a writable pytest cache under `/tmp`. Optional Textual/Node checks remain covered by the regular CI jobs. The `Isolated Docker tests` workflow builds and runs the restricted image on PRs. See [the Docker audit](DOCKER-AUDIT.md) for executed checks and outstanding production-image/remote-CI gates.
+The dev image uses lightweight core/web CI dependencies, disposable CLI fixtures, and a writable pytest cache under `/tmp`. Optional Textual/Node checks remain covered by the regular CI jobs. The `Isolated Docker tests` workflow builds and runs the restricted image on PRs. See [the Docker audit](archive/gate1/DOCKER-AUDIT.md) for executed checks and outstanding production-image/remote-CI gates.
 
 ## Wheel installation
 

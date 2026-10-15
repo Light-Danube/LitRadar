@@ -20,7 +20,7 @@ Updated 2026-10-15; package-setup baseline main [`1d1a2ca6`](https://github.com/
 
 | Existing workflow | Implementation / exercised tests | Evidence boundary |
 | --- | --- | --- |
-| Overview, Literature, Graph, Clusters, Jobs, Research | workspace API tests; shell/workflows/research DOM suites; [48 preservation contracts](../../ux-research/feature-parity.md) | Synthetic data; native Windows subset |
+| Overview, Literature, Graph, Clusters, Jobs, Research | workspace API tests; shell/workflows/research DOM suites; [48 preservation contracts](ux-research/feature-parity.md) | Synthetic data; native Windows subset |
 | Notes/tags/status, feedback, exports and offline bundles | storage, sorting/tags, bibliography/offline and CLI tests | No personal library/PDF access |
 | Citation direction/provenance/filtering, gestures and exports | mixed-provider Python and graph JS suites | No scientific-quality/novelty claim |
 | EN/UK web/TUI, themes, drafts and worker recovery | shell/research/UI workflow/localization suites | User acceptance separate from automation |
@@ -41,7 +41,7 @@ Candidate local Linux/Python 3.12.14: `python -m pytest -q -ra` **518 passed / 0
 | [Baseline clean wheel install](https://github.com/Light-Danube/LitRadar/actions/runs/38656486258) | Ubuntu and Windows succeeded: CLI/version/defaults/static assets, synthetic web edit/restart and custom database outside the checkout. |
 | [Windows recovery/API/DOM/native Chrome](https://github.com/Light-Danube/LitRadar/actions/runs/38651164554) | Recovery+legacy upgrade 49 passed / 1 case-insensitive-filesystem skip; API 129 / 1 POSIX-permission skip; Node 38/0/0; four sandboxed EN/UK desktop/narrow scenarios passed. |
 | [Baseline isolated Docker](https://github.com/Light-Danube/LitRadar/actions/runs/38656486269) | 470 passed / 31 explained optional Textual/parser/Node skips. |
-| Live venue lookup | Explicit adapter probe encountered cloud proxy tunnel 403 before OpenAlex. [Procedure and evidence](../../research/venue-verification.md); user-reported CLI success stays separate. Further live-provider verification is an environment limitation, not a hidden automated pass or a known universal provider outage. |
+| Live venue lookup | Explicit adapter probe encountered cloud proxy tunnel 403 before OpenAlex. [Procedure and evidence](research/venue-verification.md); user-reported CLI success stays separate. Further live-provider verification is an environment limitation, not a hidden automated pass or a known universal provider outage. |
 | Human acceptance | WebUI accepted 2026-10-14; Windows daily use and optional Narrator accepted 2026-10-15. Broader reader/participant studies and certification are not implied. |
 
 The original Gate 1 wheel-import failure and early Docker/PR-check failures are historical: merged fixes and later executed runs supersede them. New failures must be assessed at their actual commit, not inferred from stale handoff text.

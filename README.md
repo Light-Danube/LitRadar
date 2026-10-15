@@ -8,9 +8,9 @@ The project was formerly **LitRadar**. Existing module names, database paths, `L
 
 **Released: v0.8.0** — local browser workspace, citation map, heuristic literature clusters, editable annotations and scheduled-job controls.
 
-**Unreleased:** graph and annotation refinements, optional local semantic exploration, and venue discovery/evidence worksheets in the CLI and Research browser section. The release version stays 0.8.0 while validation gates remain open. See [CHANGELOG](CHANGELOG.md), [patch progress](docs/V08-PATCH-PROGRESS.md) and [venue delivery checks](docs/research/delivery-validation.md).
+**Unreleased:** graph and annotation refinements, optional local semantic exploration, and venue discovery/evidence worksheets in the CLI and Research browser section. The release version stays 0.8.0 while validation gates remain open. See [CHANGELOG](CHANGELOG.md) and the [Gate 1 history archive](docs/archive/gate1/README.md).
 
-Feature development is frozen for local-only 1.0. The [Gate 1 release checklist](docs/LOCAL-1.0-RELEASE-CHECKLIST.md) records executed regressions, CI evidence and packaging/recovery blockers.
+Feature development is frozen for local-only 1.0. Gate 1 is complete; the [active release checklist](docs/LOCAL-1.0-RELEASE-CHECKLIST.md) tracks recovery verification and the remaining release gates.
 
 ## Quick start
 
@@ -86,7 +86,7 @@ python cli.py venue search SOURCE_ID "emotion context" --year-from 2023 --year-t
 
 Replace `SOURCE_ID` with the returned `S` + digits identifier. Searches use structured source/year filters and bounded pages. Returned paper IDs appear in the Literature inbox. The **Research** section provides venue search, editable evidence and quick-topic templates; [browser workflow and saved results](docs/research/web-workspace.md).
 
-[Independent venue verification](docs/research/venue-verification.md) records transport/integrity tests and a repeatable public probe. The current cloud probe was blocked by proxy 403; live verification stays pending.
+[Independent venue verification](docs/archive/gate1/research/venue-verification.md) records transport/integrity tests and a repeatable public probe. The current cloud probe was blocked by proxy 403; live verification stays pending.
 
 ```sh
 python cli.py evidence show PAPER_ID
@@ -104,8 +104,8 @@ Discovery indexes, preprints, venue metadata and citations do not certify peer r
 ## Documentation
 
 - [User guide and configuration](docs/USER-GUIDE.md) · [environment template](.env.example)
-- [Краткий CLI-сценарий (RU)](docs/research/cli-workflow-ru.md) · [Venue discovery and evidence](docs/research/venue-discovery.md) · [literature comparison and verification limits](docs/research/erc-context-novelty-matrix-2026.md)
+- [Краткий CLI-сценарий (RU)](docs/research/cli-workflow-ru.md) · [Venue discovery and evidence](docs/research/venue-discovery.md) · [literature comparison and verification limits](docs/archive/gate1/research/erc-context-novelty-matrix-2026.md)
 - [Annotations and recovery](docs/V08-ANNOTATION-WORKFLOWS.md) · [semantic exploration](docs/SEMANTIC-WORKSPACE.md)
 - [Docker deployment](DOCKER.md) · [isolated development](docs/ISOLATED-DEV.md)
 - [Development and CI](docs/USER-GUIDE.md#development-and-ci) · [agent rules](AGENTS.md) · [handoff](CODEX-HANDOFF.md)
-- [Roadmap](ROADMAP.md) · [changelog](CHANGELOG.md) · [UI/UX research](docs/ux-research/README.md) · [branding](docs/ux-research/brand-beacon.md)
+- [Roadmap](ROADMAP.md) · [changelog](CHANGELOG.md) · [Gate 1 design, research and validation archive](docs/archive/gate1/README.md)

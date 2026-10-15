@@ -39,7 +39,7 @@
 - `web/static/graph-tools.js`: layout та SVG/GraphML export.
 - `workspace_web.py`, `web/annotation_actions.py`: контракти API, валідація, provenance, обмеження.
 - `tests/test_workspace_web.py`, `tests/test_workspace_v08.py`, `tests/test_annotation_provenance.py`, `tests/test_web_frontend.cjs`: наявне функціональне покриття.
-- `docs/screenshots/workspace-uk-graph.png`, `citation-map-provenance.png`, `annotation-provenance.png`: історичні ілюстрації наявного інтерфейсу; не нові скриншоти й не повна перевірка актуального рендерингу.
+- `docs/archive/gate1/screenshots/workspace-uk-graph.png`, `citation-map-provenance.png`, `annotation-provenance.png`: історичні ілюстрації наявного інтерфейсу; не нові скриншоти й не повна перевірка актуального рендерингу.
 
 ## Протокол завершення конкурентного дослідження
 
