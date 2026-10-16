@@ -1,6 +1,14 @@
 # Codex handoff — local-only LitBeacon 1.0
 
-## Current increment — Gate 4 Research result paths
+## Current increment — Gate 4 upload and restore path acceptance
+
+- Branch `codex/gate4-import-paths`, baseline main `8ca709e7` (merged #31), Draft PR #32 opened before delegation. Independent subagents own upload and restore regression files; root owns review, integration and documentation. Scope: uploaded bytes versus untrusted filename/reference labels, rejected linked restore inputs/destinations, outside-fixture preservation and no partial restore publication.
+- [Executed checks, scope and limits](docs/GATE4-IMPORT-RESTORE-PATHS.md). No general filesystem framework, hostile-local-process race-proofing or complete security audit is claimed. Continue in roadmap order with SQLite/manual-data preservation, then network-use documentation after this path item.
+- Executed Linux Python 3.12: **723 Python / 38 JavaScript passed**, zero failures/skips, one existing Starlette warning. New upload/restore tests: **10 passed**; existing path-related subset: **132 passed**. Syntax, 130 local documentation targets/anchors, whitespace and no-tracked-logs checks passed. No runtime defect was reproduced; this PR changes tests/docs only and closes Gate 4's bounded filesystem item.
+- Hosted Actions remain deferred by explicit user instruction because account billing prevents jobs starting. No retries/monitoring or new Windows/CI pass claim. New application file logging, if any, belongs under ignored shared `log/`; generated scratch output is not committed.
+- Version remains 0.8.0. No personal database, `.env`, credentials/model-cache access, major feature, merge, version bump, tag or release.
+
+## Previous increment — Gate 4 Research result paths (merged)
 
 - Branch `codex/gate4-research-paths`, baseline main `4dce7638` (merged #30), Draft PR #31 opened before delegation. A disposable baseline probe reproduced download acceptance of a hard-linked result referring outside the Research root. Fix and independent regression tests use separate subagents; integration/documentation stays with the root agent.
 - Scope: existing Research result paths, linked artifact/manifest files, Windows reparse paths, listing and allowlisted downloads. No general filesystem framework or complete security audit. [Reproduction, executed local checks and limits](docs/GATE4-RESEARCH-PATHS.md). Upload/restore safeguards, SQLite preservation and network-use documentation remain later Gate 4 slices.

@@ -10,7 +10,7 @@ The project was formerly **LitRadar**. Existing module names, database paths, `L
 
 **Unreleased:** graph and annotation refinements, optional local semantic exploration, and venue discovery/evidence worksheets in the CLI and Research browser section. The release version stays 0.8.0 while validation gates remain open. See [CHANGELOG](CHANGELOG.md) and the [Gate 1 history archive](docs/archive/gate1/README.md).
 
-Feature development is frozen for local-only 1.0. Gates 1–3 are complete for the current candidate; Gate 4 covers [local web launch](docs/GATE4-LOCAL-BOUNDARY.md) and [Research file safeguards](docs/GATE4-RESEARCH-PATHS.md). The [active release checklist](docs/LOCAL-1.0-RELEASE-CHECKLIST.md) tracks remaining work; hosted Actions are deferred by user choice while account billing blocks job startup.
+Feature development is frozen for local-only 1.0. Gates 1–3 are complete for the current candidate; Gate 4 covers [local web launch](docs/GATE4-LOCAL-BOUNDARY.md), [Research files](docs/GATE4-RESEARCH-PATHS.md) and [upload/restore paths](docs/GATE4-IMPORT-RESTORE-PATHS.md). The [active release checklist](docs/LOCAL-1.0-RELEASE-CHECKLIST.md) tracks remaining work; hosted Actions are deferred by user choice while account billing blocks job startup.
 
 ## Quick start
 
