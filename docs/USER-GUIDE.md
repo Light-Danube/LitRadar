@@ -433,6 +433,8 @@ Do not commit API keys, the SQLite database, or your offline corpus.
 
 ## Development and CI
 
+[Network-use reference](NETWORK-USE.md) lists which searches, scheduled jobs, Telegram actions, downloads and optional inference contact services and what they send. Local library storage does not make every optional workflow offline. Legacy CLI/TUI semantic ranking loads only a pre-provisioned local/cached model; set the profile's `embedding_model` to a trusted local model directory or use `--no-semantic` for CLI keyword scoring. Missing models fall back to keywords without downloading weights. The optional web semantic workspace has its separate, stricter local-path/safetensors setup.
+
 Run:
 
 ```bash
@@ -486,7 +488,7 @@ See [`CHANGELOG.md`](../CHANGELOG.md) for the release history.
 
 ### Edit your scheduled topics
 
-Edit `digest_config.json`. It contains three example queries tailored to the current research profile. Each query can specify `name`, `query`, `sources`, and `per_source`. Keep limits modest at first; the example requests at most 20 results per source/query. `scan.semantic` defaults to `false`, which keeps background jobs lightweight and avoids first-run model downloads. Set it to `true` only if semantic dependencies/model availability are acceptable for scheduled runs.
+Edit `digest_config.json`. It contains three example queries tailored to the current research profile. Each query can specify `name`, `query`, `sources`, and `per_source`. Keep limits modest at first; the example requests at most 20 results per source/query. `scan.semantic` defaults to `false`, keeping background jobs lightweight. Enable it only after installing semantic dependencies and explicitly provisioning a trusted local/cached model; missing weights are never downloaded by the scorer, and ranking falls back to keywords.
 
 ### Run a scan or preview a digest manually
 
