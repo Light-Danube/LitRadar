@@ -1,6 +1,14 @@
 # Codex handoff — local-only LitBeacon 1.0
 
-## Current increment — Gate 4 loopback launch boundary
+## Current increment — Gate 4 Research result paths
+
+- Branch `codex/gate4-research-paths`, baseline main `4dce7638` (merged #30), Draft PR #31 opened before delegation. A disposable baseline probe reproduced download acceptance of a hard-linked result referring outside the Research root. Fix and independent regression tests use separate subagents; integration/documentation stays with the root agent.
+- Scope: existing Research result paths, linked artifact/manifest files, Windows reparse paths, listing and allowlisted downloads. No general filesystem framework or complete security audit. [Reproduction, executed local checks and limits](docs/GATE4-RESEARCH-PATHS.md). Upload/restore safeguards, SQLite preservation and network-use documentation remain later Gate 4 slices.
+- Continue local verification only: the user explicitly deferred hosted Actions because account billing blocks jobs starting. Do not retry/monitor CI, change workflows/billing/security, or infer a Windows pass from Linux/simulated stat checks. Application file logs stay under ignored shared `log/`; no generated logs are committed.
+- Executed candidate: **713 Python / 38 JavaScript passed**, zero failures/skips, one existing Starlette warning. New independent regressions: **11 passed**; existing Research files/API/CLI subset: **74 passed**. Python syntax, 124 local documentation targets/anchors, whitespace and no-tracked-logs checks passed. Windows reparse behavior uses a stat-flag simulation; no native Windows pass.
+- Version stays 0.8.0. No personal database, `.env`, tokens/model-cache access, major feature, merge, version bump, tag or release.
+
+## Previous increment — Gate 4 loopback launch boundary (merged)
 
 - Branch `codex/gate4-loopback`, baseline main `bc9cbde7` (merged #29), Draft PR #30 opened before independent subagent review. Tests/documentation only: default/explicit CLI loopback, external-bind rejection, selected port/database/browser behavior, `UVICORN_HOST` override resistance and real disposable loopback listener; strengthen the static Compose publication contract.
 - Main and passing PR #29 head have identical trees. Post-merge checks stopped before any steps; the user supplied the GitHub annotation confirming failed payments/spending-limit startup blocking. One retry reproduced it. The user explicitly authorized continuing with local checks and deferring hosted Actions. Do not rerun/monitor Actions, alter billing/security/workflows, or claim a new CI/Windows pass.

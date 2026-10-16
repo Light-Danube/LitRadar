@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased — Gate 4 Research result path safeguards
+
+- Reject hard-linked/non-regular Research result and manifest files, plus symlinks and Windows reparse paths before listing/downloading. Preserve normal bundle creation, selected result roots, immutable exports and bounded downloads. [Reproduction, local evidence and limits](docs/GATE4-RESEARCH-PATHS.md).
+- Keep Gate 4 open for upload/restore path checks, SQLite preservation and network-use documentation. Hosted Actions remain deferred by explicit user instruction; no new Windows/CI pass, personal data, merge, version bump or release.
+
 ## Unreleased — Gate 4 local web launch verification
 
 - Add loopback/default-port-selection and external-bind rejection regressions, including a real CLI listener on an ephemeral port with a disposable library. Check that `UVICORN_HOST` does not override the CLI and that Compose has only its expected host-loopback publication, without host networking. No application behavior or version change.
