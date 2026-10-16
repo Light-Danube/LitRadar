@@ -1,6 +1,15 @@
 # Codex handoff — local-only LitBeacon 1.0
 
-## Current increment — Gate 4 upload and restore path acceptance
+## Current increment — Gate 4 integrity and network-use closure
+
+- Branch `codex/gate4-integrity-closure`, baseline main `402a9fd6` (merged #32), Draft PR #33 opened before delegation. Independent agents audit/test SQLite preservation and document network use; root fixes legacy semantic loading, integrates and verifies.
+- Reproduced contradictory identifier matching and cross-provider primary source/ID corruption; reject multi-owner metadata and preserve the canonical source/ID pair without merging rows or migrating schemas. Legacy semantic scoring previously allowed implicit weight downloads; load only local/cached weights with remote code disabled and retain keyword fallback.
+- [Candidate evidence and limits](docs/GATE4-INTEGRITY-CLOSURE.md), [network triggers/payloads](docs/NETWORK-USE.md). Do not infer live provider/model quality, existing-library repair, hostile filesystem race protection, new native Windows or complete security-audit evidence from these synthetic local checks.
+- Executed final Linux Python 3.12: **732 Python / 38 JavaScript passed**, zero failures/skips, one existing Starlette warning. Targeted provider/API/storage/semantic run: **67 passed**. Nine new integrity/offline-model cases plus existing regressions passed; two storage cases failed before the fix. Syntax, 180 local documentation targets/anchors, whitespace and no-tracked-logs checks passed. Gate 4 is complete for this bounded candidate.
+- Hosted Actions remain deferred by user instruction due billing job-start blocking. No retries/monitoring or workflow/billing/security changes. Application file logs stay in ignored shared `log/`; scratch output is uncommitted.
+- Version stays 0.8.0; no personal database, `.env`, credentials/model-cache access, major feature, merge, bump, tag or release. Remaining vertical gates are Gate 5 usability/keyboard evidence, then Gate 6 release approval/versioning.
+
+## Previous increment — Gate 4 upload and restore path acceptance (merged)
 
 - Branch `codex/gate4-import-paths`, baseline main `8ca709e7` (merged #31), Draft PR #32 opened before delegation. Independent subagents own upload and restore regression files; root owns review, integration and documentation. Scope: uploaded bytes versus untrusted filename/reference labels, rejected linked restore inputs/destinations, outside-fixture preservation and no partial restore publication.
 - [Executed checks, scope and limits](docs/GATE4-IMPORT-RESTORE-PATHS.md). No general filesystem framework, hostile-local-process race-proofing or complete security audit is claimed. Continue in roadmap order with SQLite/manual-data preservation, then network-use documentation after this path item.

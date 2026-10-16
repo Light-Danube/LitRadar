@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased — Gate 4 integrity and network-use closure
+
+- Reject metadata whose identifiers resolve to different canonical papers before mutation; retain the canonical provider/source-ID pair on cross-provider refresh. Preserve manual library/evidence data and transaction rollback, with disposable duplicate/conflict/malformed-row/write-lock regressions.
+- Make legacy semantic scoring load only existing local/cached weights with remote model code disabled; missing weights produce an actionable message and existing keyword fallback. Model provisioning is an explicit separate step. Document [network triggers and payloads](docs/NETWORK-USE.md) and [bounded Gate 4 evidence](docs/GATE4-INTEGRITY-CLOSURE.md). No major feature, personal data, merge, version bump or new Windows/CI pass.
+
 ## Unreleased — Gate 4 upload and restore path acceptance
 
 - Verify existing uploaded-byte annotation and new-destination restore safeguards with disposable fixtures, extending path/reference and rejection-preservation checks. [Executed results and scope](docs/GATE4-IMPORT-RESTORE-PATHS.md). No runtime defect was reproduced; application behavior and version are unchanged.

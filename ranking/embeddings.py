@@ -17,9 +17,8 @@ class TextEmbedder(Protocol):
 class SentenceTransformerEmbedder:
     """Lazy wrapper around sentence-transformers.
 
-    The model is loaded only when the embedder is instantiated, so importing
-    LitRadar does not require the heavyweight dependency until v0.2 semantic
-    scoring is actually requested.
+    Load an existing local/cached model only when scoring is requested.
+    Missing weights never trigger downloads; callers can fall back to keywords.
     """
 
     model_name: str = "all-MiniLM-L6-v2"
@@ -35,7 +34,15 @@ class SentenceTransformerEmbedder:
                     "Semantic scoring requires sentence-transformers. "
                     "Install it with: python -m pip install -r requirements.txt"
                 ) from exc
-            self._model = SentenceTransformer(self.model_name)
+            try:
+                self._model = SentenceTransformer(
+                    self.model_name, local_files_only=True, trust_remote_code=False,
+                )
+            except (OSError, ValueError) as exc:
+                raise RuntimeError(
+                    "Semantic model is not available locally. Provision it explicitly "
+                    "and select its local path, or use keyword scoring (--no-semantic)."
+                ) from exc
         return self._model
 
     def encode(self, texts: Sequence[str]) -> np.ndarray:

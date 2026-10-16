@@ -42,14 +42,16 @@ Source recovery and additive legacy upgrade are implemented and covered by synth
 
 Gate 3 is complete for the bounded candidate: actual Windows 37-test lifecycle/interface evidence at `845a6255` and native/fault-injection PowerShell checks at `6ed0fc8d`, with unchanged runtime code between them. [Closure record](docs/GATE3-LIFECYCLE.md) separates synthetic/native registration from user-reported daily use and live/timed behavior. Final documentation-head checks are tracked in PR #29; reopen for a reproduced normal-use/data-loss defect. Release/version approval remains Gate 6.
 
-## Gate 4 — Safe local operating boundary (P0)
+## Gate 4 — Safe local operating boundary (P0): complete for the bounded candidate
 
 - [x] Verify web binds only to 127.0.0.1 by default and is not represented as suitable for public/LAN exposure; no authentication/server deployment is introduced for 1.0. [Local launch checks and limits](docs/GATE4-LOCAL-BOUNDARY.md); Linux verification only, hosted Actions deferred because of the account billing blocker by user instruction.
 - [x] Verify path traversal, symlink, file-upload and export safeguards with synthetic fixtures; imports and restores must never follow arbitrary untrusted paths. [Research result/download checks](docs/GATE4-RESEARCH-PATHS.md) and [upload/restore acceptance](docs/GATE4-IMPORT-RESTORE-PATHS.md) provide bounded local evidence, including outside-fixture preservation and failure cleanup. Hosted Actions/native Windows remain deferred; these checks do not claim race-proofing against another local process or a complete security audit.
-- [ ] Verify SQLite changes, retryable failures, bad metadata and duplicate external identifiers do not discard manual notes/status/tags or overwrite research evidence.
-- [ ] Document clearly which operations use the network: OpenAlex, Semantic Scholar, arXiv, optional Unpaywall, Telegram and explicitly invoked cloud LLMs. No hidden model downloads or mandatory telemetry.
+- [x] Verify SQLite changes, retryable failures, bad metadata and duplicate external identifiers do not discard manual notes/status/tags or overwrite research evidence. [Disposable integrity checks and canonical-identity fixes](docs/GATE4-INTEGRITY-CLOSURE.md) include reopen, rollback and real SQLite lock/retry evidence.
+- [x] Document clearly which operations use the network: OpenAlex, Semantic Scholar, arXiv, optional Unpaywall, Telegram and explicitly invoked cloud LLMs. [Network-use reference](docs/NETWORK-USE.md); legacy model loading now uses local/cached weights only, with keyword fallback. No mandatory telemetry sender was found in the scoped application review.
 
 **Done when:** existing targeted security/regression tests pass and limitations are described accurately (not labeled as a complete security audit).
+
+[Gate 4 closure](docs/GATE4-INTEGRITY-CLOSURE.md) records bounded Linux evidence and limits. Hosted Actions/native Windows re-verification remain deferred by user instruction; this does not approve a release/version bump or certify hostile-local-process/parser security. Proceed vertically to Gate 5.
 
 ## Gate 5 — Local usability and accessibility evidence (P1; no scope expansion)
 

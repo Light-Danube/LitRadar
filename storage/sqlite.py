@@ -652,6 +652,7 @@ class PaperStore:
         return int(row["id"]) if row else None
 
     def _find_duplicate(self, paper: Paper) -> sqlite3.Row | None:
+        matched = None
         for identifier_type, identifier_value in self._identifiers_for_paper(paper):
             row = self.conn.execute(
                 "SELECT p.* FROM paper_identifiers i JOIN papers p ON p.id=i.paper_id "
@@ -659,10 +660,14 @@ class PaperStore:
                 (identifier_type, identifier_value),
             ).fetchone()
             if row:
+                if matched is not None and row["id"] != matched["id"]:
+                    raise ValueError("Conflicting identifiers refer to different existing papers")
                 incoming_doi = _clean_doi(paper.doi)
                 if incoming_doi and row["doi_normalized"] and incoming_doi != row["doi_normalized"]:
                     raise ValueError("Conflicting DOI for an existing provider identifier")
-                return row
+                matched = row
+        if matched is not None:
+            return matched
 
         doi = _clean_doi(paper.doi)
         if doi:
@@ -733,8 +738,11 @@ class PaperStore:
             url = paper.url or existing["url"]
             pdf_url = paper.pdf_url or existing["pdf_url"]
             doi = paper.doi or existing["doi"]
-            source_external_id = paper.external_id or existing["external_id"]
             source_name = existing["source"] or paper.source
+            # Keep the canonical provider/ID pair together. Other providers'
+            # IDs belong in provenance/aliases, not under this source's name.
+            source_external_id = ((paper.external_id or existing["external_id"])
+                                  if paper.source == source_name else existing["external_id"])
 
             self.conn.execute(
                 """
