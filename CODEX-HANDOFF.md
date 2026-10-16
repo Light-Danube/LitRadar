@@ -1,5 +1,15 @@
 # Codex handoff — local-only LitBeacon 1.0
 
+## Current increment — Gate 4 loopback launch boundary
+
+- Branch `codex/gate4-loopback`, baseline main `bc9cbde7` (merged #29), Draft PR #30 opened before independent subagent review. Tests/documentation only: default/explicit CLI loopback, external-bind rejection, selected port/database/browser behavior, `UVICORN_HOST` override resistance and real disposable loopback listener; strengthen the static Compose publication contract.
+- Main and passing PR #29 head have identical trees. Post-merge checks stopped before any steps; the user supplied the GitHub annotation confirming failed payments/spending-limit startup blocking. One retry reproduced it. The user explicitly authorized continuing with local checks and deferring hosted Actions. Do not rerun/monitor Actions, alter billing/security/workflows, or claim a new CI/Windows pass.
+- [Scope, executed local evidence and limitations](docs/GATE4-LOCAL-BOUNDARY.md). Remaining Gate 4 path/upload/export and SQLite preservation checks, then network-use documentation, are subsequent small PRs. No authentication/Origin/Host protection or public hosting is claimed; Docker's internal wildcard binding depends on Compose's host-loopback publication.
+- Executed Linux Python 3.12 candidate: **702 Python / 38 JavaScript passed**, zero failures/skips, one existing Starlette warning. Focused launch/Compose tests: **13 passed**. Syntax, 116 local documentation targets/anchors, whitespace and no-tracked-logs checks passed. No new Windows, Docker runtime, separate uvloop or hosted CI verification.
+- Version remains 0.8.0; no personal database, `.env`, credentials or model-cache access, merge, version bump, tag or release.
+
+## Previous increment — Gate 3 (merged)
+
 - Branch `codex/gate3-lifecycle`, baseline main `20225a8e` (merged #28). [Draft PR #29](https://github.com/Light-Danube/LitRadar/pull/29) opened before delegation. Gates 1–2 and provider-failure evidence are complete; Gate 3 is complete for this bounded candidate; final documentation-head CI is tracked in PR #29.
 - Fix reproduced delayed Telegram shutdown during idle polling/menu/retry waits using daemon transport-only workers and short main-thread waits. Only the main thread processes updates/offsets. No late result/log/file writes; active command cancellation and remote request rollback are not promised. Launcher pause is distinct from process exit.
 - Fix scheduler false-success/invalid-config behavior, atomically disable before OS cleanup, preserve selected data/config/profile paths across CLI/TUI/Telegram and keep stable task identity/IgnoreNew. Extend scheduled logs to shared `log/`; preserve historical `logs/` data and mount.

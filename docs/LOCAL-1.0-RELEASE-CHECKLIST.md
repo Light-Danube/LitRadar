@@ -1,22 +1,23 @@
 # LitBeacon 1.0 — active release checklist
 
-Baseline main `20225a8e` (merged PR #28). Version stays **0.8.0**; no merge/tag/release authorization is implied.
+Baseline main `bc9cbde7` (merged PR #29). Version stays **0.8.0**; no merge/tag/release authorization is implied.
 
 - **Gate 1: closed.** [Archived feature inventory and closure evidence](archive/gate1/release-checklist-2026-10-15.md). Windows daily use and optional Narrator were accepted by the user; automated results remain separate.
 - **Gate 2: complete for this candidate.** Read-only SQLite backup, new-destination restore, elected artifacts/checksums and legacy upgrade are tested. Actual [Ubuntu/Windows extracted setup-wheel recovery checks](https://github.com/Light-Danube/LitRadar/actions/runs/38744388702) passed at implementation head `a9c64fb2`; no personal data or services were used.
-- **Gate 3: complete for this candidate.** Clean package/daily-use/provider-preservation evidence plus Windows lifecycle/interface and native scheduler registration/remove checks. [Closure and limits](GATE3-LIFECYCLE.md). Final PR #29 head checks remain separate; no timed live delivery, universal listener lock or instant cancellation of arbitrary active commands is claimed.
+- **Gate 3: complete for this candidate.** Clean package/daily-use/provider-preservation evidence plus Windows lifecycle/interface and native scheduler registration/remove checks. [Closure and limits](GATE3-LIFECYCLE.md). PR #29 head `883b90e5` had 20/20 successful checks; no timed live delivery, universal listener lock or instant cancellation of arbitrary active commands is claimed.
+- **Gate 4: in progress.** [Local web launch boundary](GATE4-LOCAL-BOUNDARY.md) is verified locally. Path/upload/export, SQLite preservation and network-use checks remain open; no complete security audit or new Windows verification is claimed.
 
 - Gates 4–6 remain governed by [ROADMAP](../ROADMAP.md), including focused safety checks and final release approval.
 
-## This small Draft PR
+## Current small Draft PR #30
 
-1. Move completed Gate 1 audit/planning/validation history into `docs/archive/gate1/` and repair links; keep current setup/user/recovery instructions discoverable.
-2. Close the earliest remaining gap vertically: add an installed-wheel backup/new-destination restore round-trip to existing package smoke, using only disposable synthetic data and elected artifacts.
-3. Record actual candidate suite and Ubuntu/Windows results. Do not infer a package pass from source tests.
+1. Verify existing loopback CLI defaults, external-bind rejection, selected arguments and a real disposable web listener.
+2. Strengthen the static Compose host-port contract and document CLI/source-launcher/container boundary limitations.
+3. Execute local checks. Hosted Actions are deferred by explicit user instruction: the supplied GitHub annotation confirms account payment/spending-limit blocking before any job steps. Main's merge tree is identical to passing PR #29; this is not an executed-test failure. No further CI retries or billing/workflow changes.
 
-The recovery implementation remains bounded; no new subsystem, destructive migrations, personal database access, version bump or automatic merge. Gate 3 has more unchecked roadmap entries, but the final Gate 2 package evidence comes first. Next small PR: handle optional Telegram `getUpdates` HTTP 409 as a specific conflict and exit safely instead of retrying forever; use fake-API tests, preserve transient retries, Ctrl+C and stored offsets. Scheduler disable/remove and provider-failure workspace checks remain separate Gate 3 work.
+No new subsystem, personal database access, version bump or automatic merge. Next small slice: Gate 4 Research result path/symlink and export safeguards with disposable fixtures.
 
-## Candidate validation — 2026-10-15
+## Historical Gate 2 validation — 2026-10-15 (PR #26)
 
 - Linux Python 3.12: `PYTHONPATH=/workspace/LitRadar/work/test-deps python -m pytest -q -ra` — **518 passed, 0 failed, 0 skipped**; one existing Starlette deprecation warning.
 - `npm ci --prefix tests/web --ignore-scripts` (shared scratch cache), then `npm test --prefix tests/web` — **38 passed, 0 failed, 0 skipped**.
@@ -24,4 +25,4 @@ The recovery implementation remains bounded; no new subsystem, destructive migra
 - Documentation link/anchor scan: **221 targets resolved**; `python -m py_compile scripts/built_wheel_smoke.py` and `git diff --check` passed.
 - Actual [Ubuntu/Windows installed-wheel CI](https://github.com/Light-Danube/LitRadar/actions/runs/38744388702) **succeeded** at implementation head `a9c64fb2`. Both job logs report the recovery round-trip and general CLI/assets/web/edit/restart smoke passed; reviewable setup ZIP artifacts uploaded. This closes Gate 2 package evidence. Final head `430ffcf0` had 20/20 successful checks before PR #26 was merged. This is not release approval.
 
-Current candidate: [Gate 3 lifecycle closure](GATE3-LIFECYCLE.md). Actual Windows 37-test shutdown/interface checks and PowerShell native/failure contracts passed, along with local 693 Python / 38 JS checks. Consult Draft PR #29 for final documentation-head CI status.
+Previous candidate: [Gate 3 lifecycle closure](GATE3-LIFECYCLE.md). Actual Windows 37-test shutdown/interface checks and PowerShell native/failure contracts passed, along with local 693 Python / 38 JS checks. All 20 checks passed on final PR #29 head before merge. Current local-only increment results are recorded in [Gate 4 evidence](GATE4-LOCAL-BOUNDARY.md); hosted CI is deferred.

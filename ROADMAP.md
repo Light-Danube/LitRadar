@@ -44,7 +44,7 @@ Gate 3 is complete for the bounded candidate: actual Windows 37-test lifecycle/i
 
 ## Gate 4 — Safe local operating boundary (P0)
 
-- [ ] Verify web binds only to 127.0.0.1 by default and is not represented as suitable for public/LAN exposure; no authentication/server deployment is introduced for 1.0.
+- [x] Verify web binds only to 127.0.0.1 by default and is not represented as suitable for public/LAN exposure; no authentication/server deployment is introduced for 1.0. [Local launch checks and limits](docs/GATE4-LOCAL-BOUNDARY.md); Linux verification only, hosted Actions deferred because of the account billing blocker by user instruction.
 - [ ] Verify path traversal, symlink, file-upload and export safeguards with synthetic fixtures; imports and restores must never follow arbitrary untrusted paths.
 - [ ] Verify SQLite changes, retryable failures, bad metadata and duplicate external identifiers do not discard manual notes/status/tags or overwrite research evidence.
 - [ ] Document clearly which operations use the network: OpenAlex, Semantic Scholar, arXiv, optional Unpaywall, Telegram and explicitly invoked cloud LLMs. No hidden model downloads or mandatory telemetry.
