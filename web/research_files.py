@@ -6,6 +6,7 @@ import os
 from pathlib import Path
 import re
 import shutil
+import stat
 import tempfile
 import uuid
 
@@ -33,10 +34,29 @@ def _identifier(value):
 
 def _safe_tree(path):
     path = Path(path).absolute()
-    for part in (path, *path.parents):
-        if part.is_symlink():
-            raise FileValidationError('Symlink paths are not allowed')
+    # Check ancestors before looking up descendants, including NTFS junctions
+    # on Python 3.11 where Path.is_junction() is unavailable.
+    for part in (*reversed(path.parents), path):
+        try:
+            info = part.lstat()
+        except (FileNotFoundError, NotADirectoryError):
+            continue
+        if stat.S_ISLNK(info.st_mode) or (
+                getattr(info, 'st_file_attributes', 0)
+                & getattr(stat, 'FILE_ATTRIBUTE_REPARSE_POINT', 0x400)):
+            raise FileValidationError('Linked research paths are not allowed')
     return path
+
+
+def _artifact_info(path):
+    _safe_tree(path)
+    try:
+        info = path.lstat()
+    except (FileNotFoundError, NotADirectoryError):
+        raise FileNotFoundError('Research artifact not found') from None
+    if not stat.S_ISREG(info.st_mode) or info.st_nlink != 1:
+        raise FileValidationError('Research files must be regular, unlinked files')
+    return info
 
 
 class ResearchFiles:
@@ -77,11 +97,9 @@ class ResearchFiles:
         if filename not in ALLOWED_FILES:
             raise FileValidationError('Unsupported research filename')
         path = self.root / name / filename
-        _safe_tree(path)
-        if not path.is_file() or not (path.parent / 'manifest.json').is_file():
-            raise FileNotFoundError('Research artifact not found')
-        _safe_tree(path.parent / 'manifest.json')
-        if path.stat().st_size > MAX_FILE_BYTES:
+        info = _artifact_info(path)
+        _artifact_info(path.parent / 'manifest.json')
+        if info.st_size > MAX_FILE_BYTES:
             raise FileValidationError('Research file exceeds download bound')
         return path
 
