@@ -12,6 +12,7 @@ Open **Additional annotations → Import and local extraction**. Select one or s
 - JSON/RIS need no extra dependency. Install PDF/BibTeX adapters with `python -m pip install -r requirements-annotations.txt` or package extra `litradar[annotations]`. Missing adapters return 503 rather than a misleading empty success.
 - PDF/BibTeX run in a separate Python parser process with a 15-second wall timeout. POSIX workers cap address space at 512 MB and CPU at 12 seconds; Windows retains the timeout. This is resource bounding, not a general-purpose security sandbox.
 - No uploaded file is persisted, no source path is opened, no URL is fetched and no PDF script is executed. Filenames/references are labels only. The server reads the uploaded bytes.
+- [Gate 4 path acceptance](GATE4-IMPORT-RESTORE-PATHS.md) records disposable upload/reference and restore checks, with local execution and parser-worker limitations kept explicit.
 - Validate all files before committing. An invalid file aborts the complete batch. Repeating the same filename/content/adapter is repeat-safe. The existing JSON endpoint remains compatible and shares its identity with the new JSON file adapter.
 - Reimporting a deleted annotation does not silently resurrect it. Use **Deleted annotations** and explicitly restore it.
 

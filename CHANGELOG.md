@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased — Gate 4 upload and restore path acceptance
+
+- Verify existing uploaded-byte annotation and new-destination restore safeguards with disposable fixtures, extending path/reference and rejection-preservation checks. [Executed results and scope](docs/GATE4-IMPORT-RESTORE-PATHS.md). No runtime defect was reproduced; application behavior and version are unchanged.
+- Continue local checks while hosted Actions remain deferred by user instruction. Remaining Gate 4 work is SQLite/manual-data preservation and network-use documentation; no new Windows/CI pass, personal data, merge, version bump or release.
+
 ## Unreleased — Gate 4 Research result path safeguards
 
 - Reject hard-linked/non-regular Research result and manifest files, plus symlinks and Windows reparse paths before listing/downloading. Preserve normal bundle creation, selected result roots, immutable exports and bounded downloads. [Reproduction, local evidence and limits](docs/GATE4-RESEARCH-PATHS.md).
