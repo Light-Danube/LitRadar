@@ -55,7 +55,7 @@ Gate 3 is complete for the bounded candidate: actual Windows 37-test lifecycle/i
 
 ## Gate 5 — Local usability and accessibility evidence (P1; no scope expansion)
 
-- [ ] Review core keyboard workflows in the existing web UI and Textual TUI in both English and Ukrainian: navigation, focus, close/cancel, scrolling, error messages, and keeping unsaved drafts.
+- [ ] Review core keyboard workflows in the existing web UI and Textual TUI in both English and Ukrainian: navigation, focus, close/cancel, scrolling, error messages, and keeping unsaved drafts. [First focused slice: annotation editor open/cancel focus](docs/GATE5-KEYBOARD-FOCUS.md); broader web/TUI acceptance remains open.
 - [x] User-reported Windows/Narrator acceptance recorded on 2026-10-15; Narrator is optional for this release. The [detailed audit procedure](docs/TUI-ACCESSIBILITY-AUDIT.md) remains available for optional broader testing; no WCAG/screen-reader certification is claimed.
 - [ ] Confirm an ordinary user can locate venue search, open/save an evidence worksheet and export it, without having to learn the CLI.
 

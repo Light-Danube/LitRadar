@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased — Gate 5 annotation keyboard focus
+
+- Focus the supplemental annotation textarea on explicit Edit, and return focus to the same Edit control on Cancel or Escape. Composing Escape does not cancel. Automatic draft restoration does not take focus; canceling one editor leaves unrelated drafts intact. [EN/UK regression evidence and limits](docs/GATE5-KEYBOARD-FOCUS.md).
+- Keep Gate 5 open for broader web/TUI keyboard, scrolling/error and Research usability evidence. No major feature, personal data, new native browser/Windows/reader certification, merge, version bump or release; hosted Actions remain deferred by user instruction.
+
 ## Unreleased — Gate 4 integrity and network-use closure
 
 - Reject metadata whose identifiers resolve to different canonical papers before mutation; retain the canonical provider/source-ID pair on cross-provider refresh. Preserve manual library/evidence data and transaction rollback, with disposable duplicate/conflict/malformed-row/write-lock regressions.

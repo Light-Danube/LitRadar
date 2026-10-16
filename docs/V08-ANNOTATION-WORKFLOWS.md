@@ -30,6 +30,8 @@ Development verification uses mocked providers for all three choices; live crede
 
 ## Recovery behavior
 
+In the web supplemental annotation editor, explicit **Edit** moves focus to the textarea. **Cancel** or **Escape** closes that edit and returns focus to its Edit button without saving; unrelated drafts are retained. Escape during text composition does not cancel. Automatically restored draft editors do not take focus. [Focused EN/UK checks and limits](GATE5-KEYBOARD-FOCUS.md).
+
 - **Delete annotation** is a soft deletion. The content, kind, adapter, original source and all revisions remain in SQLite; the entry moves out of the active list into **Deleted annotations**. There is no permanent-purge action in this increment.
 - **Restore annotation** brings the stored content/review state back and appends a revision. **Annotation version history** is paginated; restoring a historical version copies its content/review state into a new active revision without rewriting the original versions or origin metadata.
 - Delete/edit/restore requests carry `expected_revision`. A stale version returns HTTP 409. Repeating deletion of an already deleted current revision, or restoring an already active current entry without a historical target, is a no-op.

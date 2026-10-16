@@ -98,8 +98,17 @@ function renderAnnotations(paperId,root){
   function bind(){
     list.querySelectorAll('[data-annotation]').forEach(card=>{
       const item=itemMap.get(Number(card.dataset.annotation));
-      function editor(){const target=$('.annotation-editor',card);target.innerHTML=`<label for="edit-${item.id}">${t('annotation')}</label><textarea class="field" id="edit-${item.id}" maxlength="50000">${esc(edits[item.id]??item.content)}</textarea><div class="detail-actions"><button class="btn" data-save>${t('save')}</button><button class="btn" data-cancel>${t('cancel')}</button></div>`;const input=$('textarea',target);input.oninput=()=>edits[item.id]=input.value;$('[data-cancel]',target).onclick=()=>{delete edits[item.id];target.replaceChildren();};$('[data-save]',target).onclick=async()=>{try{await patch(item,{content:input.value});delete edits[item.id];await load();toast(t('saved'));}catch(e){toast(e.message,true);}};}
-      $('[data-edit]',card).onclick=()=>{edits[item.id]??=item.content;editor();};if(item.id in edits)editor();
+      function editor(focus=false){
+        const target=$('.annotation-editor',card);target.innerHTML=`<label for="edit-${item.id}">${t('annotation')}</label><textarea class="field" id="edit-${item.id}" maxlength="50000">${esc(edits[item.id]??item.content)}</textarea><div class="detail-actions"><button class="btn" data-save>${t('save')}</button><button class="btn" data-cancel>${t('cancel')}</button></div>`;
+        const input=$('textarea',target),edit=$('[data-edit]',card);
+        const cancel=()=>{delete edits[item.id];if(state.drafts[paperId]?.edits)delete state.drafts[paperId].edits[item.id];target.replaceChildren();edit.focus();};
+        input.oninput=()=>edits[item.id]=input.value;
+        $('[data-cancel]',target).onclick=cancel;
+        target.onkeydown=event=>{if(event.key==='Escape'&&!event.isComposing){event.preventDefault();event.stopPropagation();cancel();}};
+        $('[data-save]',target).onclick=async()=>{try{await patch(item,{content:input.value});delete edits[item.id];await load();toast(t('saved'));}catch(e){toast(e.message,true);}};
+        if(focus)input.focus();
+      }
+      $('[data-edit]',card).onclick=()=>{edits[item.id]??=item.content;editor(true);};if(item.id in edits)editor();
       card.querySelectorAll('[data-review]').forEach(btn=>btn.onclick=async()=>{btn.disabled=true;try{await patch(item,{review_status:btn.dataset.review});await load();}catch(e){toast(e.message,true);}finally{btn.disabled=false;}});
     });
   }

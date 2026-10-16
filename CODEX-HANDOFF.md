@@ -1,6 +1,14 @@
 # Codex handoff — local-only LitBeacon 1.0
 
-## Current increment — Gate 4 integrity and network-use closure
+## Current increment — Gate 5 annotation keyboard focus
+
+- Branch `codex/gate5-keyboard-focus`, baseline main `2130f707` (merged #33), Draft PR #34 opened before delegation. Separate subagents own the minimal `app.js` focus/cancel fix and independent EN/UK DOM regressions; baseline reproduction precedes runtime edits.
+- Scope: explicit supplemental annotation Edit focuses its textarea; Cancel/Escape restore its Edit button and discard only that edit, preserving unrelated notes/new-annotation/other-edit drafts. Ignore composing Escape and keep automatic draft restoration from taking focus. [Executed evidence and limits](docs/GATE5-KEYBOARD-FOCUS.md).
+- Baseline new EN/UK DOM checks: **2 passed / 4 failed**; candidate: **6 passed**, zero failures/skips. Full local Linux Python 3.12: **732 Python / 44 JavaScript passed**, zero failures/skips, one existing Starlette warning. JS syntax, 187 local documentation targets/anchors, whitespace and no-tracked-logs checks passed. No native browser/Windows/TUI-language or reader result is inferred.
+- Gate 5 stays open: wider web/TUI keyboard/scrolling/error behavior and ordinary-user Research workflow evidence remain later small slices. DOM focus/button/key-event tests are not native browser Tab-order, Windows or Narrator certification. User-reported Windows/Narrator acceptance remains separate and Narrator optional.
+- Hosted Actions remain deferred due account billing by user instruction; no retries/monitoring or workflow/security/billing changes. Application file logs remain under ignored shared `log/`; no generated output is committed. Version remains 0.8.0; no personal database, `.env`, credentials/model-cache access, major feature, merge, bump, tag or release.
+
+## Previous increment — Gate 4 integrity and network-use closure (merged)
 
 - Branch `codex/gate4-integrity-closure`, baseline main `402a9fd6` (merged #32), Draft PR #33 opened before delegation. Independent agents audit/test SQLite preservation and document network use; root fixes legacy semantic loading, integrates and verifies.
 - Reproduced contradictory identifier matching and cross-provider primary source/ID corruption; reject multi-owner metadata and preserve the canonical source/ID pair without merging rows or migrating schemas. Legacy semantic scoring previously allowed implicit weight downloads; load only local/cached weights with remote code disabled and retain keyword fallback.
