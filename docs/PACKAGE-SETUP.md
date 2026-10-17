@@ -1,37 +1,81 @@
-# Small package setup
+# Install LitBeacon from a small setup ZIP
 
-For releases that provide `LitBeacon-<version>-setup.zip`, download and extract that asset. It contains only the built runtime wheel and a standalone `SETUP.txt` with exact commands for that wheel. GitHub's automatic source archives remain available for developers; ordinary users do not need them, legacy docs, tests or the repository checkout.
+**Release status:** v1.0.0 is a Draft PR candidate, not a published release. v0.8.0 remains the released version. For a future published release, download `LitBeacon-1.0.0-setup.zip` from that release's **Assets**, extract it into a new folder, and use the commands below. Do not select GitHub's automatically generated “Source code” ZIP for this procedure: it contains the developer checkout. Until publication, reviewers can [build the same bundle from the Draft PR](#test-the-unpublished-candidate).
 
-Requirements: **Python 3.11+** and internet access for pip dependency installation. Local-only does not mean an offline installer. The default `[web]` installation excludes development/browser tests, embeddings, cloud LLM SDKs and TUI/file-parser extras.
+The setup ZIP contains exactly `litradar-1.0.0-py3-none-any.whl` and `SETUP.txt`. You need Python **3.11 or newer** (3.12 recommended) and internet for pip dependencies. Git, Node, Docker, models, API keys and the source checkout are unnecessary for an **already built** setup ZIP. The commands below set `LITBEACON_HOME` to a new `user-data` folder for a disposable trial, so an existing LitBeacon library is not opened. Keep that folder if you want to retain trial data.
 
-Open `SETUP.txt` in the extracted folder. On Windows its commands create `.venv` and invoke `.venv\Scripts\python.exe` directly, without PowerShell activation-policy changes. Linux/macOS use `.venv/bin/python`. Install the named wheel, then run:
+## Windows 10/11 — PowerShell
 
-```sh
-python -m cli init
-python -m cli web
-```
+1. Install Python 3.12 from [python.org](https://www.python.org/downloads/windows/) if needed. Check `py -3.12 --version`. Extract the setup ZIP into a new writable folder, such as `Documents\LitBeacon-1.0.0-test`; open PowerShell **in that folder**. Confirm that `SETUP.txt` and the wheel are present.
+2. Run without activating PowerShell scripts:
 
-Use the environment's Python for those commands. Open **http://127.0.0.1:8765**, stop with Ctrl+C and restart with the same web command. No credentials or models are needed to use a saved local library. Network provider requests remain explicit.
+   ```powershell
+   py -3.12 -m venv .venv
+   $env:LITBEACON_HOME = (Join-Path (Get-Location) 'user-data')
+   .\.venv\Scripts\python.exe -m pip install ".\litradar-1.0.0-py3-none-any.whl[web]"
+   .\.venv\Scripts\python.exe -m pip check
+   .\.venv\Scripts\python.exe -m cli --version
+   .\.venv\Scripts\python.exe -m cli init
+   .\.venv\Scripts\python.exe -m cli web
+   ```
 
-Installed data lives in the per-user LitBeacon directory, separately from the extracted package and environment. Existing source-checkout libraries are not moved automatically. See [data locations and overrides](USER-GUIDE.md#wheel-installation) and [consistent backup/restore](USER-GUIDE.md#consistent-local-backup-and-restore-unreleased). Back up with the old environment before updating; keep profiles/digest settings/credentials separately, extract a new version into a new folder and repeat setup. Never delete the data directory to repair an installation.
+3. Open <http://127.0.0.1:8765>, confirm the page says `v1.0.0`, then stop with Ctrl+C. Restart with the final command in the same PowerShell window; set `LITBEACON_HOME` again in a new window. If the port is occupied, use `-m cli web --port 8787` and open that port. The wheel has no `run_web.bat`; launchers belong to the source checkout.
 
-If the older release has no `library-backup` command, install the new wheel into a separate environment first. Before running `init`/`web`, use its interpreter with `-m cli --db OLD_DATABASE library-backup NEW_BACKUP_DIRECTORY`. That command snapshots the selected old library read-only without migrating it. Elect durable Research/offline roots explicitly and keep writers stopped while including those files.
+**This exact 1.0.0 candidate has not yet been installed on Windows.** Prior Windows wheel checks apply to earlier commits. If this fresh install fails, please report the Python version, command and safe error text without sharing a library, `.env`, tokens or private logs.
 
-Optional TUI and file adapters can be selected as `[web,ui,annotations]`. Built-in Windows Task Scheduler installation still requires the source checkout; package users can configure their own scheduler for `python -m cli scheduled-run`.
+## macOS — Terminal
 
-## Build and review a future package
+1. Install Python 3.12 from [python.org](https://www.python.org/downloads/macos/) if needed; check `python3 --version` (3.11+). The system Python may be too old. Extract the setup ZIP into a new writable folder and open Terminal there.
+2. Run:
 
-From a clean source checkout:
+   ```sh
+   python3 -m venv .venv
+   export LITBEACON_HOME="$PWD/user-data"
+   ./.venv/bin/python -m pip install './litradar-1.0.0-py3-none-any.whl[web]'
+   ./.venv/bin/python -m pip check
+   ./.venv/bin/python -m cli --version
+   ./.venv/bin/python -m cli init
+   ./.venv/bin/python -m cli web
+   ```
+
+3. Open <http://127.0.0.1:8765>; stop with Ctrl+C and restart with the same command in the same terminal. Export `LITBEACON_HOME` again in a new terminal. The wheel is pure Python, but dependencies still need macOS wheels compatible with your Python and CPU. **Native macOS installation and browser behavior remain unverified** for this candidate.
+
+## Linux — terminal
+
+1. Check `python3 --version` (3.11+). If `venv` reports missing `ensurepip`, install your distribution's Python venv package (for example `python3-venv` on Debian/Ubuntu). Extract the setup ZIP into a new writable folder and open a terminal there.
+2. Run:
+
+   ```sh
+   python3 -m venv .venv
+   export LITBEACON_HOME="$PWD/user-data"
+   ./.venv/bin/python -m pip install './litradar-1.0.0-py3-none-any.whl[web]'
+   ./.venv/bin/python -m pip check
+   ./.venv/bin/python -m cli --version
+   ./.venv/bin/python -m cli init
+   ./.venv/bin/python -m cli web
+   ```
+
+3. Open <http://127.0.0.1:8765>; stop with Ctrl+C. Export `LITBEACON_HOME` again in a new terminal before restarting. The Linux installed-wheel smoke checks packaged web assets, but a headless check cannot establish native browser appearance or every distribution's dependency compatibility.
+
+## Data, optional components and upgrades
+
+The browser binds to localhost and has no login; do not expose it to a LAN or the internet. Dependencies and explicit scholarly searches use the network; saved-library operations are local. No provider or model is needed for first launch.
+
+Outside the isolated trial above, installed data defaults to `%LOCALAPPDATA%\LitBeacon` on Windows, `~/Library/Application Support/LitBeacon` on macOS, and `$XDG_DATA_HOME/LitBeacon` (usually `~/.local/share/LitBeacon`) on Linux. `LITBEACON_HOME` must be set before each new process; the trial `user-data` folder can be removed only when you no longer need its data. An installed wheel does not copy an older source-checkout library. See [wheel data locations](USER-GUIDE.md#wheel-installation) and [backup/restore](USER-GUIDE.md#consistent-local-backup-and-restore-unreleased).
+
+For optional TUI/file imports, replace `[web]` in the pip command with `[web,ui,annotations]`, then run `-m cli ui` with the same venv interpreter. LLMs, Telegram and local embeddings need separate deliberate setup. Windows Task Scheduler installation and `.bat` launchers require a source checkout; wheel users can configure their own scheduler. [User guide](USER-GUIDE.md) · [network use](NETWORK-USE.md) · [logging](LOGGING.md).
+
+To upgrade from v0.8.0, **stop all LitBeacon processes and back up first**. Use the old environment's `-m cli library-backup NEW_BACKUP_DIRECTORY` if available; elect Research/offline files explicitly with writers stopped, and save profile/digest settings and credentials separately. If the old release lacks that command, install the new wheel in a **separate venv** and run `-m cli --db OLD_DATABASE library-backup NEW_BACKUP_DIRECTORY` *before* `init` or `web`; this opens the old database read-only. Keep the backup outside the setup folder. Then install into a new folder and use the same per-user data location if you intend to upgrade that library. `init` applies additive migrations; source-checkout libraries are not moved automatically. Never delete an old data directory to repair an install. [Recovery details](USER-GUIDE.md#consistent-local-backup-and-restore-unreleased).
+
+## Test the unpublished candidate
+
+GitHub Actions cannot currently produce a downloadable PR setup artifact because account billing blocks job startup. A reviewer can obtain the [Draft PR #39 branch](https://github.com/Light-Danube/LitRadar/pull/39) with **Code → Download ZIP** from its head branch or Git, extract it to a temporary **build** folder, and run from its repository root:
 
 ```sh
 python -m pip wheel --no-deps --wheel-dir dist .
-python -m scripts.build_user_bundle "dist/litradar-<version>-py3-none-any.whl" --output-dir dist
+python -m scripts.build_user_bundle dist/litradar-1.0.0-py3-none-any.whl --output-dir dist
 ```
 
-Replace the example wheel filename with the one just built. The builder derives the setup archive name and exact guide commands from wheel metadata. Root VERSION, pyproject metadata and bundled VERSION must agree; `--tag v<version>` additionally checks an approved release tag. Existing setup ZIPs are never overwritten.
+Use `python3` instead of `python` on macOS/Linux if needed, or `py -3.12 -m` in Windows PowerShell. The build may download setuptools. Move **only** `dist/LitBeacon-1.0.0-setup.zip` into a separate fresh install folder, extract it, then follow your OS section. This keeps the installed folder free of unrelated developer files. The Draft PR's Linux verification and platform gaps are in the [active checklist](LOCAL-1.0-RELEASE-CHECKLIST.md). A reviewer-built ZIP is not a published or signed release artifact.
 
-CI builds the ZIP, verifies that its two entries include a byte-identical wheel, then installs the **extracted** wheel into clean Ubuntu and Windows environments and executes the synthetic CLI/static-assets/web-edit/restart and backup/restore smoke outside the checkout. Recovery checks use disposable SQLite and elected synthetic files, preserving durable rows/histories/tombstones and rejecting overwrites. The setup ZIP is uploaded as a reviewable Actions artifact. A workflow definition alone is not a passing result; use the actual candidate checks.
-
-The release workflow builds and smokes the same package **after an owner publishes a release**, then attaches the wheel and setup ZIP to that existing release. It does not bump versions, create a tag or publish a release. No release is published by this change; version remains 0.8.0. Full release approval remains Gate 6.
-
-New application file logs use the writable LitBeacon user directory's `log/` (checkout users: project `log/`); never write logs beside installed code. Optional Telegram file logging accepts a filename, for example `python -m cli telegram-run --debug --log-file telegram-listener.log`. [Shared logging convention and exclusions](LOGGING.md).
+For maintainers, the builder rejects version mismatch, unsafe/extra wheel paths and overwrites. Its two-file ZIP excludes local databases, `.env`, PDFs, logs, caches and developer Markdown. The release workflow attaches artifacts **only after** an owner publishes a release; it does not approve or create one.

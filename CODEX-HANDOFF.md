@@ -1,6 +1,12 @@
 # Codex handoff — local-only LitBeacon 1.0
 
-## Current increment — Gate 6 optional installed package and guide cleanup
+## Current increment — Gate 6 versioned installation candidate
+
+- Baseline main `d3bb5513` (merged #38); branch `codex/gate6-v1-install-candidate`, Draft PR #39. The user requested a 1.0 candidate for fresh-folder testing and Windows/macOS/Linux guides. Source and package version surfaces now use 1.0.0; README identifies 0.8.0 as the published release. No tag, publication, merge or personal-data access.
+- [Windows/macOS/Linux setup](docs/PACKAGE-SETUP.md) and [candidate evidence/limits](docs/GATE6-1.0-CANDIDATE.md) separate executed Linux package checks from the user's pending native Windows trial and untested macOS. Hosted Actions remain deferred by user instruction because billing blocks startup; do not infer same-commit CI or Windows success.
+- Linux Python 3.12 source suites: **740 Python / 48 JavaScript passed**, zero failures/skips, one existing Starlette warning. A fresh venv outside checkout installed the extracted 1.0.0 setup wheel `[web,ui,annotations]` plus smoke-only `httpx`; `pip check`, standard CLI/web/recovery/log smoke and installed version/Web/Textual Pilot probe passed. No live provider/model, native browser, Narrator or personal library was used. Gate 6 remains open for candidate Windows/macOS checks as available, required same-commit CI, review and explicit merge/tag/release approval.
+
+## Previous increment — Gate 6 optional installed package and guide cleanup
 
 - Branch `codex/gate6-optional-install-docs`, baseline main `d17c7f86` (merged #37), Draft PR #38. First fresh extracted-wheel `[web,ui,annotations]` install passed dependency/parser checks but Textual failed because `ui.tcss` was absent. A disposable diagnostic CSS copy isolated the cause; the tracked fix moves CSS into package data, resolves it for source/wheel, and makes the two-file setup builder reject wheels that omit it.
 - [Executed optional-extras evidence](docs/GATE6-OPTIONAL-INSTALL.md): new clean Linux venv installed fixed wheel `[web,ui,annotations]` plus smoke-only `httpx`, `pip check` passed, installed Textual Pilot and synthetic BibTeX/PDF imports passed, and standard installed-wheel CLI/web/recovery/log smoke passed. Source targeted package/TUI checks: **31 passed**; full **740 Python / 48 JavaScript passed**, zero failures/skips. One existing Starlette warning; no native Windows/terminal/Narrator/browser/provider/model claim.

@@ -1,6 +1,6 @@
 # LitBeacon — Local-Only v1.0 Release Roadmap
 
-**Goal:** ship a dependable, maintainable, local-first **LitBeacon 1.0** for one researcher on their own computer. This is a **scope-freeze and release plan**, not a request to add another subsystem. Official current version remains **0.8.0** until release gates are satisfied.
+**Goal:** ship a dependable, maintainable, local-first **LitBeacon 1.0** for one researcher on their own computer. This is a **scope-freeze and release plan**, not a request to add another subsystem. The published release remains **0.8.0**; Draft PR #39 carries an unmerged **1.0.0 candidate** for installation testing.
 
 **Product boundary:** Python/SQLite is the source of truth. Web UI is bound to localhost; CLI, Textual TUI and the optional Telegram bot are existing interfaces. Existing paper libraries, research evidence, notes, tags, IDs, histories, offline PDFs and scheduler configuration must survive updates. Literature-provider searches require network access; the saved library and local workflows do not. Optional external LLM inference requires explicit opt-in. No account, hosted backend, public API or mandatory cloud component is in scope.
 
@@ -65,10 +65,10 @@ Gate 5 is complete for this bounded local candidate. Gather further usability fe
 
 ## Gate 6 — Versioning, documentation and release artifact (P0)
 
-- [ ] Make VERSION, pyproject.toml, CLI/TUI/Telegram/Web visible version strings, package metadata, changelog and release tag consistent **after** candidate verification.
-- [ ] Build and install the distribution in a clean environment; run a smoke test against packaged static assets. Verify release ZIP/wheel contain no .env, local SQLite, PDFs, credentials, logs or source caches. The current 0.8.0 `[web]` rehearsal and [optional-extras package fix/check](docs/GATE6-OPTIONAL-INSTALL.md) passed on Linux; repeat on the final version-aligned candidate and Windows.
+- [ ] Make VERSION, pyproject.toml, CLI/TUI/Telegram/Web visible version strings, package metadata, changelog and release tag consistent **after** candidate verification. The [Draft 1.0.0 candidate](docs/GATE6-1.0-CANDIDATE.md) aligns existing version surfaces; tag and release approval remain pending.
+- [ ] Build and install the distribution in a clean environment; run a smoke test against packaged static assets. Verify release ZIP/wheel contain no .env, local SQLite, PDFs, credentials, logs or source caches. The [1.0.0 candidate](docs/GATE6-1.0-CANDIDATE.md) passed a fresh Linux package install and inventory; native Windows/macOS and same-commit required CI remain pending.
 - [ ] Keep README concise. Publish a working quick start, docs/USER-GUIDE.md, migration and backup/restore guide, optional component instructions, known limitations and a reproducible upgrade path from v0.8.0.
-- [x] Create a **1.0 release-candidate checklist** with check names, executed results, platform and known limitations. [Current 0.8.0 package rehearsal and pending checks](docs/GATE6-RELEASE-CANDIDATE.md).
+- [x] Create a **1.0 release-candidate checklist** with check names, executed results, platform and known limitations. [Historical 0.8.0 rehearsal](docs/GATE6-RELEASE-CANDIDATE.md) and [current 1.0.0 candidate](docs/GATE6-1.0-CANDIDATE.md).
 - [ ] Review the final-version draft PR; merge/tag/release only with explicit user approval.
 
 **Done when:** the same candidate commit passes required CI and Windows smoke, its built artifact installs, and release notes describe exactly what has and has not been verified.
