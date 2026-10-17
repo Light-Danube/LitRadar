@@ -37,7 +37,7 @@ function header(){
   $('#language-label').textContent=t('language');$('#language').value=state.language;$('#skip-link').textContent=t('skip');$('footer').textContent=t('footer');
   $('#connection').textContent=state.database?t('connected',{name:state.database}):t('connecting');
 }
-function switchPage(page){captureDraft();state.page=page;header();renderPage();}
+function switchPage(page){captureDraft();state.focusResearch=page==='research';state.focusResearchFrom=document.activeElement;state.page=page;header();renderPage();}
 document.querySelectorAll('[data-page]').forEach(el=>el.addEventListener('click',()=>switchPage(el.dataset.page)));
 $('#refresh').addEventListener('click',()=>{captureDraft();renderPage();});
 $('#language').addEventListener('change',event=>{captureDraft();state.language=event.target.value;try{localStorage.setItem('litbeacon-language',state.language);}catch(_){}header();renderPage();});
@@ -50,7 +50,7 @@ async function renderPage(){
   const request=++state.request,page=state.page,container=$('#page-content');$('#page-title').textContent=t(page);
   container.setAttribute('aria-busy','true');container.innerHTML=`<p class="loading">${t('loading')}</p>`;
   const view=document.createElement('div');
-  try{await ({overview:renderOverview,inbox:renderInbox,graph:renderGraph,clusters:renderClusters,jobs:renderJobs,research:renderResearch}[page])(view);if(request===state.request){container.replaceChildren(view);if(page==='inbox'&&(!state.selected||state.focusSearch)){$('#paper-search',view).focus();state.focusSearch=false;}}}
+  try{await ({overview:renderOverview,inbox:renderInbox,graph:renderGraph,clusters:renderClusters,jobs:renderJobs,research:renderResearch}[page])(view);if(request===state.request){container.replaceChildren(view);if(page==='inbox'&&(!state.selected||state.focusSearch)){$('#paper-search',view).focus();state.focusSearch=false;}if(page==='research'&&state.focusResearch&&(document.activeElement===state.focusResearchFrom||document.activeElement===document.body))$('#rw-venueQuery',view)?.focus();state.focusResearch=false;}}
   catch(error){if(request===state.request){container.innerHTML=`<div class="error" role="alert">${t('error')}: ${esc(error.message)}<p>${t('serverError')}</p>${button('retry','retry')}${(page==='clusters'&&state.clusterMode==='semantic')||(page==='graph'&&state.graphFilters.include_semantic)?button('disable-semantic','semanticReset'):''}</div>`;$('#retry').onclick=()=>renderPage();if($('#disable-semantic'))$('#disable-semantic').onclick=()=>{if(page==='clusters')state.clusterMode='heuristic';else {state.graphFilters.include_semantic=false;if(state.graphFilters.provider.startsWith('embedding:'))state.graphFilters.provider='';}renderPage();};}}
   finally{if(request===state.request)container.setAttribute('aria-busy','false');}
 }

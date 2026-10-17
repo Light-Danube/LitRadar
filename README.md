@@ -10,7 +10,7 @@ The project was formerly **LitRadar**. Existing module names, database paths, `L
 
 **Unreleased:** graph and annotation refinements, optional local semantic exploration, and venue discovery/evidence worksheets in the CLI and Research browser section. The release version stays 0.8.0 while validation gates remain open. See [CHANGELOG](CHANGELOG.md) and the [Gate 1 history archive](docs/archive/gate1/README.md).
 
-Feature development is frozen for local-only 1.0. Gates 1–4 are complete for the bounded candidate; Gate 5 covers [annotation keyboard focus](docs/GATE5-KEYBOARD-FOCUS.md) and [EN/UK TUI checks](docs/GATE5-TUI-KEYBOARD.md). [Gate 4 limits](docs/GATE4-INTEGRITY-CLOSURE.md) and [network use](docs/NETWORK-USE.md) describe the local boundary. The [active checklist](docs/LOCAL-1.0-RELEASE-CHECKLIST.md) tracks remaining work; hosted Actions are deferred by user choice while account billing blocks job startup.
+Feature development is frozen for local-only 1.0. Gates 1–4 are complete for the bounded candidate; Gate 5 covers [annotation keyboard focus](docs/GATE5-KEYBOARD-FOCUS.md), [EN/UK TUI checks](docs/GATE5-TUI-KEYBOARD.md) and the [Research keyboard journey](docs/GATE5-RESEARCH-KEYBOARD.md). [Gate 4 limits](docs/GATE4-INTEGRITY-CLOSURE.md) and [network use](docs/NETWORK-USE.md) describe the local boundary. The [active checklist](docs/LOCAL-1.0-RELEASE-CHECKLIST.md) tracks remaining work; hosted Actions are deferred by user choice while account billing blocks job startup.
 
 ## Quick start
 

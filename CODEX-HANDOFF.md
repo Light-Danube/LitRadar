@@ -1,6 +1,13 @@
 # Codex handoff — local-only LitBeacon 1.0
 
-## Current increment — Gate 5 EN/UK TUI modal checks
+## Current increment — Gate 5 Research browser keyboard journey
+
+- Branch `codex/gate5-research-keyboard`, baseline main `be81f40a` (merged #35), Draft PR #36. Two EN/UK synthetic DOM journeys failed on the baseline with seven focus gaps each. The browser now guides focus from explicit Research navigation through venue choice, search results, evidence and a saved Markdown download; source choice already focused the query.
+- Keep async focus conditional on the active connected view. Evidence save/reload preserves the active editor control, expanded groups and text selection; an older paper save cannot rebuild the current paper's editor. Four new tests cover the path and delayed lookup/save cases. [Evidence and limits](docs/GATE5-RESEARCH-KEYBOARD.md).
+- Executed local Linux Python 3.12 candidate: **740 Python / 48 JavaScript passed**, zero failures/skips, one existing Starlette warning; changed JS syntax and whitespace checks passed. No backend, schema, provider or dependency-lock changes. Synthetic jsdom focus/default-activation modeling is not native Tab/rendering/download evidence or an observed ordinary-user walkthrough. Gate 5 remains open for that acceptance.
+- Hosted Actions remain deferred due billing by user instruction. No CI retry/monitoring, personal data, real provider, version bump, merge, tag or release. Version stays 0.8.0; file logging remains under ignored shared `log/`.
+
+## Previous increment — Gate 5 EN/UK TUI modal checks
 
 - Branch `codex/gate5-tui-keyboard`, baseline main `cf3f0a86` (merged #34), Draft PR #35 opened before delegation. One subagent owns real Textual Pilot EN/UK regressions; another independently reviews modal behavior. Root owns minimal reproduced fixes, documentation and full-suite integration.
 - [Scope, local checks and limits](docs/GATE5-TUI-KEYBOARD.md): Help scrolling/close/focus and guarded underlying shortcuts; tag editing/cancel/focus/draft preservation; Jobs localized persistent status/control recovery with mocked scheduler commands. A tag-save storage failure must keep the editor open with a safe localized error and permit retry/cancel, rather than escaping the event handler.
