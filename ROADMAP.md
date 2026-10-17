@@ -55,9 +55,9 @@ Gate 3 is complete for the bounded candidate: actual Windows 37-test lifecycle/i
 
 ## Gate 5 — Local usability and accessibility evidence (P1; no scope expansion)
 
-- [ ] Review core keyboard workflows in the existing web UI and Textual TUI in both English and Ukrainian: navigation, focus, close/cancel, scrolling, error messages, and keeping unsaved drafts. [Annotation editor focus](docs/GATE5-KEYBOARD-FOCUS.md) and [TUI modal/error checks](docs/GATE5-TUI-KEYBOARD.md) are bounded slices; wider web/Research acceptance remains open.
+- [ ] Review core keyboard workflows in the existing web UI and Textual TUI in both English and Ukrainian: navigation, focus, close/cancel, scrolling, error messages, and keeping unsaved drafts. [Annotation editor focus](docs/GATE5-KEYBOARD-FOCUS.md), [TUI modal/error checks](docs/GATE5-TUI-KEYBOARD.md) and the [Research DOM journey](docs/GATE5-RESEARCH-KEYBOARD.md) are bounded slices; native browser and ordinary-user acceptance remain open.
 - [x] User-reported Windows/Narrator acceptance recorded on 2026-10-15; Narrator is optional for this release. The [detailed audit procedure](docs/TUI-ACCESSIBILITY-AUDIT.md) remains available for optional broader testing; no WCAG/screen-reader certification is claimed.
-- [ ] Confirm an ordinary user can locate venue search, open/save an evidence worksheet and export it, without having to learn the CLI.
+- [ ] Confirm an ordinary user can locate venue search, open/save an evidence worksheet and export it, without having to learn the CLI. EN/UK synthetic DOM focus and API-path checks now cover that sequence; an observed ordinary-user walkthrough is still pending.
 
 **Done when:** keyboard/smoke evidence and unresolved limitations are documented. A full accessibility certification, new UI design, new localization languages and TUI menu overhaul are **not** release gates.
 

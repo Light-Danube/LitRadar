@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased — Gate 5 Research keyboard journey
+
+- Guide focus through existing EN/UK Research venue lookup, source search, worksheet and saved Markdown export. Retain the active editor field, expanded group and draft across an async save; an older paper's response cannot rebuild a newer paper's editor. No automatic provider request or storage change.
+- Add four synthetic DOM focus/draft regressions. Baseline EN/UK journeys failed with seven focus gaps each; local candidate: **740 Python / 48 JavaScript passed**, zero failures/skips. [Evidence and native-browser/ordinary-user limits](docs/GATE5-RESEARCH-KEYBOARD.md). Gate 5 remains open; hosted Actions are deferred by user instruction. Version stays 0.8.0.
+
 ## Unreleased — Gate 5 EN/UK TUI modal keyboard checks
 
 - Keep the tag editor open after a storage/missing-paper failure, roll back a pending write, retain text/focus and display a safe localized persistent retry/cancel message. Enter and Save share the same path.
