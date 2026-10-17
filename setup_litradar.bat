@@ -3,7 +3,7 @@ setlocal
 cd /d "%~dp0"
 set "VENV=%~dp0.venv"
 set "PYTHON=%VENV%\Scripts\python.exe"
-set "MARKER=%VENV%\.litbeacon-deps-0.8.0-full"
+set "MARKER=%VENV%\.litbeacon-deps-1.0.0-full"
 
 if not exist "%PYTHON%" (
   where py >nul 2>nul

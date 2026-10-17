@@ -14,7 +14,7 @@ def test_pyproject_configures_repository_pythonpath():
 def test_packaging_metadata_includes_runtime_modules_and_optional_web_ui():
     root = Path(__file__).resolve().parents[1]
     text = (root / "pyproject.toml").read_text(encoding="utf-8")
-    assert 'version = "0.8.0"' in text
+    assert f'version = "{(root / "VERSION").read_text().strip()}"' in text
     assert '"workspace_web"' in text
     assert 'web = ["fastapi>=0.115,<1", "uvicorn>=0.30,<1"]' in text
     assets = tomllib.loads(text)["tool"]["setuptools"]["package-data"]["web"]

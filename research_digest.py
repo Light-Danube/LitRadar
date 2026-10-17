@@ -623,7 +623,7 @@ def telegram_chat_ids(token: str | None = None) -> list[dict[str, str]]:
     if not token:
         raise ValueError("Set LITRADAR_TELEGRAM_BOT_TOKEN in .env first")
     url = f"https://api.telegram.org/bot{token}/getUpdates?allowed_updates=%5B%22message%22%2C%22channel_post%22%5D&limit=100"
-    request = urllib.request.Request(url, headers={"User-Agent": "LitBeacon/0.8.0 (formerly LitRadar)"})
+    request = urllib.request.Request(url, headers={"User-Agent": "LitBeacon/1.0.0 (formerly LitRadar)"})
     try:
         with urllib.request.urlopen(request, timeout=20) as response:
             payload = json.loads(response.read().decode("utf-8"))

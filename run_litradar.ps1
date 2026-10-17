@@ -2,7 +2,7 @@ $ErrorActionPreference = 'Stop'
 Set-Location $PSScriptRoot
 $venv = Join-Path $PSScriptRoot '.venv'
 $python = Join-Path $venv 'Scripts/python.exe'
-$marker = Join-Path $venv '.litbeacon-deps-0.8.0-full'
+$marker = Join-Path $venv '.litbeacon-deps-1.0.0-full'
 if (-not (Test-Path $python)) {
     if (Get-Command py -ErrorAction SilentlyContinue) { & py -3 -m venv $venv }
     else { & python -m venv $venv }
