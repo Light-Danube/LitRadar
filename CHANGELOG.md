@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased — Gate 5 closure and Gate 6 package rehearsal
+
+- Record the user's 2026-10-18 acceptance of ordinary-user Research use and close bounded Gate 5. Prior EN/UK DOM/Textual checks remain separate from user-reported acceptance; no new native-browser or reader certification is inferred. Further usability changes can follow concrete post-release feedback.
+- Build the unchanged 0.8.0 wheel and two-file setup ZIP, inspect exclusions and install the extracted wheel into a clean Linux venv for CLI/web/recovery/log-path smoke. Correct the release guide's old source-ZIP description and add a [1.0 candidate checklist](docs/GATE6-RELEASE-CANDIDATE.md). Local candidate: **740 Python / 48 JavaScript passed**, zero failures/skips. Same-commit Windows/CI, final-version verification and release approval remain open; hosted Actions are deferred by user instruction.
+
 ## Unreleased — Gate 5 Research keyboard journey
 
 - Guide focus through existing EN/UK Research venue lookup, source search, worksheet and saved Markdown export. Retain the active editor field, expanded group and draft across an async save; an older paper's response cannot rebuild a newer paper's editor. No automatic provider request or storage change.

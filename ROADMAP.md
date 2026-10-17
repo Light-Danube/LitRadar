@@ -68,7 +68,8 @@ Gate 5 is complete for this bounded local candidate. Gather further usability fe
 - [ ] Make VERSION, pyproject.toml, CLI/TUI/Telegram/Web visible version strings, package metadata, changelog and release tag consistent **after** candidate verification.
 - [ ] Build and install the distribution in a clean environment; run a smoke test against packaged static assets. Verify release ZIP/wheel contain no .env, local SQLite, PDFs, credentials, logs or source caches.
 - [ ] Keep README concise. Publish a working quick start, docs/USER-GUIDE.md, migration and backup/restore guide, optional component instructions, known limitations and a reproducible upgrade path from v0.8.0.
-- [ ] Create a **1.0 release-candidate checklist** with check names, executed results, platform and known limitations. Review the draft PR; merge/tag/release only with explicit user approval.
+- [x] Create a **1.0 release-candidate checklist** with check names, executed results, platform and known limitations. [Current 0.8.0 package rehearsal and pending checks](docs/GATE6-RELEASE-CANDIDATE.md).
+- [ ] Review the final-version draft PR; merge/tag/release only with explicit user approval.
 
 **Done when:** the same candidate commit passes required CI and Windows smoke, its built artifact installs, and release notes describe exactly what has and has not been verified.
 

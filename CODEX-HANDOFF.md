@@ -1,6 +1,13 @@
 # Codex handoff — local-only LitBeacon 1.0
 
-## Current increment — Gate 5 Research browser keyboard journey
+## Current increment — Gate 5 closure and Gate 6 package rehearsal
+
+- Branch `codex/gate6-rc-audit`, baseline main `eaa1de4b` (merged #36), Draft PR #37. User accepted ordinary-user Research use on 2026-10-18 for the initial release; Gate 5 closes for the bounded candidate, without inventing a task transcript/native-browser test. Gather later feedback into specific follow-ups.
+- [Gate 6 checklist](docs/GATE6-RELEASE-CANDIDATE.md) separates a fresh 0.8.0 Linux wheel/setup ZIP rehearsal from the later final-version candidate. Scratch-built wheel has 62 entries; ZIP has only wheel+SETUP; prohibited path inventory found zero matches. Clean extracted-wheel `[web]` install, `pip check`, installed CLI/version/defaults/static/web/edit/restart, synthetic recovery and shared-log smoke passed outside the checkout. One existing Starlette warning.
+- Executed local Linux Python 3.12.14: **740 Python / 48 JavaScript passed**, zero failures/skips. No application/backend/schema/runtime/version change. Corrected USER-GUIDE to describe actual wheel+setup ZIP attachment after owner release; the existing 0.8.0 upgrade instructions remain linked.
+- Gate 6 remains open for an approved 1.0.0 version across surfaces, a fresh artifact install at that commit, same-commit required CI/Windows smoke, final release notes and explicit merge/tag/release approval. Hosted Actions remain deferred due billing by user instruction; do not retry/monitor, alter billing/workflows or claim a Windows pass from this Linux run. No personal data, real provider/model, merge, bump, tag or release.
+
+## Previous increment — Gate 5 Research browser keyboard journey
 
 - Branch `codex/gate5-research-keyboard`, baseline main `be81f40a` (merged #35), Draft PR #36. Two EN/UK synthetic DOM journeys failed on the baseline with seven focus gaps each. The browser now guides focus from explicit Research navigation through venue choice, search results, evidence and a saved Markdown download; source choice already focused the query.
 - Keep async focus conditional on the active connected view. Evidence save/reload preserves the active editor control, expanded groups and text selection; an older paper save cannot rebuild the current paper's editor. Four new tests cover the path and delayed lookup/save cases. [Evidence and limits](docs/GATE5-RESEARCH-KEYBOARD.md).
