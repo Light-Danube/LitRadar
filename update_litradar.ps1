@@ -36,7 +36,7 @@ if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 & $python -m pip install -r requirements.txt -r requirements-ui.txt -r requirements-dev.txt -r requirements-llm.txt -r requirements-web.txt
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 Get-ChildItem -Path $venv -Filter '.litradar-deps-*' -Force -ErrorAction SilentlyContinue | Remove-Item -Force -ErrorAction SilentlyContinue
-Set-Content -Path (Join-Path $venv '.litbeacon-deps-0.8.0-full') -Value 'ready'
+Set-Content -Path (Join-Path $venv '.litbeacon-deps-1.0.0-full') -Value 'ready'
 & $python cli.py init
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 & $python -m pytest -q

@@ -17,7 +17,7 @@ if [[ ! -x "$PYTHON" ]]; then python3 -m venv "$VENV"; fi
 "$PYTHON" -m pip install --upgrade pip
 "$PYTHON" -m pip install -r requirements.txt -r requirements-ui.txt -r requirements-dev.txt -r requirements-llm.txt -r requirements-web.txt
 rm -f "$VENV"/.litradar-deps-*
-touch "$VENV/.litbeacon-deps-0.8.0-full"
+touch "$VENV/.litbeacon-deps-1.0.0-full"
 "$PYTHON" cli.py init
 "$PYTHON" -m pytest -q
 echo 'LitBeacon update verified.'

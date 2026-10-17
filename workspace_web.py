@@ -25,7 +25,7 @@ from starlette.concurrency import run_in_threadpool
 
 from storage.sqlite import PaperStore, STATUSES
 
-from litradar_runtime import WORKSPACE_ROOT, CODE_ROOT, DEFAULT_DB, ensure_user_defaults
+from litradar_runtime import WORKSPACE_ROOT, CODE_ROOT, DEFAULT_DB, VERSION, ensure_user_defaults
 
 ROOT = WORKSPACE_ROOT
 WEB_ROOT = CODE_ROOT / "web"
@@ -209,7 +209,7 @@ def _make_clusters(rows: list[sqlite3.Row]) -> dict[str, Any]:
 def create_app(db_path: str | Path = DEFAULT_DB, *, semantic_enabled: bool | None = None, semantic_embedder=None,
                research_results_root: str | Path | None = None) -> FastAPI:
     ensure_user_defaults()
-    app = FastAPI(title="LitBeacon Research Workspace", version="0.8.0")
+    app = FastAPI(title="LitBeacon Research Workspace", version=VERSION)
     app.state.db_path = str(db_path)
     from web.research_api import register_research_routes
     register_research_routes(app, db_path, results_root=research_results_root)

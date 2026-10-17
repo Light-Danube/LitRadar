@@ -71,7 +71,7 @@ def is_available_offline(row, base_dir: str | Path = DEFAULT_OFFLINE_DIR) -> boo
 
 def _download_file(url: str, destination: Path) -> int:
     """Download a file atomically and accept it only if it has a PDF signature."""
-    request = urllib.request.Request(url, headers={"User-Agent": "LitBeacon/0.8.0 (formerly LitRadar; offline open-access retrieval)"})
+    request = urllib.request.Request(url, headers={"User-Agent": "LitBeacon/1.0.0 (formerly LitRadar; offline open-access retrieval)"})
     temp_path = destination.with_suffix(destination.suffix + ".part")
     destination.parent.mkdir(parents=True, exist_ok=True)
     try:
@@ -128,7 +128,7 @@ def resolve_unpaywall_pdf_urls(
 
     path = urllib.parse.quote(clean_doi, safe="/")
     url = f"https://api.unpaywall.org/v2/{path}?{urllib.parse.urlencode({'email': email})}"
-    request = urllib.request.Request(url, headers={"User-Agent": "LitBeacon/0.8.0 (formerly LitRadar)"})
+    request = urllib.request.Request(url, headers={"User-Agent": "LitBeacon/1.0.0 (formerly LitRadar)"})
     try:
         with urllib.request.urlopen(request, timeout=timeout) as response:
             payload = json.loads(response.read().decode("utf-8"))

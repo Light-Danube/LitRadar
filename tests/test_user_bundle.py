@@ -70,7 +70,7 @@ def test_filename_version_disagreement_rejected(wheel, tmp_path):
 
 
 def test_corrupt_wheel_cli_reports_failure_without_output(tmp_path, capsys):
-    wheel = tmp_path / 'litradar-0.8.0-py3-none-any.whl'
+    wheel = tmp_path / f'litradar-{(bundle.ROOT / "VERSION").read_text().strip()}-py3-none-any.whl'
     wheel.write_bytes(b'not a wheel')
     with pytest.raises(SystemExit) as exc:
         bundle.main([str(wheel), '--output-dir', str(tmp_path / 'output')])

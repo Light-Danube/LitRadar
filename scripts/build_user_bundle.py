@@ -80,6 +80,8 @@ WINDOWS - open PowerShell in this extracted folder:
   py -3 --version
   py -3 -m venv .venv
   .\\.venv\\Scripts\\python.exe -m pip install ".\\{wheel_name}[web]"
+  .\\.venv\\Scripts\\python.exe -m pip check
+  .\\.venv\\Scripts\\python.exe -m cli --version
   .\\.venv\\Scripts\\python.exe -m cli init
   .\\.venv\\Scripts\\python.exe -m cli web
 
@@ -87,6 +89,8 @@ LINUX / MACOS - open a terminal in this extracted folder:
   python3 --version
   python3 -m venv .venv
   ./.venv/bin/python -m pip install "./{wheel_name}[web]"
+  ./.venv/bin/python -m pip check
+  ./.venv/bin/python -m cli --version
   ./.venv/bin/python -m cli init
   ./.venv/bin/python -m cli web
 
@@ -121,7 +125,9 @@ Uninstalling/removing the environment does not remove your separate library.
 Built-in Windows Task Scheduler setup still requires the source checkout;
 package users may configure their own scheduler with -m cli scheduled-run.
 
-Guide and known limits: https://github.com/Light-Danube/LitRadar/blob/main/docs/USER-GUIDE.md
+Windows/macOS/Linux guide and known limits:
+https://github.com/Light-Danube/LitRadar/blob/main/docs/PACKAGE-SETUP.md
+This package has not been verified on every operating system or Python version.
 Installing this package does not approve a new release or certify venue/index metadata.
 '''
 

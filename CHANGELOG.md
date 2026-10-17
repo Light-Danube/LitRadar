@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.0.0 candidate — unreleased
+
+- Align package/runtime, CLI, FastAPI, web label, provider User-Agent and source-launcher dependency markers for a reviewable local-only 1.0.0 candidate. Existing legacy package/module/config identifiers remain compatible; this is no tag or published release.
+- Provide [fresh-folder Windows, macOS and Linux setup](docs/PACKAGE-SETUP.md), a two-file wheel/setup ZIP and [executed Linux candidate evidence](docs/GATE6-1.0-CANDIDATE.md). The new release combines the unreleased graph, annotation, recovery, Research/venue and local usability increments recorded below. Native Windows/macOS installation and same-commit required CI remain open; hosted Actions are deferred because billing prevents job startup.
+
 ## Unreleased — Gate 6 optional installed package and public guide cleanup
 
 - Fix a reproduced installed-wheel TUI startup failure: package the Textual stylesheet beside `ui.py`'s shared runtime assets and require it in the setup bundle. A fresh Linux `[web,ui,annotations]` install now passes Textual Pilot, synthetic PDF/BibTeX adapters and the standard CLI/web/recovery smoke. [Executed check and limits](docs/GATE6-OPTIONAL-INSTALL.md).

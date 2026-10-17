@@ -596,7 +596,7 @@ The dev image uses lightweight core/web CI dependencies, disposable CLI fixtures
 
 ## Wheel installation
 
-For releases providing a lightweight setup ZIP, extract it and follow its standalone `SETUP.txt`. It contains only the runtime wheel and guide, without the development checkout or legacy docs. [Concise package setup, upgrades and release build](PACKAGE-SETUP.md). Current CI artifacts let reviewers test this path before any release is published.
+For releases providing a lightweight setup ZIP, extract it and follow its standalone `SETUP.txt`. It contains only the runtime wheel and guide, without the development checkout or legacy docs. [Windows, macOS and Linux package setup, upgrades and candidate build](PACKAGE-SETUP.md). Draft PR #39 reviewers can build the candidate locally while hosted Actions are deferred by account billing; no current CI artifact or published 1.0 release is implied.
 
 Install a built wheel with `python -m pip install "path/to/litradar-<version>-py3-none-any.whl[web]"` (replace `<version>` with the actual wheel version), then run `python -m cli init` and `python -m cli web`. Commands work outside a source checkout. Static browser assets and canonical default JSON/version files are bundled; no real library, `.env`, PDFs or model weights are shipped.
 

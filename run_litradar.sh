@@ -3,7 +3,7 @@ set -euo pipefail
 cd "$(dirname "$0")"
 VENV="$PWD/.venv"
 PYTHON="$VENV/bin/python"
-MARKER="$VENV/.litbeacon-deps-0.8.0-full"
+MARKER="$VENV/.litbeacon-deps-1.0.0-full"
 if [[ ! -x "$PYTHON" ]]; then python3 -m venv "$VENV"; fi
 if [[ ! -f "$MARKER" ]]; then
   "$PYTHON" -m pip install --upgrade pip
