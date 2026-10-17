@@ -25,7 +25,7 @@ From a clean source checkout:
 
 ```sh
 python -m pip wheel --no-deps --wheel-dir dist .
-python -m scripts.build_user_bundle dist/litradar-0.8.0-py3-none-any.whl --output-dir dist
+python -m scripts.build_user_bundle "dist/litradar-<version>-py3-none-any.whl" --output-dir dist
 ```
 
 Replace the example wheel filename with the one just built. The builder derives the setup archive name and exact guide commands from wheel metadata. Root VERSION, pyproject metadata and bundled VERSION must agree; `--tag v<version>` additionally checks an approved release tag. Existing setup ZIPs are never overwritten.

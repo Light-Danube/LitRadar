@@ -425,7 +425,7 @@ Automated evidence uses synthetic/disposable libraries: active-WAL committed sta
 
 For a local Git checkout, the easiest Windows update path is `update_litradar.bat`; on Linux/macOS use `./update_litradar.sh`. These scripts refuse to pull over local changes, run a fast-forward-only pull, update dependencies, migrate the library, and run tests. If you prefer a GUI, use GitHub Desktop's **Fetch origin → Pull origin**, then run `python cli.py init` and `python -m pytest -q`.
 
-For an approved release after the documented validation gates: update `VERSION`, `pyproject.toml`, and `CHANGELOG.md`; commit and push in GitHub Desktop; then create a GitHub Release using a tag matching the approved version. The `.github/workflows/release.yml` workflow automatically builds and attaches a clean source ZIP. No manual ZIP replacement is needed for users working from a Git checkout.
+For an approved release after the documented validation gates: make `VERSION`, package metadata, visible labels and release notes agree, verify the same candidate commit and its installed artifacts, then create a matching tag and GitHub Release only with explicit approval. The `.github/workflows/release.yml` workflow builds and attaches a runtime wheel plus the lightweight two-file setup ZIP **after** the release is published; GitHub's automatic source archives are separate. The workflow does not create the tag or release. Git checkout users can continue updating their checkout without replacing a ZIP manually.
 
 The local database, offline files, provider/OA caches, and `.env` remain outside source control.
 
@@ -598,7 +598,7 @@ The dev image uses lightweight core/web CI dependencies, disposable CLI fixtures
 
 For releases providing a lightweight setup ZIP, extract it and follow its standalone `SETUP.txt`. It contains only the runtime wheel and guide, without the development checkout or legacy docs. [Concise package setup, upgrades and release build](PACKAGE-SETUP.md). Current CI artifacts let reviewers test this path before any release is published.
 
-Install a built wheel with `python -m pip install "path/to/litradar-0.8.0-py3-none-any.whl[web]"`, then run `python -m cli init` and `python -m cli web`. Commands work outside a source checkout. Static browser assets and canonical default JSON/version files are bundled; no real library, `.env`, PDFs or model weights are shipped.
+Install a built wheel with `python -m pip install "path/to/litradar-<version>-py3-none-any.whl[web]"` (replace `<version>` with the actual wheel version), then run `python -m cli init` and `python -m cli web`. Commands work outside a source checkout. Static browser assets and canonical default JSON/version files are bundled; no real library, `.env`, PDFs or model weights are shipped.
 
 Source checkouts preserve their existing root-level defaults. Wheel installations store editable profiles/digest configuration, `.env`, database, artifacts, caches and logs under `%LOCALAPPDATA%\LitBeacon` on Windows, `$XDG_DATA_HOME/LitBeacon` (default `~/.local/share/LitBeacon`) on Linux, or `~/Library/Application Support/LitBeacon` on macOS. Set `LITBEACON_HOME` (legacy `LITRADAR_HOME`) before launch to select a different directory. Missing profile/digest defaults are seeded at explicit startup; existing edits are never replaced. Existing libraries are not moved automatically: pass `--db PATH` explicitly when needed.
 

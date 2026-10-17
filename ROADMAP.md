@@ -53,20 +53,23 @@ Gate 3 is complete for the bounded candidate: actual Windows 37-test lifecycle/i
 
 [Gate 4 closure](docs/GATE4-INTEGRITY-CLOSURE.md) records bounded Linux evidence and limits. Hosted Actions/native Windows re-verification remain deferred by user instruction; this does not approve a release/version bump or certify hostile-local-process/parser security. Proceed vertically to Gate 5.
 
-## Gate 5 — Local usability and accessibility evidence (P1; no scope expansion)
+## Gate 5 — Local usability and accessibility evidence (P1; complete for this candidate)
 
-- [ ] Review core keyboard workflows in the existing web UI and Textual TUI in both English and Ukrainian: navigation, focus, close/cancel, scrolling, error messages, and keeping unsaved drafts. [Annotation editor focus](docs/GATE5-KEYBOARD-FOCUS.md), [TUI modal/error checks](docs/GATE5-TUI-KEYBOARD.md) and the [Research DOM journey](docs/GATE5-RESEARCH-KEYBOARD.md) are bounded slices; native browser and ordinary-user acceptance remain open.
+- [x] Review core keyboard workflows in the existing web UI and Textual TUI in both English and Ukrainian: navigation, focus, close/cancel, scrolling, error messages, and keeping unsaved drafts. [Annotation editor focus](docs/GATE5-KEYBOARD-FOCUS.md), [TUI modal/error checks](docs/GATE5-TUI-KEYBOARD.md) and the [Research DOM journey](docs/GATE5-RESEARCH-KEYBOARD.md) are bounded slices with stated platform limits.
 - [x] User-reported Windows/Narrator acceptance recorded on 2026-10-15; Narrator is optional for this release. The [detailed audit procedure](docs/TUI-ACCESSIBILITY-AUDIT.md) remains available for optional broader testing; no WCAG/screen-reader certification is claimed.
-- [ ] Confirm an ordinary user can locate venue search, open/save an evidence worksheet and export it, without having to learn the CLI. EN/UK synthetic DOM focus and API-path checks now cover that sequence; an observed ordinary-user walkthrough is still pending.
+- [x] Ordinary-user Research use accepted by the user on 2026-10-18, including the venue/evidence/export path covered by EN/UK synthetic DOM checks. This is user-reported acceptance, without an independently observed task transcript or native-browser test.
 
 **Done when:** keyboard/smoke evidence and unresolved limitations are documented. A full accessibility certification, new UI design, new localization languages and TUI menu overhaul are **not** release gates.
+
+Gate 5 is complete for this bounded local candidate. Gather further usability feedback after the initial release as separate, specific follow-ups. This does not approve a version bump or release.
 
 ## Gate 6 — Versioning, documentation and release artifact (P0)
 
 - [ ] Make VERSION, pyproject.toml, CLI/TUI/Telegram/Web visible version strings, package metadata, changelog and release tag consistent **after** candidate verification.
 - [ ] Build and install the distribution in a clean environment; run a smoke test against packaged static assets. Verify release ZIP/wheel contain no .env, local SQLite, PDFs, credentials, logs or source caches.
 - [ ] Keep README concise. Publish a working quick start, docs/USER-GUIDE.md, migration and backup/restore guide, optional component instructions, known limitations and a reproducible upgrade path from v0.8.0.
-- [ ] Create a **1.0 release-candidate checklist** with check names, executed results, platform and known limitations. Review the draft PR; merge/tag/release only with explicit user approval.
+- [x] Create a **1.0 release-candidate checklist** with check names, executed results, platform and known limitations. [Current 0.8.0 package rehearsal and pending checks](docs/GATE6-RELEASE-CANDIDATE.md).
+- [ ] Review the final-version draft PR; merge/tag/release only with explicit user approval.
 
 **Done when:** the same candidate commit passes required CI and Windows smoke, its built artifact installs, and release notes describe exactly what has and has not been verified.
 
