@@ -23,6 +23,7 @@ include-package-data = true
 
 [tool.setuptools.package-data]
 web = ["index.html", "static/*.js", "static/*.css", "static/brand/*.png"]
+litradar_runtime = ["ui.tcss"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

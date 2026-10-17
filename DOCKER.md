@@ -45,11 +45,11 @@ docker compose --profile bot stop telegram
 
 The listener is optional; it shares the same persistent `data/` with the web service. Do not run `run_telegram_bot.bat` simultaneously with the container bot using the same token, because Telegram permits only one active `getUpdates` consumer per bot.
 
-**Scheduling:** Docker does not automatically create Windows Task Scheduler tasks. Configure **one** host scheduler to launch the one-off `boot.sh scan` and `boot.sh digest` commands if you need periodic unattended runs. Avoid running Windows scheduled scans and Docker scheduled scans on the same database simultaneously. On a permanently running VPS, introduce authorization and backups before making anything publicly reachable.
+**Scheduling:** Docker does not automatically create Windows Task Scheduler tasks. Configure **one** host scheduler to launch the one-off `boot.sh scan` and `boot.sh digest` commands if you need periodic unattended runs. Avoid running Windows scheduled scans and Docker scheduled scans on the same database simultaneously. Keep this optional deployment on localhost; public/VPS hosting is outside the local-only 1.0 scope.
 
 ## Requirements, tests and limitations
 
-PR #5 is merged, but production-image build/run remains a release gate. The cloud audit validated the boot helper using an isolated dev image and synthetic data; Docker build networking prevented a stock production-image build. See [the audit](docs/archive/gate1/DOCKER-AUDIT.md) for the precise scope. Production Compose intentionally mounts host research data and reads `.env`; never use it as the untrusted development test runner.
+PR #5 is merged, but a stock production-image build/run remains unverified for Docker users; optional Docker validation is not a local-only 1.0 release gate. The cloud audit validated the boot helper using an isolated dev image and synthetic data; Docker build networking prevented a stock production-image build. See [the audit](docs/archive/gate1/DOCKER-AUDIT.md) for the precise scope. Production Compose intentionally mounts host research data and reads `.env`; never use it as the untrusted development test runner.
 
 The runtime image installs `requirements.txt` and `requirements-web.txt`. It does not install Textual, pytest or optional LLM extras; this keeps its footprint smaller, though `sentence-transformers` may still be large. To run regression tests on your development machine install `requirements-dev.txt` and run `python -m pytest -q`. Confirm the container with:
 

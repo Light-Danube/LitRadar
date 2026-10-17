@@ -4,6 +4,8 @@ Draft PR #37 starts Gate 6 from merged PR #36 (`eaa1de4b`). On 2026-10-18 the us
 
 This PR rehearses the existing **0.8.0** package and corrects release instructions. It does not produce a `1.0.0` candidate, change a release version, publish an artifact or approve the release. Any later version change needs fresh checks on that exact candidate commit.
 
+This records PR #37's earlier `[web]` artifact. The subsequent optional-extras install exposed a missing TUI stylesheet in that wheel; [PR #38's fix and fresh installed-wheel checks](GATE6-OPTIONAL-INSTALL.md) supersede its artifact for optional TUI use.
+
 | Gate 6 check | Current result and evidence |
 | --- | --- |
 | Source tests | Linux Python 3.12.14: `PYTHONPATH=/workspace/LitRadar/work/test-deps python -m pytest -q -ra` — **740 passed, 0 failed, 0 skipped**; one existing Starlette/httpx warning. `npm ci --prefix tests/web --ignore-scripts` then `npm test --prefix tests/web` — **48 passed, 0 failed, 0 skipped**. Synthetic tests do not contact scholarly providers or use a personal library. |

@@ -263,7 +263,7 @@ class LitRadarApp(App[None]):
 
     TITLE = "LitBeacon"
     SUB_TITLE = "Research Workspace · formerly LitRadar"
-    CSS_PATH = "ui.tcss"
+    CSS_PATH = Path(__file__).with_name("litradar_runtime") / "ui.tcss"
 
     BINDINGS = [
         Binding("q", "quit", "Quit"),
