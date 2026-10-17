@@ -56,6 +56,7 @@ UK = {
     'tag-one, tag-two, …': 'тег-один, тег-два, …',
     'Save': 'Зберегти',
     'Cancel': 'Скасувати',
+    'Could not save tags. Your draft is retained; retry or cancel.': 'Не вдалося зберегти теги. Введений текст не втрачено; повторіть спробу або скасуйте.',
     'Close': 'Закрити',
     'Library: {total} | View: {view}': 'Бібліотека: {total} | Вибірка: {view}',
     'all': 'Усі',

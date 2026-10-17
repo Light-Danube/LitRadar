@@ -1,6 +1,15 @@
 # Codex handoff — local-only LitBeacon 1.0
 
-## Current increment — Gate 5 annotation keyboard focus
+## Current increment — Gate 5 EN/UK TUI modal checks
+
+- Branch `codex/gate5-tui-keyboard`, baseline main `cf3f0a86` (merged #34), Draft PR #35 opened before delegation. One subagent owns real Textual Pilot EN/UK regressions; another independently reviews modal behavior. Root owns minimal reproduced fixes, documentation and full-suite integration.
+- [Scope, local checks and limits](docs/GATE5-TUI-KEYBOARD.md): Help scrolling/close/focus and guarded underlying shortcuts; tag editing/cancel/focus/draft preservation; Jobs localized persistent status/control recovery with mocked scheduler commands. A tag-save storage failure must keep the editor open with a safe localized error and permit retry/cancel, rather than escaping the event handler.
+- Long Jobs output now uses a keyboard-focusable standard scroll container; tests reach it by Tab and scroll all 50 lines with End/Home. Gate 5 remains open for remaining web/Research discovery/save/export evidence. Pilot establishes Textual event/focus behavior, not native Windows rendering, actual Narrator speech or accessibility certification. User acceptance stays separate; Narrator optional.
+- Executed local candidate: **740 Python / 44 JavaScript passed**, zero failures/skips, one existing Starlette warning. Eight new EN/UK Pilot cases pass; tag-save failure baseline was 6 passed/2 failed, with separate Jobs keyboard/scroll probes failing before the scroll-container fix. Python syntax, 105 local documentation targets/anchors, whitespace and no-tracked-logs checks passed. Version/backend/schema unchanged.
+- Fresh execution environment uses scratch-installed dev/UI/web/annotation dependencies, no semantic/model packages. Hosted Actions remain deferred by user instruction; no retries/monitoring or workflow/billing/security changes. File logging stays under ignored shared `log/`; scratch outputs uncommitted.
+- Version stays 0.8.0; no personal database, `.env`, credentials/model-cache access, major feature, merge, bump, tag or release.
+
+## Previous increment — Gate 5 annotation keyboard focus (merged)
 
 - Branch `codex/gate5-keyboard-focus`, baseline main `2130f707` (merged #33), Draft PR #34 opened before delegation. Separate subagents own the minimal `app.js` focus/cancel fix and independent EN/UK DOM regressions; baseline reproduction precedes runtime edits.
 - Scope: explicit supplemental annotation Edit focuses its textarea; Cancel/Escape restore its Edit button and discard only that edit, preserving unrelated notes/new-annotation/other-edit drafts. Ignore composing Escape and keep automatic draft restoration from taking focus. [Executed evidence and limits](docs/GATE5-KEYBOARD-FOCUS.md).

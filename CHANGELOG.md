@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased — Gate 5 EN/UK TUI modal keyboard checks
+
+- Keep the tag editor open after a storage/missing-paper failure, roll back a pending write, retain text/focus and display a safe localized persistent retry/cancel message. Enter and Save share the same path.
+- Make long Jobs diagnostics keyboard reachable and scrollable. Verify existing Help/tag/Jobs navigation, localized controls, scrolling and focus return with synthetic Textual Pilot checks. [Executed evidence and limits](docs/GATE5-TUI-KEYBOARD.md); Gate 5 remains open for remaining web/Research usability evidence, with no new Windows/Narrator certification or hosted CI claim.
+
 ## Unreleased — Gate 5 annotation keyboard focus
 
 - Focus the supplemental annotation textarea on explicit Edit, and return focus to the same Edit control on Cancel or Escape. Composing Escape does not cancel. Automatic draft restoration does not take focus; canceling one editor leaves unrelated drafts intact. [EN/UK regression evidence and limits](docs/GATE5-KEYBOARD-FOCUS.md).

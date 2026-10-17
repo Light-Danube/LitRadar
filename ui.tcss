@@ -95,13 +95,18 @@ ScheduleScreen {
 }
 
 Button:focus, Input:focus, Select:focus, #papers:focus,
-#details:focus, #help_scroll:focus, #schedule_dialog:focus {
+#details:focus, #help_scroll:focus, #schedule_dialog:focus, #schedule_status_scroll:focus {
     border: heavy $accent;
 }
 
 #tag_title {
     text-style: bold;
     margin-bottom: 1;
+}
+
+#tag_error {
+    height: auto;
+    color: $error;
 }
 
 #tag_existing {
@@ -208,12 +213,16 @@ Button:focus, Input:focus, Select:focus, #papers:focus,
     margin-bottom: 1;
 }
 
-#schedule_status {
+#schedule_status_scroll {
     height: 8;
     border: round $panel;
     padding: 1;
     overflow-y: auto;
     margin-bottom: 1;
+}
+
+#schedule_status {
+    height: auto;
 }
 
 #schedule_action_row, #schedule_remove_row {

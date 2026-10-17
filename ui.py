@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import os
 import re
+import sqlite3
 import subprocess
 import sys
 import webbrowser
@@ -105,6 +106,7 @@ class TagScreen(ModalScreen[None]):
             yield Static(self._t("[b]Edit tags[/b]"), id="tag_title")
             yield Static(self._t("Existing tags: {existing}", existing=existing), id="tag_existing", markup=False)
             yield Input(value=current, placeholder=self._t("tag-one, tag-two, …"), id="tag_input")
+            yield Static("", id="tag_error", markup=False)
             with Horizontal(id="tag_buttons"):
                 yield Button(self._t("Save"), id="tag_save", variant="primary")
                 yield Button(self._t("Cancel"), id="tag_cancel")
@@ -114,19 +116,32 @@ class TagScreen(ModalScreen[None]):
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
         if event.button.id == "tag_save":
-            raw = self.query_one("#tag_input", Input).value
-            tags = [part.strip() for part in raw.split(",") if part.strip()]
-            self.store.set_tags(self.paper_id, tags)
-            self.dismiss()
+            event.stop()
+            self._save_tags(self.query_one("#tag_input", Input).value)
         elif event.button.id == "tag_cancel":
+            event.stop()
             self.dismiss()
 
     def on_input_submitted(self, event: Input.Submitted) -> None:
         if event.input.id == "tag_input":
-            raw = event.value
-            tags = [part.strip() for part in raw.split(",") if part.strip()]
+            event.stop()
+            self._save_tags(event.value)
+
+    def _save_tags(self, raw: str) -> None:
+        tags = [part.strip() for part in raw.split(",") if part.strip()]
+        try:
             self.store.set_tags(self.paper_id, tags)
-            self.dismiss()
+        except (sqlite3.Error, OSError, KeyError):
+            # A failed commit must not leave a pending edit for a later action.
+            try:
+                self.store.conn.rollback()
+            except sqlite3.Error:
+                pass
+            self.query_one("#tag_error", Static).update(
+                self._t("Could not save tags. Your draft is retained; retry or cancel."))
+            self.query_one("#tag_input", Input).focus()
+            return
+        self.dismiss()
 
     def action_cancel(self) -> None:
         self.dismiss()
@@ -160,7 +175,8 @@ class ScheduleScreen(ModalScreen[None]):
                 id="schedule_help",
                 markup=False,
             )
-            yield Static(self._t("Checking scheduler status…"), id="schedule_status", markup=False)
+            with VerticalScroll(id="schedule_status_scroll", can_focus=True):
+                yield Static(self._t("Checking scheduler status…"), id="schedule_status", markup=False)
             with Horizontal(id="schedule_action_row"):
                 yield Button(self._t("Refresh status"), id="schedule_status_btn")
                 yield Button(self._t("Install scan · daily 07:30"), id="schedule_install_scan")
