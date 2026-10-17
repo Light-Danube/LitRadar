@@ -1,6 +1,13 @@
 # Codex handoff — local-only LitBeacon 1.0
 
-## Current increment — Gate 5 closure and Gate 6 package rehearsal
+## Current increment — Gate 6 optional installed package and guide cleanup
+
+- Branch `codex/gate6-optional-install-docs`, baseline main `d17c7f86` (merged #37), Draft PR #38. First fresh extracted-wheel `[web,ui,annotations]` install passed dependency/parser checks but Textual failed because `ui.tcss` was absent. A disposable diagnostic CSS copy isolated the cause; the tracked fix moves CSS into package data, resolves it for source/wheel, and makes the two-file setup builder reject wheels that omit it.
+- [Executed optional-extras evidence](docs/GATE6-OPTIONAL-INSTALL.md): new clean Linux venv installed fixed wheel `[web,ui,annotations]` plus smoke-only `httpx`, `pip check` passed, installed Textual Pilot and synthetic BibTeX/PDF imports passed, and standard installed-wheel CLI/web/recovery/log smoke passed. Source targeted package/TUI checks: **31 passed**; full **740 Python / 48 JavaScript passed**, zero failures/skips. One existing Starlette warning; no native Windows/terminal/Narrator/browser/provider/model claim.
+- README now points to user/setup/recovery guides; obsolete Docker handoff moved to the Gate 1 archive and public Docker scope wording matches the roadmap. Keep AGENTS/ROADMAP/CODEX-HANDOFF available for maintainers. Archiving/navigation do not make repository files private; setup ZIP still contains only wheel and SETUP.
+- Gate 6 remains open for final 1.0.0 metadata and installed artifact at that commit, same-commit CI/Windows smoke, release notes and explicit merge/tag/release approval. Hosted Actions deferred by user instruction because billing blocks startup; no retry/monitoring or workflow/billing change. No personal data, live provider, version bump, merge, tag or release.
+
+## Previous increment — Gate 5 closure and Gate 6 package rehearsal
 
 - Branch `codex/gate6-rc-audit`, baseline main `eaa1de4b` (merged #36), Draft PR #37. User accepted ordinary-user Research use on 2026-10-18 for the initial release; Gate 5 closes for the bounded candidate, without inventing a task transcript/native-browser test. Gather later feedback into specific follow-ups.
 - [Gate 6 checklist](docs/GATE6-RELEASE-CANDIDATE.md) separates a fresh 0.8.0 Linux wheel/setup ZIP rehearsal from the later final-version candidate. Scratch-built wheel has 62 entries; ZIP has only wheel+SETUP; prohibited path inventory found zero matches. Clean extracted-wheel `[web]` install, `pip check`, installed CLI/version/defaults/static/web/edit/restart, synthetic recovery and shared-log smoke passed outside the checkout. One existing Starlette warning.

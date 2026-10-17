@@ -1,6 +1,6 @@
 # LitBeacon 1.0 — active release checklist
 
-Baseline main `eaa1de4b` (merged PR #36). Version stays **0.8.0**; no merge/tag/release authorization is implied.
+Baseline main `d17c7f86` (merged PR #37). Version stays **0.8.0**; no merge/tag/release authorization is implied.
 
 - **Gate 1: closed.** [Archived feature inventory and closure evidence](archive/gate1/release-checklist-2026-10-15.md). Windows daily use and optional Narrator were accepted by the user; automated results remain separate.
 - **Gate 2: complete for this candidate.** Read-only SQLite backup, new-destination restore, elected artifacts/checksums and legacy upgrade are tested. Actual [Ubuntu/Windows extracted setup-wheel recovery checks](https://github.com/Light-Danube/LitRadar/actions/runs/38744388702) passed at implementation head `a9c64fb2`; no personal data or services were used.
@@ -9,15 +9,15 @@ Baseline main `eaa1de4b` (merged PR #36). Version stays **0.8.0**; no merge/tag/
 
 - **Gate 5: complete for this candidate.** [Annotation focus](GATE5-KEYBOARD-FOCUS.md), [EN/UK TUI modal/error checks](GATE5-TUI-KEYBOARD.md) and the [Research DOM keyboard journey](GATE5-RESEARCH-KEYBOARD.md) provide bounded checks. The user accepted ordinary-user Research use on 2026-10-18 and preferred later feedback to guide follow-ups. This is user-reported acceptance, without a supplied task transcript or new native-browser result. Narrator remains optional; no certification is inferred.
 
-- **Gate 6: in progress.** [Candidate checklist and local package rehearsal](GATE6-RELEASE-CANDIDATE.md) record executed Linux checks, current 0.8.0 version surfaces and pending same-commit Windows/CI, final-version and approval steps. [ROADMAP](../ROADMAP.md) remains the gate definition.
+- **Gate 6: in progress.** [Candidate checklist and standard package rehearsal](GATE6-RELEASE-CANDIDATE.md), followed by the [optional-extras package fix/check](GATE6-OPTIONAL-INSTALL.md), record executed Linux checks and pending same-commit Windows/CI, final-version and approval steps. [ROADMAP](../ROADMAP.md) remains the gate definition.
 
-## Current small Draft PR #37
+## Current small Draft PR #38
 
-1. Record the user's Gate 5 ordinary-use acceptance separately from synthetic keyboard checks; defer further usability changes until specific post-release feedback.
-2. Build and inspect the current 0.8.0 wheel and two-file setup ZIP, then install the extracted wheel in a fresh Linux venv outside the checkout and run the existing synthetic CLI/web/recovery/log-path smoke. **Passed**, with one existing Starlette warning; no Windows result claimed.
-3. Execute local checks: **740 Python / 48 JavaScript passed**, zero failures/skips. Correct the release guide's obsolete source-ZIP claim, keep concise setup/upgrade links and list the remaining final-candidate checks in [Gate 6 evidence](GATE6-RELEASE-CANDIDATE.md).
+1. Reproduce the fresh optional `[web,ui,annotations]` wheel's missing Textual stylesheet; include that CSS in the package and require it in the setup-bundle builder. The rebuilt extracted wheel's Textual Pilot, synthetic PDF/BibTeX adapters and existing standard installed-wheel smoke **passed** in a new Linux venv. `pip check` found no broken requirements.
+2. Remove historical development links from README's public navigation, archive the obsolete Docker handoff, and correct the public Docker guide's optional local-only scope. Active setup/recovery/user and current maintainer records remain available; archived Git history remains public if the repo is published.
+3. Execute focused source package/TUI checks: **31 passed**. Full local suites: **740 Python / 48 JavaScript passed**, zero failures/skips, one existing Starlette warning. [Detailed evidence and limits](GATE6-OPTIONAL-INSTALL.md).
 
-Hosted Actions remain deferred by user instruction because account billing blocks job startup. This rehearsal does not complete Gate 6: approved 1.0.0 metadata/artifact checks, same-commit Windows/required CI and final release approval remain open. No new subsystem, personal database access, version bump or automatic merge.
+Hosted Actions remain deferred by user instruction because account billing blocks job startup. This Linux fix does not complete Gate 6: final 1.0.0 metadata/artifact checks, same-commit Windows/required CI and final release approval remain open. No new subsystem, personal database access, version bump or automatic merge.
 
 ## Historical Gate 2 validation — 2026-10-15 (PR #26)
 

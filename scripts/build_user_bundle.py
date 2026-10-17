@@ -13,7 +13,7 @@ ROOT = Path(__file__).resolve().parents[1]
 MAX_WHEEL_BYTES = 50 * 1024 * 1024
 REQUIRED = {
     'cli.py', 'config.py', 'workspace_web.py', 'storage/recovery.py',
-    'litradar_runtime/__init__.py', 'litradar_runtime/assets/VERSION',
+    'litradar_runtime/__init__.py', 'litradar_runtime/ui.tcss', 'litradar_runtime/assets/VERSION',
     'litradar_runtime/assets/research_profile.json', 'litradar_runtime/assets/digest_config.json',
     'web/index.html', 'web/static/app.js', 'web/static/styles.css',
     'web/static/brand/litbeacon-mark.png',

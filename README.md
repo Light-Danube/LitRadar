@@ -8,9 +8,9 @@ The project was formerly **LitRadar**. Existing module names, database paths, `L
 
 **Released: v0.8.0** — local browser workspace, citation map, heuristic literature clusters, editable annotations and scheduled-job controls.
 
-**Unreleased:** graph and annotation refinements, optional local semantic exploration, and venue discovery/evidence worksheets in the CLI and Research browser section. The release version stays 0.8.0 while validation gates remain open. See [CHANGELOG](CHANGELOG.md) and the [Gate 1 history archive](docs/archive/gate1/README.md).
+**Unreleased:** graph and annotation refinements, optional local semantic exploration, and venue discovery/evidence worksheets in the CLI and Research browser section. The release version stays 0.8.0 while validation gates remain open. See the [changelog](CHANGELOG.md).
 
-Feature development is frozen for local-only 1.0. Gates 1–5 are complete for the bounded candidate, with [Gate 5 keyboard evidence and user acceptance](docs/GATE6-RELEASE-CANDIDATE.md). [Gate 4 limits](docs/GATE4-INTEGRITY-CLOSURE.md) and [network use](docs/NETWORK-USE.md) describe the local boundary. The [active checklist](docs/LOCAL-1.0-RELEASE-CHECKLIST.md) tracks Gate 6; hosted Actions are deferred by user choice while account billing blocks job startup.
+Feature development is frozen for local-only 1.0. Gates 1–5 are complete for the bounded candidate; the [release checklist](docs/LOCAL-1.0-RELEASE-CHECKLIST.md) tracks remaining Gate 6 checks. Hosted Actions are deferred by user choice while account billing blocks job startup.
 
 ## Quick start
 
@@ -86,7 +86,7 @@ python cli.py venue search SOURCE_ID "emotion context" --year-from 2023 --year-t
 
 Replace `SOURCE_ID` with the returned `S` + digits identifier. Searches use structured source/year filters and bounded pages. Returned paper IDs appear in the Literature inbox. The **Research** section provides venue search, editable evidence and quick-topic templates; [browser workflow and saved results](docs/research/web-workspace.md).
 
-[Independent venue verification](docs/archive/gate1/research/venue-verification.md) records transport/integrity tests and a repeatable public probe. The current cloud probe was blocked by proxy 403; live verification stays pending.
+The current cloud venue probe was blocked by proxy 403; live verification stays pending. The user reported successful CLI retrieval on their installation.
 
 ```sh
 python cli.py evidence show PAPER_ID
@@ -103,9 +103,7 @@ Discovery indexes, preprints, venue metadata and citations do not certify peer r
 
 ## Documentation
 
-- [User guide and configuration](docs/USER-GUIDE.md) · [environment template](.env.example) · [Telegram diagnostics](docs/TELEGRAM-TROUBLESHOOTING.md) · [Local logs](docs/LOGGING.md) · [Shutdown and scheduler checks](docs/GATE3-LIFECYCLE.md)
-- [Краткий CLI-сценарий (RU)](docs/research/cli-workflow-ru.md) · [Venue discovery and evidence](docs/research/venue-discovery.md) · [literature comparison and verification limits](docs/archive/gate1/research/erc-context-novelty-matrix-2026.md)
-- [Annotations and recovery](docs/V08-ANNOTATION-WORKFLOWS.md) · [semantic exploration](docs/SEMANTIC-WORKSPACE.md)
-- [Docker deployment](DOCKER.md) · [isolated development](docs/ISOLATED-DEV.md)
-- [Development and CI](docs/USER-GUIDE.md#development-and-ci) · [agent rules](AGENTS.md) · [handoff](CODEX-HANDOFF.md)
-- [Roadmap](ROADMAP.md) · [changelog](CHANGELOG.md) · [Gate 1 design, research and validation archive](docs/archive/gate1/README.md)
+- [Setup and updates](docs/PACKAGE-SETUP.md) · [user guide and backup/restore](docs/USER-GUIDE.md) · [environment template](.env.example)
+- [Research browser](docs/research/web-workspace.md) · [venue discovery and evidence](docs/research/venue-discovery.md) · [CLI scenario (RU)](docs/research/cli-workflow-ru.md)
+- [Annotations and recovery](docs/V08-ANNOTATION-WORKFLOWS.md) · [semantic exploration limits](docs/SEMANTIC-WORKSPACE.md)
+- [Network use](docs/NETWORK-USE.md) · [Telegram troubleshooting](docs/TELEGRAM-TROUBLESHOOTING.md) · [local logs](docs/LOGGING.md) · [optional Docker deployment](DOCKER.md)

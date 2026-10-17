@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased — Gate 6 optional installed package and public guide cleanup
+
+- Fix a reproduced installed-wheel TUI startup failure: package the Textual stylesheet beside `ui.py`'s shared runtime assets and require it in the setup bundle. A fresh Linux `[web,ui,annotations]` install now passes Textual Pilot, synthetic PDF/BibTeX adapters and the standard CLI/web/recovery smoke. [Executed check and limits](docs/GATE6-OPTIONAL-INSTALL.md).
+- Simplify README's public documentation navigation, archive the obsolete Docker handoff and align the optional Docker guide with the local-only release boundary. Current maintainer records remain available; archive/history are still visible in a public repository. Final-version and same-commit Windows/CI checks remain Gate 6 work; no version bump or release.
+
 ## Unreleased — Gate 5 closure and Gate 6 package rehearsal
 
 - Record the user's 2026-10-18 acceptance of ordinary-user Research use and close bounded Gate 5. Prior EN/UK DOM/Textual checks remain separate from user-reported acceptance; no new native-browser or reader certification is inferred. Further usability changes can follow concrete post-release feedback.
