@@ -2,6 +2,8 @@
 
 Historical audit: 2026-10-14. Scope: existing LitBeacon Textual TUI only. On **2026-10-15 the user confirmed Windows daily use and Narrator work okay and accepted them as “yes”**. This is user-reported acceptance; exact platform/reader versions and per-task observations were not supplied. Narrator is optional for this release. The broader detailed assistive-technology procedure below remains optional and incomplete; no formal certification is claimed.
 
+Current [Gate 5 EN/UK modal checks](GATE5-TUI-KEYBOARD.md) separately record Textual Pilot keyboard evidence, recoverable tag-save errors and long Jobs diagnostics. Those checks do not replace native Windows/reader observations or certify the historical procedure below.
+
 ## Executed evidence
 
 Environment: Linux, Python 3.12.14, Textual 1.0.0. Tests use Textual's real `App.run_test` lifecycle and Pilot keyboard events with disposable SQLite databases and two synthetic papers. Scheduler subprocesses, online providers and citation lookups are mocked; no actual scheduled tasks, network requests, downloads or personal research data are used.
