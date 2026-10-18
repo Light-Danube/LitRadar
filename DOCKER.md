@@ -43,7 +43,7 @@ docker compose --profile bot logs -f telegram
 docker compose --profile bot stop telegram
 ```
 
-The listener is optional; it shares the same persistent `data/` with the web service. Do not run `run_telegram_bot.bat` simultaneously with the container bot using the same token, because Telegram permits only one active `getUpdates` consumer per bot.
+The listener is optional; it shares the same persistent `data/` with the web service. Do not run `run_litbeacon_telegram.bat` simultaneously with the container bot using the same token, because Telegram permits only one active `getUpdates` consumer per bot.
 
 **Scheduling:** Docker does not automatically create Windows Task Scheduler tasks. Configure **one** host scheduler to launch the one-off `boot.sh scan` and `boot.sh digest` commands if you need periodic unattended runs. Avoid running Windows scheduled scans and Docker scheduled scans on the same database simultaneously. Keep this optional deployment on localhost; public/VPS hosting is outside the local-only 1.0 scope.
 

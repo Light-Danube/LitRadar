@@ -570,7 +570,7 @@ def cmd_web(args: argparse.Namespace) -> int:
         import uvicorn
         from workspace_web import create_app
     except ImportError as exc:
-        print("Web workspace dependencies are missing. Run setup_litradar.bat or install requirements-web.txt.", file=sys.stderr)
+        print("Web workspace dependencies are missing. Run setup_litbeacon.bat or install requirements-web.txt.", file=sys.stderr)
         return 2
     host = args.host
     if host not in {"127.0.0.1", "localhost"}:

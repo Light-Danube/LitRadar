@@ -1,0 +1,28 @@
+# Fresh Windows install from GitHub's source ZIP
+
+Use this page if you chose GitHub's **Code → Download ZIP**. To test Draft PR #40 *before it merges*, [download that branch's source ZIP](https://github.com/Light-Danube/LitRadar/archive/refs/heads/codex/gate6-windows-source-setup.zip); after merge, use `main`. The ZIP contains `cli.py`, `pyproject.toml` and `run_litbeacon_web.bat`, plus developer files. It is different from the future two-file `LitBeacon-1.0.0-setup.zip` release asset. **No 1.0 release asset has been published yet.** You do not have to build a wheel to try the source ZIP.
+
+## First launch
+
+1. Install **Python 3.12** from [python.org](https://www.python.org/downloads/windows/) with the Windows `py` launcher. Reopen PowerShell and run `py -3.12 --version`. LitBeacon needs Python 3.11+; Python 3.12 is the tested/recommended choice. The old launcher used `py -3`, which could choose Python 3.9 and fail with `TypeError: dataclass() got an unexpected keyword argument 'slots'`.
+2. Extract the GitHub ZIP into a **new, writable** folder (for example, `Documents\LitBeacon-test`). Open the folder that directly contains `cli.py` and `run_litbeacon_web.bat`. In File Explorer's address bar type `powershell` and press Enter. Do not run setup from inside the ZIP viewer.
+3. In that PowerShell window, run:
+
+   ```powershell
+   py -3.12 --version
+   $env:LITBEACON_HOME = (Join-Path (Get-Location) 'user-data')
+   .\run_litbeacon_web.bat
+   ```
+
+   The `user-data` directory keeps this test separate from an existing library. The launcher creates `.venv`, installs only the web, Textual TUI and file-import dependencies, initializes the trial database, then starts the local browser server. Development tests, semantic-model packages and cloud LLM SDKs are **not** part of this normal setup. The first run needs internet access for pip dependencies.
+4. Open <http://127.0.0.1:8765>. Stop with Ctrl+C. For another run in the **same** PowerShell window, use `.\run_litbeacon_web.bat` again; in a new window, set `LITBEACON_HOME` again first. The folder's `.venv` is the environment; `user-data` is the trial library. Keep `user-data` if you want to retain trial data.
+
+`setup_litbeacon.bat` performs just the setup step and now leaves its error visible when double-clicked. `run_litbeacon.bat` opens the TUI; `run_litbeacon_cli.bat` opens a CLI shell; `run_litbeacon_telegram.bat` starts the optional bot only after you configure it. Old `litradar` launcher filenames remain as compatibility aliases. A source ZIP cannot update itself with Git; download a newer source ZIP into another folder when needed. The packaged [wheel/setup ZIP route](PACKAGE-SETUP.md) is for a built release asset or a reviewer-built bundle.
+
+## If setup stops
+
+- If `py -3.12 --version` fails, install Python 3.12 and reopen PowerShell. If an earlier failed run created `.venv` with Python 3.9/3.10, start with a **new extracted source folder**. You may remove only that new folder's `.venv` after confirming it holds no files you need; do not delete `user-data`, `data/`, another LitBeacon folder, or an existing library.
+- If pip reports `No matching distribution`, a compiler error, or a network/TLS error, copy the **first package name and error lines**, plus `py -3.12 --version`. Run from PowerShell so the window stays open. The install may need network/package-index access; an optional model, LLM or browser-test package should not be required by this launcher.
+- To isolate the install command, run `py -3.12 -m venv .venv`, then `.\.venv\Scripts\python.exe -m pip install ".[web,ui,annotations]"` from the folder containing `pyproject.toml`. Follow with `.\.venv\Scripts\python.exe -m pip check`, `.\.venv\Scripts\python.exe -m cli init` and `.\.venv\Scripts\python.exe -m cli web`. The same PowerShell window must still have `LITBEACON_HOME` set for the isolated trial.
+
+No native Windows execution of this exact repair is claimed yet. Report an error without including your personal database, `.env`, tokens or private logs.

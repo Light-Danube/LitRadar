@@ -15,7 +15,7 @@ Scratch artifacts are **not published**: `litradar-1.0.0-py3-none-any.whl` — 8
 
 ## Open platform and release checks
 
-- **Windows:** no fresh native install of this 1.0.0 candidate yet. Earlier Windows installed-wheel checks were on older commits. The user's planned fresh-folder trial should use the Draft PR's bundle procedure and report any dependency, launch, browser or data-location issue; do not infer success from the Linux run.
+- **Windows:** the user attempted GitHub's source ZIP, not a built setup ZIP, and reported `dataclass(slots=...)` failing; the exact Python version and first pip failure are unavailable because the batch window closed. [Draft PR #40 source-ZIP repair and steps](WINDOWS-SOURCE-ZIP.md) address interpreter choice, broad dependencies and visible errors, but a native retest is pending. Earlier Windows installed-wheel checks were on older commits; Linux success does not imply a Windows pass.
 - **macOS:** no macOS runner or user machine was available. Python/CPU dependency wheels, TUI and browser behavior remain unverified. The guide gives commands but makes no compatibility claim.
 - **Linux:** this one Python 3.12 x86_64 environment passed; other distributions/Python versions and native browser appearance remain unverified.
 - **Required CI:** hosted GitHub Actions are deferred by user instruction because account billing blocks job startup. Do not retry/monitor jobs, change billing/workflows or claim same-commit CI. The final candidate needs required checks on the same reviewed commit when available.

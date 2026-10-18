@@ -47,10 +47,10 @@ The browser workspace is served locally by FastAPI/Uvicorn and builds on the exi
 
 ### Feature reference
 
-- **Browser workspace:** local-only `python cli.py web` / `run_web.bat`, with overview, searchable inbox, paper details, editable notes/tags/status, bounded citation/related-work map, and local heuristic clusters.
+- **Browser workspace:** local-only `python cli.py web` / `run_litbeacon_web.bat`, with overview, searchable inbox, paper details, editable notes/tags/status, bounded citation/related-work map, and local heuristic clusters.
 - **Scheduled-job control:** `python cli.py schedule remove --job scan|digest|all`, Telegram `/schedule remove …` or `/jobs`, and TUI `J` opens the schedule manager. Removing jobs disables the stored job flag as well as removing Windows Task Scheduler entries; on Linux/macOS any cron/launchd line must also be removed manually.
 - **Brand transition:** user-facing name is now **LitBeacon** (the Telegram bot's current name). Legacy `LitRadar` package/module paths, database path, environment variable prefix and Task Scheduler identifiers are retained for backward compatibility.
-- **Windows web shortcut:** `run_web.bat` installs the optional web dependencies through the shared setup helper, initializes the existing database, and starts the browser workspace.
+- **Windows web shortcut:** `run_litbeacon_web.bat` installs the optional web dependencies through the shared setup helper, initializes the existing database, and starts the browser workspace.
 - **Search workflow:** visible per-source progress in CLI/TUI, online source search from inside TUI, and a summary of fetched/new/library totals.
 - **Personalization:** optional feedback-based ranking, explicit Useful/Not relevant feedback, and explanations of which research-profile groups influenced the recommendation.
 - **Configuration:** `.env`, registered providers, API keys, timeouts/retries/backoff, and cached source-query results.
@@ -58,16 +58,16 @@ The browser workspace is served locally by FastAPI/Uvicorn and builds on the exi
 - **Notes and exports:** structured note template through `$EDITOR`/`VISUAL`, Markdown literature-notes export, and BibTeX export with normalized, collision-safe citekeys.
 - **Search:** SQLite FTS5 indexes title, abstract, venue, and personal notes when supported; a `LIKE` fallback remains available.
 - **Citation intelligence:** persists references, cited-by edges, and related-work links; explores a bounded citation neighborhood from the CLI or TUI; reconciles DOI, arXiv, OpenAlex, Semantic Scholar, PMID/PMCID, and corpus identifiers where available. The original reference/citation counts remain available as metadata.
-- **Telegram bot:** `telegram-run` / `run_telegram_bot.bat` listens for `/digest`, `/scan`, `/schedule`, `/settings`, `/topic`, `/search`, `/recent`, `/queue`, `/limit`, `/overlap`, and `/stats`; the bot also registers a command menu and inline action buttons. Schedule, digest-size, reading-queue, overlap, and search-topic settings persist in `digest_config.json` with bounded values. Only `LITRADAR_TELEGRAM_CHAT_ID` is allowed to issue commands.
-- **Windows convenience:** `run_cli.bat` opens a persistent activated CLI shell; `setup_litradar.bat` is shared by launchers and installs core, UI, development, LLM, web, annotation, semantic and browser-test requirement sets. The TUI launcher, updater, and schedule installer use the same dependency setup.
+- **Telegram bot:** `telegram-run` / `run_litbeacon_telegram.bat` listens for `/digest`, `/scan`, `/schedule`, `/settings`, `/topic`, `/search`, `/recent`, `/queue`, `/limit`, `/overlap`, and `/stats`; the bot also registers a command menu and inline action buttons. Schedule, digest-size, reading-queue, overlap, and search-topic settings persist in `digest_config.json` with bounded values. Only `LITRADAR_TELEGRAM_CHAT_ID` is allowed to issue commands.
+- **Windows convenience:** `run_litbeacon_cli.bat` opens a persistent activated CLI shell; `setup_litbeacon.bat` is shared by launchers and installs core, web, TUI and annotation dependencies. Development, LLM, semantic and browser-test packages are opt-in. Older launcher filenames remain aliases.
 
 The LLM assessment remains experimental/advisory; it does not override the primary ranking or establish scientific novelty.
 
 ## Start here
 
-For the quickest first launch on Windows, run `run_litradar.bat`. It creates `.venv`, installs the full dependency sets listed in `setup_litradar.bat`, initializes the database, and opens the TUI. This includes optional semantic and browser-test packages; use the manual installation below for a lighter setup. Use `run_cli.bat` for a persistent CLI shell, `run_web.bat` for the browser workspace, or `run_telegram_bot.bat` to handle interactive Telegram commands. Scheduled digest delivery works independently of the Telegram listener. Use `run_litradar.ps1` in PowerShell or `./run_litradar.sh` on Linux/macOS.
+For a new Windows **GitHub source ZIP**, start with the [three-step fresh install](WINDOWS-SOURCE-ZIP.md). `run_litbeacon_web.bat` creates `.venv`, installs normal app dependencies, initializes the selected database and opens the browser workspace. Use `run_litbeacon.bat` for TUI, `run_litbeacon_cli.bat` for a CLI shell, or `run_litbeacon_telegram.bat` only after optional bot configuration. Scheduled digest delivery does not require the listener. Use `run_litbeacon.ps1` in PowerShell or `./run_litbeacon.sh` on Linux/macOS for the TUI.
 
-To run a single CLI command through the launcher, pass arguments, for example `run_litradar.bat list --status to-read`.
+To run a single CLI command through the launcher, pass arguments, for example `run_litbeacon.bat list --status to-read`.
 
 ```bash
 python cli.py --help
@@ -98,7 +98,7 @@ python cli.py list
 python -m pytest -q
 ```
 
-After publishing the repository, update a Git checkout through GitHub Desktop (`Fetch origin` → `Pull origin`) or run `update_litradar.bat` on Windows / `./update_litradar.sh` on Linux/macOS. The updater refuses to pull over tracked local edits, updates dependencies, runs `init`, and executes tests. It does not replace the local database, `.env`, or offline PDFs. If you installed LitRadar by extracting/copying a ZIP, `update_litradar.bat` can refresh all dependency sets but cannot fetch source code without `.git`; apply a newer patch/full ZIP manually or clone the repository with GitHub Desktop.
+Update a Git checkout through GitHub Desktop (`Fetch origin` → `Pull origin`) or run `update_litbeacon.bat` on Windows / `./update_litbeacon.sh` on Linux/macOS. The updater refuses to pull over tracked local edits, updates normal runtime dependencies and runs `init`; development tests are separate. It does not replace the local database, `.env`, or offline PDFs. A source ZIP has no `.git`, so `update_litbeacon.bat` can refresh dependencies but cannot fetch newer code; extract a newer source ZIP into another folder or use GitHub Desktop.
 ## Installation
 
 Use Python 3.11 or newer. Create a virtual environment and install the lightweight package core:
@@ -423,7 +423,7 @@ Automated evidence uses synthetic/disposable libraries: active-WAL committed sta
 
 ## Upgrading and releasing with GitHub Desktop
 
-For a local Git checkout, the easiest Windows update path is `update_litradar.bat`; on Linux/macOS use `./update_litradar.sh`. These scripts refuse to pull over local changes, run a fast-forward-only pull, update dependencies, migrate the library, and run tests. If you prefer a GUI, use GitHub Desktop's **Fetch origin → Pull origin**, then run `python cli.py init` and `python -m pytest -q`.
+For a local Git checkout, the easiest Windows update path is `update_litbeacon.bat`; on Linux/macOS use `./update_litbeacon.sh`. These scripts refuse to pull over local changes, run a fast-forward-only pull, update normal runtime dependencies and initialize the library. Run development tests separately if desired. A source ZIP has no Git update path.
 
 For an approved release after the documented validation gates: make `VERSION`, package metadata, visible labels and release notes agree, verify the same candidate commit and its installed artifacts, then create a matching tag and GitHub Release only with explicit approval. The `.github/workflows/release.yml` workflow builds and attaches a runtime wheel plus the lightweight two-file setup ZIP **after** the release is published; GitHub's automatic source archives are separate. The workflow does not create the tag or release. Git checkout users can continue updating their checkout without replacing a ZIP manually.
 
@@ -504,7 +504,7 @@ The overlap section has two sources: high-overlap flags already stored by an opt
 
 ### Windows Task Scheduler
 
-Run `run_litradar.bat` once to create `.venv` and install the launcher dependency sets, then use `install_schedule.bat` for the default daily scan + weekly digest, or install jobs individually:
+Run `run_litbeacon.bat` once to create `.venv` and install the launcher dependency sets, then use `install_litbeacon_schedule.bat` for the default daily scan + weekly digest, or install jobs individually:
 
 ```powershell
 python cli.py schedule install --job scan --frequency daily --time 07:30
@@ -530,7 +530,7 @@ If Telegram is not configured, scheduled digest jobs save a Markdown report loca
 
 [Stopping the listener with Ctrl+C](TELEGRAM-TROUBLESHOOTING.md#stopping-the-listener): idle HTTP/menu/retry waits now allow prompt interruption; the Windows launcher can remain open at its exit-status pause. Active commands retain their own bounded waits.
 
-The scheduled Task Scheduler job sends digests without a permanently running bot process. To use slash commands and inline menu buttons, configure both `LITRADAR_TELEGRAM_BOT_TOKEN` and `LITRADAR_TELEGRAM_CHAT_ID`, then run `run_telegram_bot.bat` and keep that window open. The polling process receives commands only from the configured chat ID and saves its update offset under `data/telegram_bot_state.json`. Do not run multiple `telegram-run` instances or use `telegram-chats` concurrently with the listener; Telegram allows only one active `getUpdates` poller per bot token.
+The scheduled Task Scheduler job sends digests without a permanently running bot process. To use slash commands and inline menu buttons, configure both `LITRADAR_TELEGRAM_BOT_TOKEN` and `LITRADAR_TELEGRAM_CHAT_ID`, then run `run_litbeacon_telegram.bat` and keep that window open. The polling process receives commands only from the configured chat ID and saves its update offset under `data/telegram_bot_state.json`. Do not run multiple `telegram-run` instances or use `telegram-chats` concurrently with the listener; Telegram allows only one active `getUpdates` poller per bot token.
 
 All new file logging uses the application workspace's ignored `log/` directory across CLI/web/TUI/Telegram/provider integrations; installed packages use their writable user directory. [Locations, exclusions and legacy compatibility](LOGGING.md).
 
@@ -574,11 +574,11 @@ Keep the project `.env` readable by the user running the scheduled job.
 
 ## Browser startup and runtime
 
-Run `run_web.bat` on Windows or `python cli.py web` from the prepared virtual environment, then open `http://127.0.0.1:8765`. Use `--port 8787` if the default port is occupied. The server binds only to localhost; do not expose it to your LAN or the public internet because this first release has no account/auth layer. The shipped UI uses HTML/CSS, vanilla JavaScript and native SVG; API routes use FastAPI and Uvicorn and read/write through the existing `PaperStore` layer. No Node/npm, CDN, React, or new database is required at runtime.
+Run `run_litbeacon_web.bat` on Windows or `python cli.py web` from the prepared virtual environment, then open `http://127.0.0.1:8765`. Use `--port 8787` if the default port is occupied. The server binds only to localhost; do not expose it to your LAN or the public internet because this first release has no account/auth layer. The shipped UI uses HTML/CSS, vanilla JavaScript and native SVG; API routes use FastAPI and Uvicorn and read/write through the existing `PaperStore` layer. No Node/npm, CDN, React, or new database is required at runtime.
 
 The CLI defaults to numeric `127.0.0.1`; its only accepted `--host` values are `127.0.0.1` and `localhost`. Docker uses a separate container-internal listener and relies on the shipped Compose host-loopback port mapping. Direct Uvicorn invocation, edited port mappings, reverse proxies and tunnels can bypass this launch boundary and are outside the supported local-only setup. Loopback binding provides no authentication, browser Origin/Host validation or protection from other local programs. [Verification scope and results](GATE4-LOCAL-BOUNDARY.md).
 
-Install only the web dependencies manually with `python -m pip install -r requirements-web.txt` if needed. The shared Windows setup helper installs core, UI, development, LLM and web requirement sets. The UI can edit status, notes and tags; it can visualise citation/related edges that are already stored locally. If a map is empty, run Citation Discovery using the CLI/TUI first. Cluster labels are explicitly heuristic (tags, repeated venues, shared title/abstract terms), not embedding-based semantic similarity or evidence of research novelty.
+Install only the web dependencies manually with `python -m pip install ".[web]"` if needed. The shared Windows setup helper installs web, TUI and annotation extras, without development, LLM, semantic or browser-test packages. The UI can edit status, notes and tags; it can visualise citation/related edges already stored locally. If a map is empty, run Citation Discovery using the CLI/TUI first. Cluster labels are heuristic, not evidence of research novelty.
 
 ### Brand name note
 
@@ -596,7 +596,7 @@ The dev image uses lightweight core/web CI dependencies, disposable CLI fixtures
 
 ## Wheel installation
 
-For releases providing a lightweight setup ZIP, extract it and follow its standalone `SETUP.txt`. It contains only the runtime wheel and guide, without the development checkout or legacy docs. [Windows, macOS and Linux package setup, upgrades and candidate build](PACKAGE-SETUP.md). Draft PR #39 reviewers can build the candidate locally while hosted Actions are deferred by account billing; no current CI artifact or published 1.0 release is implied.
+For releases providing a lightweight setup ZIP, extract it and follow its standalone `SETUP.txt`. It contains only the runtime wheel and guide, without the development checkout or legacy docs. [Windows, macOS and Linux package setup](PACKAGE-SETUP.md). The 1.0 candidate is currently source only; [Windows source-ZIP users can launch without building a wheel](WINDOWS-SOURCE-ZIP.md). Hosted Actions are deferred by account billing; no current CI artifact or published 1.0 release is implied.
 
 Install a built wheel with `python -m pip install "path/to/litradar-<version>-py3-none-any.whl[web]"` (replace `<version>` with the actual wheel version), then run `python -m cli init` and `python -m cli web`. Commands work outside a source checkout. Static browser assets and canonical default JSON/version files are bundled; no real library, `.env`, PDFs or model weights are shipped.
 
