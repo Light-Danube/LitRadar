@@ -2,6 +2,7 @@
 
 ## 1.0.0 candidate — unreleased
 
+- Clarify a GitHub source-ZIP first launch on Windows after a user-reported `dataclass(slots=...)` failure consistent with Python older than the supported 3.11 floor. Prefer Python 3.12/3.11, stop visibly on an old `.venv`, and install only normal web/TUI/file-import extras from source. Add LitBeacon-named launchers with prior filenames as compatibility aliases. [Windows source-ZIP steps and limits](docs/WINDOWS-SOURCE-ZIP.md). This exact Windows repair still needs a native retest.
 - Align package/runtime, CLI, FastAPI, web label, provider User-Agent and source-launcher dependency markers for a reviewable local-only 1.0.0 candidate. Existing legacy package/module/config identifiers remain compatible; this is no tag or published release.
 - Provide [fresh-folder Windows, macOS and Linux setup](docs/PACKAGE-SETUP.md), a two-file wheel/setup ZIP and [executed Linux candidate evidence](docs/GATE6-1.0-CANDIDATE.md). The new release combines the unreleased graph, annotation, recovery, Research/venue and local usability increments recorded below. Native Windows/macOS installation and same-commit required CI remain open; hosted Actions are deferred because billing prevents job startup.
 

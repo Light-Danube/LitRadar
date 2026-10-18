@@ -1,6 +1,6 @@
 # Fresh Windows install from GitHub's source ZIP
 
-Use this page if you chose **Code → Download ZIP** on the repository's `main` branch. That ZIP is the *source checkout*; it contains `cli.py`, `pyproject.toml` and `run_litbeacon_web.bat`, plus developer files. It is different from the future two-file `LitBeacon-1.0.0-setup.zip` release asset. **No 1.0 release asset has been published yet.** You do not have to build a wheel to try the source ZIP.
+Use this page if you chose GitHub's **Code → Download ZIP**. To test Draft PR #40 *before it merges*, [download that branch's source ZIP](https://github.com/Light-Danube/LitRadar/archive/refs/heads/codex/gate6-windows-source-setup.zip); after merge, use `main`. The ZIP contains `cli.py`, `pyproject.toml` and `run_litbeacon_web.bat`, plus developer files. It is different from the future two-file `LitBeacon-1.0.0-setup.zip` release asset. **No 1.0 release asset has been published yet.** You do not have to build a wheel to try the source ZIP.
 
 ## First launch
 

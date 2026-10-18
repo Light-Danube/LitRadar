@@ -1,6 +1,12 @@
 # Codex handoff — local-only LitBeacon 1.0
 
-## Current increment — Gate 6 versioned installation candidate
+## Current increment — Gate 6 Windows source-ZIP setup repair
+
+- Baseline main `6d47d808` (merged #39), branch `codex/gate6-windows-source-setup`, Draft PR #40. User downloaded GitHub's **source ZIP**, ran `setup_litradar.bat` and saw `TypeError: dataclass() got an unexpected keyword argument 'slots'`, but the batch window closed too quickly to capture the pip error. This is consistent with an interpreter older than Python 3.10; the project requires 3.11+, with 3.12 recommended. Do not claim the exact interpreter version without the user's version output.
+- Normal source setup now chooses Python 3.12 or 3.11 through `py`, detects an old existing `.venv`, displays an actionable message and pauses on direct failure. It installs `[web,ui,annotations]` instead of development, semantic, browser-test and LLM requirements. New LitBeacon-named launchers are primary; old filenames remain forwarding aliases and stable Task Scheduler identities stay unchanged. [Clear source-ZIP Windows steps](docs/WINDOWS-SOURCE-ZIP.md) distinguish it from the unpublished two-file package ZIP.
+- Linux source-venv install of `[web,ui,annotations]`, `pip check`, `cli --version`, disposable `init` and empty-library read passed. Full local **740 Python / 48 JavaScript passed**, zero failures/skips, one existing Starlette warning. Batch/PowerShell/native Windows are unexecuted here; Windows fresh-install retest, macOS and same-commit CI remain Gate 6 work. No personal library/credentials, merge, tag or release.
+
+## Previous increment — Gate 6 versioned installation candidate
 
 - Baseline main `d3bb5513` (merged #38); branch `codex/gate6-v1-install-candidate`, Draft PR #39. The user requested a 1.0 candidate for fresh-folder testing and Windows/macOS/Linux guides. Source and package version surfaces now use 1.0.0; README identifies 0.8.0 as the published release. No tag, publication, merge or personal-data access.
 - [Windows/macOS/Linux setup](docs/PACKAGE-SETUP.md) and [candidate evidence/limits](docs/GATE6-1.0-CANDIDATE.md) separate executed Linux package checks from the user's pending native Windows trial and untested macOS. Hosted Actions remain deferred by user instruction because billing blocks startup; do not infer same-commit CI or Windows success.

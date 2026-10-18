@@ -1,6 +1,6 @@
 # LitBeacon 1.0 — active release checklist
 
-Baseline main `d3bb5513` (merged PR #38). Published version stays **0.8.0**; Draft PR #39 contains a **1.0.0 candidate**, with no merge/tag/release authorization implied.
+Baseline main `6d47d808` (merged PR #39). Published version stays **0.8.0**; source `main` contains an unreleased **1.0.0 candidate**. Draft PR #40 repairs its Windows source-ZIP setup; no tag/release authorization is implied.
 
 - **Gate 1: closed.** [Archived feature inventory and closure evidence](archive/gate1/release-checklist-2026-10-15.md). Windows daily use and optional Narrator were accepted by the user; automated results remain separate.
 - **Gate 2: complete for this candidate.** Read-only SQLite backup, new-destination restore, elected artifacts/checksums and legacy upgrade are tested. Actual [Ubuntu/Windows extracted setup-wheel recovery checks](https://github.com/Light-Danube/LitRadar/actions/runs/38744388702) passed at implementation head `a9c64fb2`; no personal data or services were used.
@@ -9,13 +9,13 @@ Baseline main `d3bb5513` (merged PR #38). Published version stays **0.8.0**; Dra
 
 - **Gate 5: complete for this candidate.** [Annotation focus](GATE5-KEYBOARD-FOCUS.md), [EN/UK TUI modal/error checks](GATE5-TUI-KEYBOARD.md) and the [Research DOM keyboard journey](GATE5-RESEARCH-KEYBOARD.md) provide bounded checks. The user accepted ordinary-user Research use on 2026-10-18 and preferred later feedback to guide follow-ups. This is user-reported acceptance, without a supplied task transcript or new native-browser result. Narrator remains optional; no certification is inferred.
 
-- **Gate 6: in progress.** [Current 1.0.0 candidate evidence](GATE6-1.0-CANDIDATE.md) and [Windows/macOS/Linux fresh-folder guide](PACKAGE-SETUP.md) follow the [0.8.0 rehearsal](GATE6-RELEASE-CANDIDATE.md) and [optional-extras fix](GATE6-OPTIONAL-INSTALL.md). Native Windows/macOS, same-commit required CI and approval remain open. [ROADMAP](../ROADMAP.md) remains the gate definition.
+- **Gate 6: in progress.** [Current 1.0.0 candidate evidence](GATE6-1.0-CANDIDATE.md), [Windows source-ZIP repair](WINDOWS-SOURCE-ZIP.md) and [package-guide distinction](PACKAGE-SETUP.md) follow the [0.8.0 rehearsal](GATE6-RELEASE-CANDIDATE.md). The user's Windows source-ZIP attempt failed with `dataclass(slots=...)`, consistent with an old interpreter; exact Python version and first pip error remain unconfirmed. Native retest, macOS, same-commit required CI and approval remain open. [ROADMAP](../ROADMAP.md) remains the gate definition.
 
-## Current small Draft PR #39
+## Current small Draft PR #40
 
-1. Align 1.0.0 candidate version surfaces and write copyable setup instructions for Windows, macOS and Linux. README remains concise and distinguishes the candidate from published 0.8.0. The setup ZIP continues to contain only wheel and `SETUP.txt`.
-2. Build and inspect the 1.0.0 wheel/ZIP; fresh-install extracted wheel `[web,ui,annotations]` in a new Linux venv outside checkout. `pip check`, installed CLI/version/web/assets/edit/restart/recovery/log smoke and a Textual Pilot startup passed. The package inventory excludes local/private files. [Exact evidence](GATE6-1.0-CANDIDATE.md).
-3. Full local suites: **740 Python / 48 JavaScript passed**, zero failures/skips, one existing Starlette warning. Windows native installation is now a user test target; no 1.0.0 Windows/macOS pass is claimed.
+1. Make GitHub's **source ZIP** a direct, documented first-launch path: Python 3.12, extract to a new folder, set a disposable data home, run `run_litbeacon_web.bat`. The unpublished two-file release ZIP remains a separate package path; no wheel build is needed for the source ZIP.
+2. Replace the broad Windows launcher install with `[web,ui,annotations]`, prefer Python 3.12/3.11, detect an old `.venv` and keep errors visible. Provide LitBeacon-named batch/PowerShell/shell launchers while retaining old names as aliases; preserve scheduler task identity and data paths.
+3. Fresh Linux source install of those extras plus `pip check`, disposable init/list and version **passed**. Local source suites: **740 Python / 48 JavaScript passed**, zero failures/skips, one existing Starlette warning. Native Windows launcher execution is pending.
 
 Hosted Actions remain deferred by user instruction because account billing blocks job startup. Gate 6 remains open for native candidate installation, same-commit required CI, review and explicit merge/tag/release approval. No new subsystem, personal database access, automatic merge or publication.
 
