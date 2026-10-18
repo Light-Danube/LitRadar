@@ -45,8 +45,8 @@ if errorlevel 1 goto venv_failed
 :install
 "%PYTHON%" --version
 if not exist "%MARKER%" (
-  echo Installing LitBeacon web, TUI and file-import dependencies...
-  "%PYTHON%" -m pip install ".[web,ui,annotations]"
+  echo Installing LitBeacon web and TUI dependencies...
+  "%PYTHON%" -m pip install ".[web,ui]"
   if errorlevel 1 goto failed
   "%PYTHON%" -m pip check
   if errorlevel 1 goto failed
