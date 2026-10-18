@@ -71,14 +71,15 @@ def wheel_version(wheel: Path, tag: str | None = None) -> str:
 def setup_text(wheel_name: str, version: str) -> str:
     return f'''LitBeacon {version} - package setup
 
-Requirements: Python 3.11+ and internet access for pip dependencies.
+Requirements: Python 3.11+; Python 3.12 is recommended and tested.
+Python 3.12.7 is suitable. Internet access is needed for pip dependencies.
 Extract both files together into a writable folder. No Git, Node, Docker,
 development checkout, legacy documentation or credentials are needed.
 Local-only describes library use; provider searches and dependency installation use the network.
 
 WINDOWS - open PowerShell in this extracted folder:
-  py -3 --version
-  py -3 -m venv .venv
+  py -3.12 --version
+  py -3.12 -m venv .venv
   .\\.venv\\Scripts\\python.exe -m pip install ".\\{wheel_name}[web]"
   .\\.venv\\Scripts\\python.exe -m pip check
   .\\.venv\\Scripts\\python.exe -m cli --version
@@ -94,7 +95,10 @@ LINUX / MACOS - open a terminal in this extracted folder:
   ./.venv/bin/python -m cli init
   ./.venv/bin/python -m cli web
 
-Use a Python version of 3.11 or newer for the venv command above.
+If py -3.12 is unavailable, install Python 3.12 from python.org and reopen
+PowerShell. Python 3.11 users can replace -3.12 with -3.11 in both commands.
+Do not use py -3: it can silently select a different installed version.
+On Linux/macOS, confirm python3 --version is 3.11 or newer before creating .venv.
 Open http://127.0.0.1:8765. Stop with Ctrl+C; restart using the same web command.
 The server is for localhost use; do not expose it publicly or on a LAN.
 For help, use the same venv interpreter with: -m cli --help

@@ -1,6 +1,6 @@
 # LitBeacon 1.0 — active release checklist
 
-Baseline main `6d47d808` (merged PR #39). Published version stays **0.8.0**; source `main` contains an unreleased **1.0.0 candidate**. Draft PR #40 repairs its Windows source-ZIP setup; no tag/release authorization is implied.
+Baseline main `5e7fff51` (merged PR #40). Published version stays **0.8.0**; source `main` contains an unreleased **1.0.0 candidate**. Draft PR #41 prepares the version-specific setup guide and release readiness; no tag/release authorization is implied.
 
 - **Gate 1: closed.** [Archived feature inventory and closure evidence](archive/gate1/release-checklist-2026-10-15.md). Windows daily use and optional Narrator were accepted by the user; automated results remain separate.
 - **Gate 2: complete for this candidate.** Read-only SQLite backup, new-destination restore, elected artifacts/checksums and legacy upgrade are tested. Actual [Ubuntu/Windows extracted setup-wheel recovery checks](https://github.com/Light-Danube/LitRadar/actions/runs/38744388702) passed at implementation head `a9c64fb2`; no personal data or services were used.
@@ -9,15 +9,15 @@ Baseline main `6d47d808` (merged PR #39). Published version stays **0.8.0**; sou
 
 - **Gate 5: complete for this candidate.** [Annotation focus](GATE5-KEYBOARD-FOCUS.md), [EN/UK TUI modal/error checks](GATE5-TUI-KEYBOARD.md) and the [Research DOM keyboard journey](GATE5-RESEARCH-KEYBOARD.md) provide bounded checks. The user accepted ordinary-user Research use on 2026-10-18 and preferred later feedback to guide follow-ups. This is user-reported acceptance, without a supplied task transcript or new native-browser result. Narrator remains optional; no certification is inferred.
 
-- **Gate 6: in progress.** [Current 1.0.0 candidate evidence](GATE6-1.0-CANDIDATE.md), [Windows source-ZIP repair](WINDOWS-SOURCE-ZIP.md) and [package-guide distinction](PACKAGE-SETUP.md) follow the [0.8.0 rehearsal](GATE6-RELEASE-CANDIDATE.md). The user's Windows source-ZIP attempt failed with `dataclass(slots=...)`, consistent with an old interpreter; exact Python version and first pip error remain unconfirmed. Native retest, macOS, same-commit required CI and approval remain open. [ROADMAP](../ROADMAP.md) remains the gate definition.
+- **Gate 6: in progress.** [Current 1.0.0 candidate evidence](GATE6-1.0-CANDIDATE.md), [Windows source-ZIP guide](WINDOWS-SOURCE-ZIP.md) and [package guide](PACKAGE-SETUP.md) distinguish source from the two-file release artifact. On 2026-10-18 the user reported Windows source-ZIP setup with Python **3.12.7** created `.venv` and launched the web workspace after manually deleting an old `.venv`/cache and running setup as administrator. That confirms their recovery path, not the new automatic preservation path. Exact 1.0 wheel/setup-ZIP installation on Windows, macOS installation, same-commit required CI and explicit release approval remain open. [ROADMAP](../ROADMAP.md) remains the gate definition.
 
-## Current small Draft PR #40
+## Current small Draft PR #41
 
-1. Make GitHub's **source ZIP** a direct, documented first-launch path: Python 3.12, extract to a new folder, set a disposable data home, run `run_litbeacon_web.bat`. The unpublished two-file release ZIP remains a separate package path; no wheel build is needed for the source ZIP.
-2. Replace the broad Windows launcher install with `[web,ui,annotations]`, prefer Python 3.12/3.11, detect an old `.venv` and keep errors visible. Provide LitBeacon-named batch/PowerShell/shell launchers while retaining old names as aliases; preserve scheduler task identity and data paths.
-3. Extracted a tracked source ZIP into a new Linux folder, installed those extras in a new venv, then ran `pip check`, disposable init/list and version: **passed**. Local source suites: **740 Python / 48 JavaScript passed**, zero failures/skips, one existing Starlette warning. Native Windows launcher execution is pending.
+1. Keep a mismatched/broken Windows source `.venv` under `.venv-before-python312` and create a fresh environment; route PowerShell launch/update through the same setup. Pin the generated Windows `SETUP.txt` venv command to `py -3.12`; a documented 3.11 fallback remains. Avoid `py -3` silently selecting another installed version.
+2. Record the user's Windows **source-ZIP** success as user-reported evidence, shorten README and update platform setup instructions. Keep the release ZIP/wheel and source paths distinct.
+3. Linux Python 3.12: **740 Python passed** (one existing Starlette warning); after `npm ci`, **8 Node test files passed**. Built the 1.0.0 wheel and two-file ZIP; 63 wheel entries, byte-identical embedded wheel, generated `py -3.12` instruction and prohibited-file inventory passed. Fresh Linux extracted-wheel `[web]` install, `pip check`, CLI 1.0.0, disposable init and installed-package CLI/assets/web/edit/restart/recovery smoke passed. No native Windows batch or exact 1.0 wheel test is inferred. Hosted Actions remain deferred because account billing blocks job startup. The release workflow runs only **after** publication, so manual asset verification is required before publishing while Actions are unavailable.
 
-Hosted Actions remain deferred by user instruction because account billing blocks job startup. Gate 6 remains open for native candidate installation, same-commit required CI, review and explicit merge/tag/release approval. No new subsystem, personal database access, automatic merge or publication.
+No new subsystem, personal database access, automatic merge, tag or publication.
 
 ## Historical Gate 2 validation — 2026-10-15 (PR #26)
 

@@ -1,110 +1,31 @@
 # LitBeacon Research Workspace
 
-**LitBeacon** is a local-first workspace for discovering, ranking, reading and comparing academic papers. It keeps your library, notes and research history in SQLite and offers a browser interface, CLI, Textual TUI and optional Telegram workflows.
-
-The project was formerly **LitRadar**. Existing module names, database paths, `LITRADAR_*` configuration and Windows task identifiers remain compatible.
+**LitBeacon** is a local-first workspace for discovering, reading and comparing academic papers. It keeps your library, notes and research history in SQLite, with a browser interface, CLI, Textual TUI and optional Telegram workflows. The project was formerly LitRadar; existing module names, data paths and `LITRADAR_*` settings remain compatible.
 
 ## Release status
 
-**Released: v0.8.0** — local browser workspace, citation map, heuristic literature clusters, editable annotations and scheduled-job controls.
+**Published release: v0.8.0.** Source `main` contains an **unreleased v1.0.0 candidate**; no 1.0 setup ZIP has been published. Feature development is frozen. Gates 1–5 are complete for this bounded candidate; [Gate 6 checks and limits](docs/LOCAL-1.0-RELEASE-CHECKLIST.md) remain open. Hosted Actions are deferred because account billing prevents jobs from starting.
 
-**v1.0.0 candidate in source:** graph and annotation refinements, optional local semantic exploration, and venue discovery/evidence worksheets in the CLI and Research browser section. No 1.0 release asset has been published. See the [changelog](CHANGELOG.md).
+## Start on Windows from GitHub's source ZIP
 
-Feature development is frozen for local-only 1.0. Gates 1–5 are complete for the bounded candidate; the [release checklist](docs/LOCAL-1.0-RELEASE-CHECKLIST.md) tracks remaining Gate 6 checks. Hosted Actions are deferred by user choice while account billing blocks job startup.
+1. Install **Python 3.12** from [python.org](https://www.python.org/downloads/windows/) with the Windows `py` launcher. Python 3.12.7 works; check `py -3.12 --version` in PowerShell.
+2. Use **Code → Download ZIP**, extract it into a new writable folder, and open the folder containing `run_litbeacon_web.bat`.
+3. Run `run_litbeacon_web.bat`; it creates `.venv`, installs the normal app dependencies and starts the local web workspace. Open <http://127.0.0.1:8765>.
 
-## Quick start
+If an old `.venv` uses a different Python, the launcher keeps it as `.venv-before-python312` and creates a fresh one; your library remains separate. The [step-by-step Windows source-ZIP guide](docs/WINDOWS-SOURCE-ZIP.md) covers a separate trial data folder and errors. The **future release download** is a smaller, two-file setup ZIP with a wheel and `SETUP.txt`; follow the [Windows, macOS and Linux package guide](docs/PACKAGE-SETUP.md) for that route. Dependency installation needs internet access; saved-library work is local.
 
-Use **Python 3.11 or newer** (3.12 recommended). Downloaded GitHub's **Code → Download ZIP**? Follow the [fresh Windows source-ZIP guide](docs/WINDOWS-SOURCE-ZIP.md): open its extracted folder and run `run_litbeacon_web.bat`. No wheel build is needed. A future two-file release ZIP uses the separate [Windows, macOS and Linux package guide](docs/PACKAGE-SETUP.md). Installation downloads dependencies; local library use needs no cloud service.
+## Use the workspace
 
-The source-checkout commands below are for developers and existing launcher users.
+The browser, CLI and TUI support discovery, notes and tags, citation maps, annotations, Research venue search and evidence worksheets, local exports and recovery. Provider searches use the network; optional LLM and local semantic exploration require explicit setup. The web server binds to localhost and has no authentication for public/LAN hosting.
 
-### Windows launchers
+For a source checkout, run `run_litbeacon_cli.bat` or `run_litbeacon.bat` on Windows for the CLI/TUI. On macOS/Linux, follow the [package guide](docs/PACKAGE-SETUP.md) or the [source setup and command reference](docs/USER-GUIDE.md). Previous `litradar` launcher names remain aliases.
 
-Run `run_litbeacon_web.bat` for the browser workspace, `run_litbeacon.bat` for the TUI, or `run_litbeacon_cli.bat` for a persistent CLI shell. Launchers create `.venv`, install the normal app dependencies and initialize the selected database. Previous launcher names remain as aliases.
+Installed wheels keep data in a writable per-user LitBeacon directory; source checkouts use `data/litradar.sqlite3` unless configured otherwise. An install never moves an old library automatically. [Back up and upgrade safely](docs/USER-GUIDE.md#consistent-local-backup-and-restore-unreleased).
 
-The shared Windows setup installs web, TUI and file-import extras; semantic, LLM and development packages are opt-in. [Launcher and update details](docs/USER-GUIDE.md#start-here).
+## Guides
 
-### Manual setup
+- [Installation and updates](docs/PACKAGE-SETUP.md) · [Windows source ZIP](docs/WINDOWS-SOURCE-ZIP.md) · [user guide](docs/USER-GUIDE.md)
+- [Research workflow](docs/research/web-workspace.md) · [venue/evidence details](docs/research/venue-discovery.md) · [network use](docs/NETWORK-USE.md)
+- [Changelog](CHANGELOG.md) · [roadmap](ROADMAP.md) · [release checklist](docs/LOCAL-1.0-RELEASE-CHECKLIST.md)
 
-Create and activate a virtual environment:
-
-```sh
-python -m venv .venv
-```
-
-Windows PowerShell:
-
-```powershell
-.\.venv\Scripts\Activate.ps1
-```
-
-Linux/macOS:
-
-```sh
-source .venv/bin/activate
-```
-
-Install the lightweight core plus browser dependencies and start the workspace:
-
-```sh
-python -m pip install ".[web]"
-python cli.py init
-python cli.py web
-```
-
-Open **http://127.0.0.1:8765**. The server binds to localhost; it has no account/authentication layer. Use `python cli.py web --port 8787` if the default port is occupied.
-
-For CLI only, install `python -m pip install .`; for the TUI, install `python -m pip install ".[ui]"` and run `python cli.py ui`. Unlike the package core, legacy `requirements.txt` also installs sentence-transformers. [Optional dependencies and configuration](docs/USER-GUIDE.md#installation).
-
-Try the library without scholarly API access:
-
-```sh
-python cli.py ingest-fixture data/fixture.json --no-semantic
-python cli.py list
-python cli.py --help
-```
-
-## Main workflows
-
-- **Discover papers:** broad OpenAlex, Semantic Scholar and arXiv searches, source progress, cached results and conservative deduplication.
-- **Organize reading:** search/filter the inbox, edit notes/tags/status, record relevance feedback and export Markdown or BibTeX.
-- **Explore connections:** bounded citation and related-work maps with provider provenance, filters and SVG/GraphML/JSON export.
-- **Use the browser:** English/Ukrainian interface, System/Light/Dark appearance, keyboard navigation and draft-preserving editors.
-- **Retain evidence:** separate annotations with provenance, revision history and guarded recovery; optional bounded file imports.
-- **Work offline or on a schedule:** local reading bundles, legal open-access PDF downloads, research digests and optional Telegram delivery.
-
-[Detailed workflows, commands and shortcuts](docs/USER-GUIDE.md). Optional LLM assessment is advisory and requires an explicit action. Local semantic graph exploration is off by default and requires an existing local model; [setup and evaluation limits](docs/SEMANTIC-WORKSPACE.md).
-
-## Venue search and evidence worksheet (unreleased)
-
-Look up a venue, inspect its identity, then search a concrete OpenAlex source ID:
-
-```sh
-python cli.py venue lookup "Computational Linguistics" --limit 10
-python cli.py venue search SOURCE_ID "emotion context" --year-from 2023 --year-to 2026 --limit 20
-```
-
-Replace `SOURCE_ID` with the returned `S` + digits identifier. Searches use structured source/year filters and bounded pages. Returned paper IDs appear in the Literature inbox. The **Research** section provides venue search, editable evidence and quick-topic templates; [browser workflow and saved results](docs/research/web-workspace.md).
-
-The current cloud venue probe was blocked by proxy 403; live verification stays pending. The user reported successful CLI retrieval on their installation.
-
-```sh
-python cli.py evidence show PAPER_ID
-python cli.py evidence export PAPER_ID --output matrix.md
-```
-
-Replace `PAPER_ID` with a canonical library ID. Worksheets are human-editable, preserve per-field provenance and remain separate from personal notes. No LLM is required. [Full usage, JSON edits, CSV export, bounds and recovery](docs/research/venue-discovery.md).
-
-## Data and limitations
-
-Source checkouts keep `data/litradar.sqlite3`; installed wheels use a separate writable per-user LitBeacon directory ([locations/override](docs/USER-GUIDE.md#wheel-installation)). Migrations are additive. Unreleased `library-backup` creates a consistent SQLite snapshot with explicitly elected files; `library-restore` verifies it into a new directory. [Backup, exclusions and upgrade instructions](docs/USER-GUIDE.md#consistent-local-backup-and-restore-unreleased).
-
-Discovery indexes, preprints, venue metadata and citations do not certify peer review, Scopus/WoS membership or academic novelty. Missing evidence stays unverified. The user confirmed live CLI retrieval locally; cloud OpenAlex/Crossref probes were blocked by proxy **403**. Synthetic tests establish behavior, not live coverage. Windows, rendered-browser and real-model results are tracked separately in the validation documents.
-
-## Documentation
-
-- [Setup and updates](docs/PACKAGE-SETUP.md) · [user guide and backup/restore](docs/USER-GUIDE.md) · [environment template](.env.example)
-- [Fresh Windows source-ZIP setup](docs/WINDOWS-SOURCE-ZIP.md)
-- [Research browser](docs/research/web-workspace.md) · [venue discovery and evidence](docs/research/venue-discovery.md) · [CLI scenario (RU)](docs/research/cli-workflow-ru.md)
-- [Annotations and recovery](docs/V08-ANNOTATION-WORKFLOWS.md) · [semantic exploration limits](docs/SEMANTIC-WORKSPACE.md)
-- [Network use](docs/NETWORK-USE.md) · [Telegram troubleshooting](docs/TELEGRAM-TROUBLESHOOTING.md) · [local logs](docs/LOGGING.md) · [optional Docker deployment](DOCKER.md)
+Provider metadata and citation links do not prove peer review, indexing or novelty. See the guides for evidence limits and optional components.

@@ -24,18 +24,10 @@ if ($LASTEXITCODE -ne 0) {
     exit $LASTEXITCODE
 }
 Write-Host 'Source files updated. Preparing environment...' -ForegroundColor Green
+& (Join-Path $PSScriptRoot 'setup_litbeacon.bat')
+if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 $venv = Join-Path $PSScriptRoot '.venv'
 $python = Join-Path $venv 'Scripts/python.exe'
-if (-not (Test-Path $python)) {
-    if (Get-Command py -ErrorAction SilentlyContinue) {
-        & py -3.12 --version *> $null
-        if ($LASTEXITCODE -eq 0) { & py -3.12 -m venv $venv }
-        else { & py -3.11 -m venv $venv }
-    } else { throw 'Install Python 3.12 or 3.11 with the Windows py launcher first.' }
-    if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-}
-& $python -c 'import sys; sys.exit(0 if sys.version_info >= (3, 11) else 1)'
-if ($LASTEXITCODE -ne 0) { throw 'This .venv uses old Python. Install Python 3.12 and create a fresh .venv.' }
 & $python -m pip install '.[web,ui,annotations]'
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 & $python -m pip check
