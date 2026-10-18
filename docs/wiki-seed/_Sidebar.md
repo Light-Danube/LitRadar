@@ -1,0 +1,7 @@
+- [Home](Home)
+- [Release and downloads](https://github.com/Light-Danube/LitRadar/releases/tag/v1.0.0)
+- [Install on Windows, macOS or Linux](https://github.com/Light-Danube/LitRadar/blob/main/docs/PACKAGE-SETUP.md)
+- [Windows source ZIP](https://github.com/Light-Danube/LitRadar/blob/main/docs/WINDOWS-SOURCE-ZIP.md)
+- [Українські інструкції](https://github.com/Light-Danube/LitRadar/blob/main/docs/PACKAGE-SETUP.uk.md)
+- [User guide and backup](https://github.com/Light-Danube/LitRadar/blob/main/docs/USER-GUIDE.md)
+- [Documentation index](https://github.com/Light-Danube/LitRadar/blob/main/docs/README.md)

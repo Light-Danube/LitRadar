@@ -1,0 +1,87 @@
+LitBeacon 1.0.0 - package setup
+
+Requirements: Python 3.11+; Python 3.12 is recommended and tested.
+Python 3.12.7 is suitable. Internet access is needed for pip dependencies.
+Save this file and the wheel together in a writable folder. If you downloaded
+a setup ZIP, extract both files first. No Git, Node, Docker,
+development checkout, legacy documentation or credentials are needed.
+Local-only describes library use; provider searches and dependency installation use the network.
+
+WINDOWS - open PowerShell in this folder:
+  py -3.12 --version
+  py -3.12 -m venv .venv
+  .\.venv\Scripts\python.exe -m pip install --no-cache-dir ".\litradar-1.0.0-py3-none-any.whl[web]"
+  .\.venv\Scripts\python.exe -m pip check
+  .\.venv\Scripts\python.exe -m cli --version
+  .\.venv\Scripts\python.exe -m cli init
+  .\.venv\Scripts\python.exe -m cli web
+
+LINUX / MACOS - open a terminal in this folder:
+  python3 --version
+  python3 -m venv .venv
+  ./.venv/bin/python -m pip install --no-cache-dir "./litradar-1.0.0-py3-none-any.whl[web]"
+  ./.venv/bin/python -m pip check
+  ./.venv/bin/python -m cli --version
+  ./.venv/bin/python -m cli init
+  ./.venv/bin/python -m cli web
+
+If py -3.12 is unavailable, install Python 3.12 from python.org and reopen
+PowerShell. Python 3.11 users can replace -3.12 with -3.11 in both commands.
+Do not use py -3: it can silently select a different installed version.
+On Linux/macOS, confirm python3 --version is 3.11 or newer before creating .venv.
+Open http://127.0.0.1:8765. Stop with Ctrl+C; restart using the same web command.
+The server is for localhost use; do not expose it publicly or on a LAN.
+For help, use the same venv interpreter with: -m cli --help
+Optional TUI/file parsers: install this wheel with [web,ui,annotations] instead.
+Models, cloud LLMs and Telegram are optional; nothing requires them for local library use.
+
+DATA AND UPDATES
+Windows data: %LOCALAPPDATA%\LitBeacon
+Linux data: $XDG_DATA_HOME/LitBeacon (default ~/.local/share/LitBeacon)
+macOS data: ~/Library/Application Support/LitBeacon
+Set LITBEACON_HOME before launching to choose another data directory.
+Missing editable defaults are seeded; existing profiles/configuration are retained.
+New application file logs belong in this data directory under log/, never in installed code.
+Optional Telegram diagnostics: -m cli telegram-run --debug --log-file telegram-listener.log
+This writes log/telegram-listener.log under that data directory; logs are not release files.
+Existing source-checkout libraries are not moved: use --db PATH before the command.
+
+Before upgrading, stop writers and use the OLD environment's interpreter with:
+  -m cli library-backup NEW_BACKUP_DIRECTORY
+This is a database-only backup. Elect research/offline roots explicitly when needed;
+see library-backup --help. Keep profile/digest settings and credentials separately.
+If the old release lacks library-backup, install the new wheel in a separate venv,
+then use its interpreter with -m cli --db OLD_DATABASE library-backup NEW_DIRECTORY
+BEFORE init or web. The backup opens the selected source read-only, without migrations.
+Save a later release's wheel and guide in a new folder and repeat setup. The same per-user
+library remains in place; init applies additive migrations, so back up first.
+Uninstalling/removing the environment does not remove your separate library.
+Built-in Windows Task Scheduler setup still requires the source checkout;
+package users may configure their own scheduler with -m cli scheduled-run.
+
+Windows/macOS/Linux guide and known limits:
+https://github.com/Light-Danube/LitRadar/blob/main/docs/PACKAGE-SETUP.md
+This package has not been verified on every operating system or Python version.
+Installing this package does not approve a new release or certify venue/index metadata.
+
+MIT License
+
+Copyright (c) 2026 Light-Danube
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.

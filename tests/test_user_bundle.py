@@ -30,6 +30,9 @@ def test_bundle_contains_only_identical_wheel_and_standalone_setup(wheel, tmp_pa
         assert 'py -3.12 -m venv .venv' in text
         assert 'py -3 -m venv .venv' not in text
         assert 'python.exe -m pip install --no-cache-dir' in text
+        assert './.venv/bin/python -m pip install --no-cache-dir' in text
+        assert 'Save this file and the wheel together' in text
+        assert (bundle.ROOT / 'LICENSE').read_text(encoding='utf-8') in text
     original = artifact.read_bytes()
     with pytest.raises(FileExistsError):
         bundle.build_bundle(wheel, artifact.parent)

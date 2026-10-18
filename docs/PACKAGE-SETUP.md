@@ -1,6 +1,6 @@
 # Install LitBeacon from the release wheel
 
-Download both `litradar-1.0.0-py3-none-any.whl` and `SETUP.txt` from the [v1.0.0 GitHub Release](https://github.com/Light-Danube/LitRadar/releases/tag/v1.0.0), saving them in the **same new writable folder**. If you chose GitHub's **Code → Download ZIP** instead and see `cli.py`, `pyproject.toml` and `.bat` files, follow the [Windows source-ZIP guide](WINDOWS-SOURCE-ZIP.md). The exact uploaded wheel has not yet been independently installed; see the [release checklist](LOCAL-1.0-RELEASE-CHECKLIST.md).
+Download both `litradar-1.0.0-py3-none-any.whl` and `SETUP.txt` from the [v1.0.0 GitHub Release](https://github.com/Light-Danube/LitRadar/releases/tag/v1.0.0), saving them in the **same new writable folder**. If you chose GitHub's **Code → Download ZIP** instead and see `cli.py`, `pyproject.toml` and `.bat` files, follow the [Windows source-ZIP guide](WINDOWS-SOURCE-ZIP.md). The exact uploaded wheel passed a fresh Linux installed-package smoke; [release checks](LOCAL-1.0-RELEASE-CHECKLIST.md) record the platform limits. Until the release `SETUP.txt` is replaced, use the commands on this page, especially `--no-cache-dir` on Windows.
 
 You need Python **3.11 or newer** (3.12 recommended) and internet for pip dependencies. Git, Node, Docker, models, API keys and the source checkout are unnecessary for the already built wheel. The commands below set `LITBEACON_HOME` to a new `user-data` folder for a disposable trial, so an existing LitBeacon library is not opened. Keep that folder if you want to retain trial data.
 

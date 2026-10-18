@@ -531,7 +531,7 @@ LitBeacon also supports a local-only Docker Compose deployment for the browser w
 
 ## Wheel installation
 
-The v1.0.0 GitHub Release provides the runtime wheel and `SETUP.txt` as separate files, without the development checkout or legacy docs. Save both in one folder and follow [Windows, macOS and Linux package setup](PACKAGE-SETUP.md). The exact uploaded wheel remains unverified by an independent install. [Windows source-ZIP users can launch without building a wheel](WINDOWS-SOURCE-ZIP.md). Hosted Actions remain blocked by account billing; no current CI pass is implied.
+The v1.0.0 GitHub Release provides the runtime wheel and `SETUP.txt` as separate files, without the development checkout or legacy docs. Save both in one folder and follow [Windows, macOS and Linux package setup](PACKAGE-SETUP.md). The exact uploaded wheel passed a fresh Linux installed-package smoke; the release `SETUP.txt` still needs corrected direct-download wording and a Windows pip-cache flag. [Windows source-ZIP users can launch without building a wheel](WINDOWS-SOURCE-ZIP.md). Hosted Actions remain blocked by account billing; no current CI pass is implied.
 
 Install a built wheel with `python -m pip install "path/to/litradar-<version>-py3-none-any.whl[web]"` (replace `<version>` with the actual wheel version), then run `python -m cli init` and `python -m cli web`. Commands work outside a source checkout. Static browser assets and canonical default JSON/version files are bundled; no real library, `.env`, PDFs or model weights are shipped.
 
