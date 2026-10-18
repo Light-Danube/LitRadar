@@ -2,7 +2,7 @@
 
 [Back to the project overview](../README.md). This guide holds detailed setup, configuration, workflow and maintenance instructions.
 
-Version **1.0.0** has a [GitHub Release](https://github.com/Light-Danube/LitRadar/releases/tag/v1.0.0) in a private repository; public distribution is still under review. See the [release checklist](LOCAL-1.0-RELEASE-CHECKLIST.md) and [changelog](../CHANGELOG.md).
+Version **1.0.0** has a [GitHub Release](https://github.com/Light-Danube/LitRadar/releases/tag/v1.0.0). See the [release checklist](LOCAL-1.0-RELEASE-CHECKLIST.md) for distribution checks and the [changelog](../CHANGELOG.md) for changes.
 
 ## Find a workflow
 
@@ -10,7 +10,7 @@ Version **1.0.0** has a [GitHub Release](https://github.com/Light-Danube/LitRada
 - [Manual installation](#installation) and [configuration](#configuration)
 - [Library, notes, downloads and bibliography](#core-workflow)
 - [Textual TUI](#textual-tui) and [citation discovery](#citation-intelligence)
-- [Browser startup](#browser-startup-and-runtime) and [annotation recovery](V08-ANNOTATION-WORKFLOWS.md)
+- [Browser startup](#browser-startup-and-runtime) and [annotation recovery](archive/release-1.0/V08-ANNOTATION-WORKFLOWS.md)
 - [Scheduled digest and Telegram](#scheduled-research-digest)
 - [Research browser workspace and saved bundles](research/web-workspace.md) · [venue CLI and evidence worksheets](research/venue-discovery.md)
 - [Local data](#database-and-local-data) and [source-checkout updates](#update-a-source-checkout)
@@ -31,7 +31,7 @@ Paper details include **Additional annotations**, separate from editable researc
 
 Under **Import and local extraction**, upload up to 10 JSON/RIS/BibTeX/PDF files (5 MB combined, 100 records and 1 MB parsed annotations). Install optional PDF/BibTeX parsers with `python -m pip install -r requirements-annotations.txt`; JSON/RIS work without them. Import is atomic and repeat-safe; PDFs provide comments/text excerpts without OCR. JSON is a UTF-8 array, for example `[{"content":"Imported observation","source_ref":"paper.pdf / page 3"}]`. Import does not read referenced paths/URLs. Repeating the same file/content is idempotent. **Extract stored metadata** snapshots title, abstract excerpt (up to 10000 characters), authors, venue, date, source tags and citation count already in SQLite. Check **Include generated suggestions** to explicitly opt in: existing LLM summary/fit/tags are copied with provider/model provenance when available; otherwise local heuristic reading prompts are created. This stored-extraction path makes no new provider/model request, and generated text never replaces personal notes. JSON import and extraction actions roll back on validation failures.
 
-**Fresh LLM inference** is a separate optional section for each paper: choose a configured OpenAI/Anthropic provider or local Ollama, select a model, and explicitly consent for the request. Only the stored title/abstract is used; generated annotations remain separate and unreviewed. External services may incur costs. No credentials are entered in the browser. [Adapter limits, recovery rules and verification](V08-ANNOTATION-WORKFLOWS.md).
+**Fresh LLM inference** is a separate optional section for each paper: choose a configured OpenAI/Anthropic provider or local Ollama, select a model, and explicitly consent for the request. Only the stored title/abstract is used; generated annotations remain separate and unreviewed. External services may incur costs. No credentials are entered in the browser. [Archived adapter and recovery details](archive/release-1.0/V08-ANNOTATION-WORKFLOWS.md).
 
 In the citation map, use the mouse wheel to zoom at the cursor, drag nodes to arrange them, or use Shift+arrow keys on a focused node. Node layouts are saved in this browser; **Reset node layout** restores the default. SVG export includes custom coordinates; graph data and other export contracts stay intact.
 
@@ -380,7 +380,9 @@ These are intentionally excluded from Git.
 
 Additive SQLite migrations are applied automatically. Upgrading from v0.4.x does not require a database reset.
 
-### Consistent local backup and restore (unreleased)
+<a id="consistent-local-backup-and-restore-unreleased"></a>
+
+### Consistent local backup and restore
 
 Use `library-backup` for a consistent SQLite snapshot, including committed changes in an active WAL. The source is opened read-only through SQLite's backup API; it is never initialized or migrated. Do not copy an open `.sqlite3` file by itself. `restore` still changes one paper's reading status; **`library-restore`** restores a library.
 
@@ -529,7 +531,7 @@ LitBeacon also supports a local-only Docker Compose deployment for the browser w
 
 ## Wheel installation
 
-For a lightweight setup ZIP, extract it and follow its standalone `SETUP.txt`. The intended bundle contains only the runtime wheel and guide, without the development checkout or legacy docs. [Windows, macOS and Linux package setup](PACKAGE-SETUP.md). The v1.0.0 release ZIP is attached to a private GitHub Release; its exact uploaded bytes remain unverified. [Windows source-ZIP users can launch without building a wheel](WINDOWS-SOURCE-ZIP.md). Hosted Actions remain blocked by account billing; no current CI pass is implied.
+The v1.0.0 GitHub Release provides the runtime wheel and `SETUP.txt` as separate files, without the development checkout or legacy docs. Save both in one folder and follow [Windows, macOS and Linux package setup](PACKAGE-SETUP.md). The exact uploaded wheel remains unverified by an independent install. [Windows source-ZIP users can launch without building a wheel](WINDOWS-SOURCE-ZIP.md). Hosted Actions remain blocked by account billing; no current CI pass is implied.
 
 Install a built wheel with `python -m pip install "path/to/litradar-<version>-py3-none-any.whl[web]"` (replace `<version>` with the actual wheel version), then run `python -m cli init` and `python -m cli web`. Commands work outside a source checkout. Static browser assets and canonical default JSON/version files are bundled; no real library, `.env`, PDFs or model weights are shipped.
 

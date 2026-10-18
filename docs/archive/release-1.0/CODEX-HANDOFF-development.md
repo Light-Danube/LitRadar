@@ -8,7 +8,7 @@
 
 ## Previous increment — Gate 6 artifact preflight
 
-- Baseline main `9bf2a261` (merged #41), branch `codex/gate6-release-preflight`, Draft PR #42. Adds [prepublication build/check/upload sequence and proposed 1.0 notes](../../RELEASE-1.0-PREFLIGHT.md). README/setup/user/recovery guides already exist; Gate 6's documentation item can close for the candidate without claiming platform verification.
+- Baseline main `9bf2a261` (merged #41), branch `codex/gate6-release-preflight`, Draft PR #42. Adds [prepublication build/check/upload sequence and proposed 1.0 notes](RELEASE-1.0-PREFLIGHT.md). README/setup/user/recovery guides already exist; Gate 6's documentation item can close for the candidate without claiming platform verification.
 - At preflight commit `851511ff`, Linux Python 3.12.14 built the 1.0.0 wheel and two-file ZIP. Wheel inventory: 63 entries, no excluded local data; ZIP embeds a byte-identical wheel and `SETUP.txt` with `py -3.12`. Fresh extracted `[web]` wheel in a separate directory passed pip check, CLI version and synthetic installed-package CLI/static/web edit/restart/recovery smoke. The full local suites passed **740 Python / 48 JavaScript** tests, zero failures/skips, with one existing Starlette warning. No personal data or live provider was used.
 - Exact 1.0 setup ZIP native Windows, macOS and same-commit required CI remain open; Actions billing prevents jobs starting and user deferred retries. Do not infer a pass from Windows source-ZIP acceptance or earlier installed-wheel CI. No merge/tag/release or approval is assumed.
 

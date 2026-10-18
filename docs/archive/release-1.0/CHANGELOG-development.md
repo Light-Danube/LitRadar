@@ -4,7 +4,7 @@
 
 - Keep optional PDF/BibTeX parsers out of the default Windows source web/TUI install and disable pip caching for Windows setup/update and the release ZIP guide. The user identified the failed path as `AppData\Local\pip\Cache\wheels\...` during an optional `bibtexparser` install; they subsequently reported successful normal-user source-ZIP setup and a separate fresh-folder two-file setup-ZIP install whose web workspace showed v1.0.0. File imports remain an explicit `[annotations]` extra. PR #43 and the release remain pending by user choice.
 
-- Add a [release preflight and proposed notes](../../RELEASE-1.0-PREFLIGHT.md) for the exact two-file 1.0 download, including manual asset verification while hosted Actions cannot start. A fresh Linux Python 3.12 extracted-wheel smoke passed; native Windows package, macOS and same-commit CI remain open. No release was published.
+- Add a [release preflight and proposed notes](RELEASE-1.0-PREFLIGHT.md) for the exact two-file 1.0 download, including manual asset verification while hosted Actions cannot start. A fresh Linux Python 3.12 extracted-wheel smoke passed; native Windows package, macOS and same-commit CI remain open. No release was published.
 
 - Preserve an incompatible/broken Windows source `.venv` as `.venv-before-python312` and create a fresh one with Python 3.12/3.11; Git updater and PowerShell launcher use the same setup path. No library deletion or in-place virtual-environment upgrade.
 - Recommend Python 3.12 explicitly in the generated release setup guide so `py -3` cannot select a different installed interpreter. The user reported a successful Windows source-ZIP install and web launch with Python 3.12.7; the 1.0 wheel/setup ZIP still needs a Windows install check. Condense README and clarify the manual asset path while hosted Actions cannot start. [Release checklist](../../LOCAL-1.0-RELEASE-CHECKLIST.md).
@@ -118,7 +118,7 @@
 - Save search pages, worksheet snapshots and Markdown/CSV exports to unique local `data/research/<identifier>/` bundles; generated IDs or validated user names never overwrite existing results. Existing SQLite library and personal notes remain authoritative/intact.
 - User reports live CLI API retrieval succeeds locally (2026-10-14); this supersedes an assumption of universal inaccessibility, while historical cloud 403 probes remain separate evidence. No automatic inference or indexing/novelty certification.
 - Local checks: **405 Python passed / 0 failed / 0 skipped; 6 Node test files passed / 0 failed / 0 skipped**. Browser rendering blocked before launch by SUID sandbox configuration; Windows/remote CI results not claimed.
-- [Browser workflow, storage and verification](../../research/web-workspace.md) · [quick-topic design](../../research/quick-venues.md). Release version remains 0.8.0.
+- [Browser workflow, storage and verification](../../research/web-workspace.md) · [quick-topic design](quick-venues.md). Release version remains 0.8.0.
 
 ## Unreleased — compact documentation and CLI guidance
 
@@ -148,7 +148,7 @@ Browser venue-discovery controls remain planned; retrieved paper IDs are availab
 - Add per-paper opt-in fresh OpenAI/Anthropic/Ollama inference with provider/model selection, bounded metadata input, transport limits and generated/unreviewed provenance. No personal-note overwrite or automatic inference.
 - Define reversible deletion, paginated supplemental version history and append-only annotation/research-note restoration with optimistic guards; additive migrations retain old data.
 - Add cursor-anchored wheel zoom, node dragging, keyboard movement, local layout persistence/reset and geometry-aware SVG export, with EN/UK labels.
-- Record user acceptance of the existing visual/functionality and skip the extra cloud-browser gate as requested. Local checks: Python 164/0/0, Node 19/0/0; restricted Docker with file adapters 159/0/5 expected optional skips (Textual/Node), lightweight profile 157/0/7. Live providers, Windows and new real-browser rendering are unverified. See [workflow documentation](../../V08-ANNOTATION-WORKFLOWS.md).
+- Record user acceptance of the existing visual/functionality and skip the extra cloud-browser gate as requested. Local checks: Python 164/0/0, Node 19/0/0; restricted Docker with file adapters 159/0/5 expected optional skips (Textual/Node), lightweight profile 157/0/7. Live providers, Windows and new real-browser rendering are unverified. See [workflow documentation](V08-ANNOTATION-WORKFLOWS.md).
 
 ## Unreleased — Beacon Blue web identity
 

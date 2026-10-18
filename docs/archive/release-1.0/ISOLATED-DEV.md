@@ -41,7 +41,7 @@ Use `docker compose -f compose.isolated-dev.yaml run --rm dev` to run the includ
 
 Only `.github/workflows/tests.yml` and `release.yml` enter the image because existing contract tests read them; other `.github` files stay excluded. Source is copied with UID/GID 10001 ownership to support owner-only cloud checkout permissions. The root filesystem stays read-only and the pytest cache uses `/tmp`.
 
-`Isolated Docker tests` builds and runs this configuration on pull requests, main pushes and manual dispatch, with read-only repository permissions. The current cloud validation used a temporary local-wheel installation override because the Docker build network lacked DNS/proxy access. See [the audit](archive/gate1/DOCKER-AUDIT.md) for executed results and remaining stock-build/CI gates.
+`Isolated Docker tests` builds and runs this configuration on pull requests, main pushes and manual dispatch, with read-only repository permissions. The current cloud validation used a temporary local-wheel installation override because the Docker build network lacked DNS/proxy access. See [the audit](../gate1/DOCKER-AUDIT.md) for executed results and remaining stock-build/CI gates.
 
 All per-run `/app/data` state is ephemeral and never mounted from the host. The test suite includes its own fixtures where needed.
 

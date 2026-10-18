@@ -6,7 +6,7 @@ Quick cards save a **research topic and venue lookup lead**. They reduce repeate
 
 | Topic card | Initial keyword query | Venue lookup lead | Why investigate |
 | --- | --- | --- | --- |
-| ERC context | emotion recognition conversation context | Computational Linguistics | Journal focused on computational language/NLP; includes verified conversation-context sarcasm research in [the existing evidence review](../archive/gate1/research/erc-context-novelty-matrix-2026.md#r05--sarcasm-analysis-using-conversation-context) |
+| ERC context | emotion recognition conversation context | Computational Linguistics | Journal focused on computational language/NLP; includes verified conversation-context sarcasm research in [the existing evidence review](../gate1/research/erc-context-novelty-matrix-2026.md#r05--sarcasm-analysis-using-conversation-context) |
 | Sarcasm in discussion | sarcasm conversation context | Transactions of the Association for Computational Linguistics | NLP journal; a lead to investigate, with no promise of results for this particular query |
 | Affective context | emotion recognition context selection | IEEE Transactions on Affective Computing | Affective-computing journal whose stated scope includes recognition/interpretation of human emotions |
 

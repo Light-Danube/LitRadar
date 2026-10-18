@@ -1,4 +1,4 @@
-# Research browser workspace (unreleased)
+# Research browser workspace
 
 Open `python cli.py web`, then select **Research** in the sidebar (or Alt+6). Existing Overview/Inbox/Graph/Clusters/Jobs destinations and Alt+1–5 remain in their original order. EN/UK and System/Light/Dark are shared with the rest of the workspace.
 
@@ -17,7 +17,7 @@ Search, evidence and preset drafts are preserved in page state through navigatio
 
 ## Quick venues
 
-[Design and journal sources](quick-venues.md) explains why a card stores topic query + venue lookup query + optional chosen source ID, instead of guessing that a journal name identifies a unique indexed source. Users can add/edit/remove templates and select one of six local icon styles; no icon URLs or remote scripts are fetched. Presets are stored on the existing SQLite connection in supplemental tables, with guarded edits and deletion tombstones. Seed defaults are inserted once, so a removed default does not reappear after restart.
+[Archived design and journal sources](../archive/release-1.0/quick-venues.md) explain why a card stores topic query + venue lookup query + optional chosen source ID, instead of guessing that a journal name identifies a unique indexed source. Users can add/edit/remove templates and select one of six local icon styles; no icon URLs or remote scripts are fetched. Presets are stored on the existing SQLite connection in supplemental tables, with guarded edits and deletion tombstones. Seed defaults are inserted once, so a removed default does not reappear after restart.
 
 ## Where results are stored
 
