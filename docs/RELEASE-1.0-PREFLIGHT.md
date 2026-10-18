@@ -7,7 +7,7 @@ This is the maintainer's final check for the **unpublished 1.0.0 candidate**. Do
 From a clean, reviewed checkout at the commit intended for the release, record `git rev-parse HEAD` and confirm `git status --short` is empty. Use Python 3.12. In a new `dist/` directory:
 
 ```sh
-python -m pip wheel --no-deps --wheel-dir dist .
+python -m pip wheel --no-cache-dir --no-deps --wheel-dir dist .
 python -m scripts.build_user_bundle dist/litradar-1.0.0-py3-none-any.whl --output-dir dist --tag v1.0.0
 ```
 

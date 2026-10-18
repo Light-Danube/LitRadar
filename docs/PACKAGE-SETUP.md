@@ -74,7 +74,7 @@ To upgrade from v0.8.0, **stop all LitBeacon processes and back up first**. Use 
 GitHub Actions cannot currently produce a downloadable setup artifact because account billing blocks job startup. A reviewer can obtain [current source](https://github.com/Light-Danube/LitRadar) with **Code → Download ZIP** or Git, extract it to a temporary **build** folder, and run from its repository root. Windows users can instead [launch directly from the source ZIP](WINDOWS-SOURCE-ZIP.md):
 
 ```sh
-python -m pip wheel --no-deps --wheel-dir dist .
+python -m pip wheel --no-cache-dir --no-deps --wheel-dir dist .
 python -m scripts.build_user_bundle dist/litradar-1.0.0-py3-none-any.whl --output-dir dist
 ```
 
