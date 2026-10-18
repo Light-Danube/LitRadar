@@ -1,4 +1,4 @@
-# Venue discovery and evidence worksheet (unreleased)
+# Venue discovery and evidence worksheet
 
 [Russian step-by-step CLI workflow and practical significance](cli-workflow-ru.md).
 

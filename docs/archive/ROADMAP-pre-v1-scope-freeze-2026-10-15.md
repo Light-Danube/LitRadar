@@ -22,7 +22,7 @@ Validation: **430 Python passed / 0 failed / 0 skipped; 6 Node test files passed
 - Save search pages, worksheet snapshots and Markdown/CSV exports to unique local `data/research/<identifier>/` bundles; generated IDs or validated user names never overwrite existing results. Existing SQLite library and personal notes remain authoritative/intact.
 - User reports live CLI API retrieval succeeds locally (2026-10-14); this supersedes an assumption of universal inaccessibility, while historical cloud 403 probes remain separate evidence. No automatic inference or indexing/novelty certification.
 - Local checks: **405 Python passed / 0 failed / 0 skipped; 6 Node test files passed / 0 failed / 0 skipped**. Browser rendering blocked before launch by SUID sandbox configuration; Windows/remote CI results not claimed.
-- [Browser workflow, storage and verification](../research/web-workspace.md) · [quick-topic design](../research/quick-venues.md). Release version remains 0.8.0.
+- [Browser workflow, storage and verification](../research/web-workspace.md) · [quick-topic design](release-1.0/quick-venues.md). Release version remains 0.8.0.
 
 ## Unreleased — compact documentation and CLI guidance
 
@@ -63,7 +63,7 @@ This roadmap separates implemented behavior from research ideas that still need 
 - [x] Improve graph layout with deterministic BFS layers and separated labels; apply year-range/unknown-year filters before traversal; export the displayed graph to standalone SVG, GraphML and JSON (unreleased).
 - [x] Add the provenance foundation: user/imported/extracted/generated supplemental annotations, recording timestamps and optional source references, research-note revisions, and explicit unknown provenance for legacy notes (unreleased).
 - [x] Integrate bounded, repeat-safe JSON annotation import and stored-metadata extraction, opt-in suggestions from stored assessments/local reading prompts, review/edit with revision-conflict checks, and paginated research-note history UI (unreleased). Automatic entries record the adapter; manual origin labels remain declarations.
-- [x] Extend annotation adapters to PDF/RIS/BibTeX and atomic multi-file uploads; add per-paper opt-in fresh LLM inference with provider/model choice, append-only history restoration and reversible annotation deletion (unreleased). See [limits, recovery behavior and tests](../V08-ANNOTATION-WORKFLOWS.md). Live provider calls remain unverified.
+- [x] Extend annotation adapters to PDF/RIS/BibTeX and atomic multi-file uploads; add per-paper opt-in fresh LLM inference with provider/model choice, append-only history restoration and reversible annotation deletion (unreleased). See [limits, recovery behavior and tests](release-1.0/V08-ANNOTATION-WORKFLOWS.md). Live provider calls remain unverified.
 - [x] Add cursor-anchored wheel zoom, draggable graph nodes, Shift+arrow movement, locally saved node layouts/reset and layout-aware SVG export (unreleased).
 - [x] Implement ephemeral semantic-similarity related edges and complete-link embedding clusters behind an OFF-default feature flag/local-only model dependency, with synthetic fixtures and an attributed shareable title corpus.
 - [ ] Complete real neural-model quality evaluation on the [shareable corpus](../SEMANTIC-WORKSPACE.md); lexical controls have run, model/metadata access remains blocked.

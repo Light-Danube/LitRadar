@@ -12,7 +12,7 @@ Open **Additional annotations → Import and local extraction**. Select one or s
 - JSON/RIS need no extra dependency. Install PDF/BibTeX adapters with `python -m pip install -r requirements-annotations.txt` or package extra `litradar[annotations]`. Missing adapters return 503 rather than a misleading empty success.
 - PDF/BibTeX run in a separate Python parser process with a 15-second wall timeout. POSIX workers cap address space at 512 MB and CPU at 12 seconds; Windows retains the timeout. This is resource bounding, not a general-purpose security sandbox.
 - No uploaded file is persisted, no source path is opened, no URL is fetched and no PDF script is executed. Filenames/references are labels only. The server reads the uploaded bytes.
-- [Gate 4 path acceptance](archive/release-1.0/evidence/GATE4-IMPORT-RESTORE-PATHS.md) records disposable upload/reference and restore checks, with local execution and parser-worker limitations kept explicit.
+- [Gate 4 path acceptance](evidence/GATE4-IMPORT-RESTORE-PATHS.md) records disposable upload/reference and restore checks, with local execution and parser-worker limitations kept explicit.
 - Validate all files before committing. An invalid file aborts the complete batch. Repeating the same filename/content/adapter is repeat-safe. The existing JSON endpoint remains compatible and shares its identity with the new JSON file adapter.
 - Reimporting a deleted annotation does not silently resurrect it. Use **Deleted annotations** and explicitly restore it.
 
@@ -30,7 +30,7 @@ Development verification uses mocked providers for all three choices; live crede
 
 ## Recovery behavior
 
-In the web supplemental annotation editor, explicit **Edit** moves focus to the textarea. **Cancel** or **Escape** closes that edit and returns focus to its Edit button without saving; unrelated drafts are retained. Escape during text composition does not cancel. Automatically restored draft editors do not take focus. [Focused EN/UK checks and limits](archive/release-1.0/evidence/GATE5-KEYBOARD-FOCUS.md).
+In the web supplemental annotation editor, explicit **Edit** moves focus to the textarea. **Cancel** or **Escape** closes that edit and returns focus to its Edit button without saving; unrelated drafts are retained. Escape during text composition does not cancel. Automatically restored draft editors do not take focus. [Focused EN/UK checks and limits](evidence/GATE5-KEYBOARD-FOCUS.md).
 
 - **Delete annotation** is a soft deletion. The content, kind, adapter, original source and all revisions remain in SQLite; the entry moves out of the active list into **Deleted annotations**. There is no permanent-purge action in this increment.
 - **Restore annotation** brings the stored content/review state back and appends a revision. **Annotation version history** is paginated; restoring a historical version copies its content/review state into a new active revision without rewriting the original versions or origin metadata.

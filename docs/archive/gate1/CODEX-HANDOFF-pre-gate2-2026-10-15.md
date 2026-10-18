@@ -1,4 +1,4 @@
-> Historical development handoff archived on 2026-10-15. Pending tasks below describe their original commits; use the [active roadmap](../../../ROADMAP.md) and [current handoff](../../../CODEX-HANDOFF.md).
+> Historical development handoff archived on 2026-10-15. Pending tasks below describe their original commits; use the [active roadmap](../../../ROADMAP.md) and [current handoff](../release-1.0/CODEX-HANDOFF-final.md).
 
 # Codex development handoff — LitBeacon Research Workspace
 
@@ -50,7 +50,7 @@
 - Save search pages, worksheet snapshots and Markdown/CSV exports to unique local `data/research/<identifier>/` bundles; generated IDs or validated user names never overwrite existing results. Existing SQLite library and personal notes remain authoritative/intact.
 - User reports live CLI API retrieval succeeds locally (2026-10-14); this supersedes an assumption of universal inaccessibility, while historical cloud 403 probes remain separate evidence. No automatic inference or indexing/novelty certification.
 - Local checks: **405 Python passed / 0 failed / 0 skipped; 6 Node test files passed / 0 failed / 0 skipped**. Browser rendering blocked before launch by SUID sandbox configuration; Windows/remote CI results not claimed.
-- [Browser workflow, storage and verification](../../research/web-workspace.md) · [quick-topic design](../../research/quick-venues.md). Release version remains 0.8.0.
+- [Browser workflow, storage and verification](../../research/web-workspace.md) · [quick-topic design](../release-1.0/quick-venues.md). Release version remains 0.8.0.
 
 ## Unreleased — compact documentation and CLI guidance
 
@@ -80,7 +80,7 @@ This file records development progress and a safe starting point for continuing 
 
 ## Annotation adapters, recovery and graph layout (unreleased)
 
-- Branch `codex/annotation-adapters-graph`, base `ef5ecd06`. Read [the workflow/recovery specification](../../V08-ANNOTATION-WORKFLOWS.md).
+- Branch `codex/annotation-adapters-graph`, base `ef5ecd06`. Read [the workflow/recovery specification](../release-1.0/V08-ANNOTATION-WORKFLOWS.md).
 - Add bounded uploaded-file adapters and optional `requirements-annotations.txt` / `[annotations]` extra. Web CI installs the extra parsers; the lightweight isolated image intentionally does not. PDF/BibTeX are parsed in timeout/resource-bounded subprocesses, without opening referenced paths.
 - Per-paper fresh inference is off by default, uses provider/model selection and explicit consent, sends only title/abstract and stores generated/unreviewed provenance. Tests mock all three providers; no live service/credential validation.
 - Add nullable tombstones to annotations/revisions through additive migrations. Soft delete/undo and paginated version history use expected revision guards. Research-note restoration writes legacy `papers.notes` plus a new `history_restore` row with latest-note guard.

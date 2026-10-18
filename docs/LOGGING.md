@@ -14,7 +14,7 @@ python -m cli telegram-run --debug --log-file telegram-listener.log
 
 The filename resolves to `log/telegram-listener.log` under the application workspace, regardless of the current directory. The `log/filename` spelling is also accepted. Absolute paths must remain inside that log directory; traversal and symlink/junction escapes are rejected. Use separate files per process. File rotation stays UTF-8, 1 MiB per file and three backups. This change does not automatically move old files.
 
-Generated logs and rotations are local data: `log/`, legacy `logs/`, `*.log` and `*.log.*` are ignored by Git and excluded from Docker build contexts. The setup ZIP contains only its validated runtime wheel and guide; wheel validation rejects log directories and rotated log files even under a runtime package. Do not force-add logs to Git or attach them automatically to a release. Review and sanitize any diagnostics before sharing.
+Generated logs and rotations are local data: `log/`, legacy `logs/`, `*.log` and `*.log.*` are ignored by Git and excluded from Docker build contexts. Wheel validation rejects log directories and rotated log files even under a runtime package. Do not force-add logs to Git or attach them automatically to a release. Review and sanitize any diagnostics before sharing.
 
 Extended scheduled-run logging now uses the shared `log/` directory too. Historical `logs/` files remain untouched and ignored; no existing files are moved or deleted. Compose retains its old mount and adds the new directory. Scheduled command output retains its separate behavior; this does not enable global file logging or promise that every legacy output stream is sanitized.
 

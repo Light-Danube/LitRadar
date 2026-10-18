@@ -1,10 +1,10 @@
 # LitBeacon — Local-Only v1.0 Release Roadmap
 
-**Goal:** ship a dependable, maintainable, local-first **LitBeacon 1.0** for one researcher on their own computer. This is a **scope-freeze and release plan**, not a request to add another subsystem. A **v1.0.0 GitHub Release** exists in the private repository with one setup ZIP; Gate 6 and public distribution remain open pending the checks below.
+**Goal:** ship a dependable, maintainable, local-first **LitBeacon 1.0** for one researcher on their own computer. This is a **scope-freeze and release plan**, not a request to add another subsystem. A **v1.0.0 GitHub Release** exists in the private repository with a wheel and `SETUP.txt`; Gate 6 and public distribution remain open pending the checks below.
 
 **Product boundary:** Python/SQLite is the source of truth. Web UI is bound to localhost; CLI, Textual TUI and the optional Telegram bot are existing interfaces. Existing paper libraries, research evidence, notes, tags, IDs, histories, offline PDFs and scheduler configuration must survive updates. Literature-provider searches require network access; the saved library and local workflows do not. Optional external LLM inference requires explicit opt-in. No account, hosted backend, public API or mandatory cloud component is in scope.
 
-**Current baseline:** existing web/CLI/TUI/Telegram workflows, citation graph, annotations and recovery, venue-scoped search, evidence worksheets and local Research workspace are already implemented or documented in main. The user's 2026-10-14 web visual acceptance is not a substitute for packaging or Windows release tests. Existing v0.8.x implementation and historical test notes were moved to [the archived roadmap](docs/archive/ROADMAP-pre-v1-scope-freeze-2026-10-15.md). Consult CHANGELOG.md and CODEX-HANDOFF.md for detailed delivery history.
+**Current baseline:** existing web/CLI/TUI/Telegram workflows, citation graph, annotations and recovery, venue-scoped search, evidence worksheets and local Research workspace are already implemented or documented in main. The user's 2026-10-14 web visual acceptance is not a substitute for packaging or Windows release tests. Existing v0.8.x implementation and historical test notes were moved to [the archived roadmap](docs/archive/ROADMAP-pre-v1-scope-freeze-2026-10-15.md). Consult CHANGELOG.md and the [archived handoff](docs/archive/release-1.0/CODEX-HANDOFF-final.md) for detailed delivery history.
 
 ## Rules for the finish line
 
@@ -24,7 +24,7 @@ Reopen for a reproduced workflow/data-loss defect. Live venue access remains clo
 ## Gate 2 — Local data integrity and recovery (P0): complete for this candidate
 
 - [x] Provide a documented **consistent SQLite backup** using SQLite's backup API and a read-only source without source migrations; committed active-WAL snapshot tested.
-- [x] Implement bounded `library-backup`/`library-restore`, explicitly elected Research/offline roots, manifest/SHA-256 and exclusions. Artifact inclusion requires an explicit stopped-writers acknowledgment. [Instructions and limits](docs/USER-GUIDE.md#consistent-local-backup-and-restore-unreleased).
+- [x] Implement bounded `library-backup`/`library-restore`, explicitly elected Research/offline roots, manifest/SHA-256 and exclusions. Artifact inclusion requires an explicit stopped-writers acknowledgment. [Instructions and limits](docs/USER-GUIDE.md#consistent-local-backup-and-restore).
 - [x] Demonstrate restore into a **new, disposable destination**, retaining all table data: notes/tags/status/IDs, citations/feedback, annotation/evidence histories/tombstones, preset tombstones and elected files. Corruption/missing/duplicate/path/schema/failure-cleanup checks execute on synthetic fixtures.
 - [x] Restore an additive older LitRadar schema and upgrade twice, retaining existing fields, identities, metadata and histories. Compatibility identifiers remain unchanged.
 
@@ -67,17 +67,17 @@ Gate 5 is complete for this bounded local candidate. Gather further usability fe
 
 - [x] Verify VERSION, pyproject.toml, CLI/TUI/Telegram/Web visible version strings and package metadata against the `v1.0.0` tag at `da4486ab`. The candidate version surfaces and tag agree.
 - [ ] Build and install the distribution in a clean environment; run a smoke test against packaged static assets. Verify release ZIP/wheel contain no .env, local SQLite, PDFs, credentials, logs or source caches. The [1.0.0 candidate](docs/archive/release-1.0/evidence/GATE6-1.0-CANDIDATE.md) passed a fresh Linux package install and inventory. The user reported a successful Windows source-ZIP install with Python 3.12.7 and, separately, a normal-user PR #43 source-ZIP retest. They also built the two-file 1.0 setup ZIP from PR #43, installed it in a fresh Windows folder without administrator rights, and reported that the web workspace opened showing v1.0.0. The [package guide](docs/PACKAGE-SETUP.md) records that user-reported package result; the exact uploaded asset, native macOS and same-commit required CI remain pending.
-- [x] Keep README concise and provide the source-ZIP quick start, Windows/macOS/Linux package guide, user guide, backup/restore and v0.8.0 upgrade instructions, optional components, known limits and [draft release notes/preflight](docs/RELEASE-1.0-PREFLIGHT.md). These are candidate documents; platform checks and publication remain separate.
+- [x] Keep README concise and provide the source-ZIP quick start, Windows/macOS/Linux package guide, user guide, backup/restore and v0.8.0 upgrade instructions, optional components, known limits and [archived release preflight](docs/archive/release-1.0/RELEASE-1.0-PREFLIGHT.md). Platform checks and publication remain separate.
 - [x] Create a **1.0 release-candidate checklist** with check names, executed results, platform and known limitations. [Historical 0.8.0 rehearsal](docs/archive/release-1.0/evidence/GATE6-RELEASE-CANDIDATE.md) and [current 1.0.0 candidate](docs/archive/release-1.0/evidence/GATE6-1.0-CANDIDATE.md).
 - [x] Merge the reviewed 1.0 candidate fixes through PR #43; the user completed that merge at `86f20a68`.
 - [x] Push the requested `v1.0.0` tag to the merged and locally verified commit.
-- [x] Publish a GitHub Release for `v1.0.0` with a setup ZIP. The published release is still in a private repository; this records publication, not artifact or public-access verification.
-- [ ] Download and inspect the exact published setup ZIP, verify its wheel and hashes, and rerun a disposable installation smoke from that download. The uploaded ZIP's SHA-256 differs from the earlier locally tested ZIP; no standalone wheel is attached although the preflight called for both. [Live status and hashes](docs/LOCAL-1.0-RELEASE-CHECKLIST.md).
-- [ ] Before changing visibility, review Git history for public-safe content, resolve the historic committed `venv/` tree, and confirm release notes and downloads are accessible to an unauthenticated user. Keep exact platform and CI limits explicit.
+- [x] Publish a GitHub Release for `v1.0.0`. The private release now offers a wheel and `SETUP.txt` as separate assets; this records publication, not artifact or public-access verification.
+- [ ] Download and inspect the exact published wheel and `SETUP.txt`, then run a disposable install and web smoke from those downloads. The uploaded wheel's hash differs from the earlier locally tested wheel; the prior test cannot verify these exact bytes. [Live status and hashes](docs/LOCAL-1.0-RELEASE-CHECKLIST.md).
+- [ ] Before changing visibility, complete public-ready docs/license and confirm release notes and downloads are accessible to an unauthenticated user. The owner reviewed Git history and reported no personal data; this is owner-reported rather than an independent content audit. Keep platform and CI limits explicit.
 
 **Done when:** the exact published artifact is inspected and installs, public-facing history/downloads pass review, and release notes describe exactly what has and has not been verified. Required same-commit CI is blocked before job startup by account billing; record an explicit owner decision on this exception rather than claiming a pass. Native macOS installation remains unverified.
 
-A planning-only [post-1.0 roadmap draft](docs/ROADMAP-post-1.0-draft.md) is available. Keep this release roadmap active until Gate 6 is evidenced and closed; then archive it.
+A planning-only [post-1.0 roadmap draft](docs/archive/release-1.0/ROADMAP-post-1.0-draft.md) is available. Keep this release roadmap active until Gate 6 is evidenced and closed; then archive it.
 
 ## Recommended sequence (small draft PRs)
 
