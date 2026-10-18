@@ -1,4 +1,4 @@
-# LitBeacon 1.0 release notes — proposed text
+# LitBeacon 1.0
 
 LitBeacon 1.0 is a local research workspace with a browser interface, CLI, and optional Textual TUI and Telegram workflows. Libraries, notes, evidence and research history stay in local SQLite. Since 0.8.0, this release adds venue search and evidence worksheets, consistent library backup and new-destination restore, annotation and citation-map improvements, and installation fixes. Optional local semantic exploration remains off by default.
 
