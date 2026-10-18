@@ -2,6 +2,8 @@
 
 ## 1.0.0 candidate — unreleased
 
+- Add a [release preflight and proposed notes](docs/RELEASE-1.0-PREFLIGHT.md) for the exact two-file 1.0 download, including manual asset verification while hosted Actions cannot start. A fresh Linux Python 3.12 extracted-wheel smoke passed; native Windows package, macOS and same-commit CI remain open. No release was published.
+
 - Preserve an incompatible/broken Windows source `.venv` as `.venv-before-python312` and create a fresh one with Python 3.12/3.11; Git updater and PowerShell launcher use the same setup path. No library deletion or in-place virtual-environment upgrade.
 - Recommend Python 3.12 explicitly in the generated release setup guide so `py -3` cannot select a different installed interpreter. The user reported a successful Windows source-ZIP install and web launch with Python 3.12.7; the 1.0 wheel/setup ZIP still needs a Windows install check. Condense README and clarify the manual asset path while hosted Actions cannot start. [Release checklist](docs/LOCAL-1.0-RELEASE-CHECKLIST.md).
 

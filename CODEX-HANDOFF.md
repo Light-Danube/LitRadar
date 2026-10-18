@@ -1,6 +1,12 @@
 # Codex handoff — local-only LitBeacon 1.0
 
-## Current increment — Gate 6 release preparation
+## Current increment — Gate 6 artifact preflight
+
+- Baseline main `9bf2a261` (merged #41), branch `codex/gate6-release-preflight`, Draft PR #42. Adds [prepublication build/check/upload sequence and proposed 1.0 notes](docs/RELEASE-1.0-PREFLIGHT.md). README/setup/user/recovery guides already exist; Gate 6's documentation item can close for the candidate without claiming platform verification.
+- At preflight commit `851511ff`, Linux Python 3.12.14 built the 1.0.0 wheel and two-file ZIP. Wheel inventory: 63 entries, no excluded local data; ZIP embeds a byte-identical wheel and `SETUP.txt` with `py -3.12`. Fresh extracted `[web]` wheel in a separate directory passed pip check, CLI version and synthetic installed-package CLI/static/web edit/restart/recovery smoke. The full local suites passed **740 Python / 48 JavaScript** tests, zero failures/skips, with one existing Starlette warning. No personal data or live provider was used.
+- Exact 1.0 setup ZIP native Windows, macOS and same-commit required CI remain open; Actions billing prevents jobs starting and user deferred retries. Do not infer a pass from Windows source-ZIP acceptance or earlier installed-wheel CI. No merge/tag/release or approval is assumed.
+
+## Previous increment — Gate 6 release preparation
 
 - Baseline main `5e7fff51` (merged #40), branch `codex/gate6-release-prep`, Draft PR #41. On 2026-10-18 the user reported that a Windows source ZIP with Python 3.12.7 created `.venv` and launched the web workspace after they manually removed an old `.venv`/cache and ran setup as administrator. Normal setup should not require admin; the new automatic preservation path lacks native Windows execution. This is user-reported source installation, not 1.0 wheel/setup-ZIP verification.
 - Windows source batch setup now preserves a mismatched/broken `.venv` as `.venv-before-python312` and creates a fresh one; Git updater and PowerShell launcher call the same setup. The generated release `SETUP.txt` now specifies `py -3.12` with a 3.11 fallback instead of `py -3`, which could select a different installed interpreter. README and setup guides identify the two download paths and pending platform checks; the published release remains 0.8.0.
