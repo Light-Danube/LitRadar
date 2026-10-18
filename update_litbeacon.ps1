@@ -28,7 +28,7 @@ Write-Host 'Source files updated. Preparing environment...' -ForegroundColor Gre
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 $venv = Join-Path $PSScriptRoot '.venv'
 $python = Join-Path $venv 'Scripts/python.exe'
-& $python -m pip install '.[web,ui]'
+& $python -m pip install --no-cache-dir '.[web,ui]'
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 & $python -m pip check
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }

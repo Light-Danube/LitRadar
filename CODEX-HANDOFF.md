@@ -1,6 +1,12 @@
 # Codex handoff — local-only LitBeacon 1.0
 
-## Current increment — Gate 6 artifact preflight
+## Current increment — Gate 6 Windows non-admin setup
+
+- Baseline main `b2480889` (merged #42), branch `codex/gate6-optional-parser-install`, Draft PR #43. The user reported a source-ZIP web launcher failed as a standard user during a `bibtexparser-1.4.4` wheel install with `Errno 13` under LocalAppData, while elevated setup succeeded. The user then identified the denied suffix as `AppData\Local\pip\Cache\wheels\...`, confirming pip cache access as the failed operation. Native verification of the fix remains pending. Source runtime normally stores data in the checkout or `LITBEACON_HOME`, separately from pip cache.
+- Windows source setup/updater now install `[web,ui]` without optional `[annotations]` and use `pip --no-cache-dir`; release ZIP Windows setup does likewise. The source guide gives an explicit optional parser install and differentiates pip storage from library data. Linux Python 3.12 local validation: **740 Python / 48 JavaScript passed** with one existing Starlette warning. Fresh source `[web,ui]` install passed `pip check` and excluded bibtexparser; a fresh extracted `[web]` wheel passed `pip check`, CLI/version and synthetic CLI/static/web edit/restart/recovery smoke. ZIP had exactly wheel+SETUP, byte identity and excluded-file inventory passed. Rerun as standard user from a fresh writable folder before tagging. Exact 1.0 wheel Windows smoke remains pending.
+- Hosted Actions remain unavailable due billing. No personal data/credentials, merge, tag, release or Gate 6 closure is implied by this Draft PR.
+
+## Previous increment — Gate 6 artifact preflight
 
 - Baseline main `9bf2a261` (merged #41), branch `codex/gate6-release-preflight`, Draft PR #42. Adds [prepublication build/check/upload sequence and proposed 1.0 notes](docs/RELEASE-1.0-PREFLIGHT.md). README/setup/user/recovery guides already exist; Gate 6's documentation item can close for the candidate without claiming platform verification.
 - At preflight commit `851511ff`, Linux Python 3.12.14 built the 1.0.0 wheel and two-file ZIP. Wheel inventory: 63 entries, no excluded local data; ZIP embeds a byte-identical wheel and `SETUP.txt` with `py -3.12`. Fresh extracted `[web]` wheel in a separate directory passed pip check, CLI version and synthetic installed-package CLI/static/web edit/restart/recovery smoke. The full local suites passed **740 Python / 48 JavaScript** tests, zero failures/skips, with one existing Starlette warning. No personal data or live provider was used.

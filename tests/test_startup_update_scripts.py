@@ -45,6 +45,8 @@ def test_normal_launchers_install_only_application_extras_and_keep_legacy_aliase
         assert "requirements-dev.txt" not in text and "requirements-semantic.txt" not in text
     setup = (root / "setup_litbeacon.bat").read_text(encoding="utf-8")
     assert ".[web,ui,annotations]" not in setup
+    assert "pip install --no-cache-dir" in setup
+    assert "pip install --no-cache-dir" in (root / "update_litbeacon.ps1").read_text(encoding="utf-8")
     assert ".[web,ui,annotations]" not in (root / "update_litbeacon.ps1").read_text(encoding="utf-8")
     assert "py -3.12" in setup and ".venv-before-python312" in setup and "pause >nul" in setup
     assert 'move "%VENV%" "%BACKUP%"' in setup

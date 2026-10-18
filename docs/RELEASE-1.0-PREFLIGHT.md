@@ -1,6 +1,6 @@
 # LitBeacon 1.0 release preflight
 
-This is the maintainer's final check for the **unpublished 1.0.0 candidate**. Do not tag or publish until the reviewed commit, Windows package test and release decision are recorded in the [active checklist](LOCAL-1.0-RELEASE-CHECKLIST.md). The user-tested GitHub source ZIP is a different install path from the two-file release ZIP.
+This is the maintainer's final check for the **unpublished 1.0.0 candidate**. Do not tag or publish until the reviewed commit, standard-user Windows setup/package test and release decision are recorded in the [active checklist](LOCAL-1.0-RELEASE-CHECKLIST.md). The user-tested GitHub source ZIP is a different install path from the two-file release ZIP.
 
 ## Prepare the exact artifacts
 
@@ -25,4 +25,4 @@ Only **after explicit release approval**: create a draft GitHub release for `v1.
 
 LitBeacon 1.0 is a local-only research workspace with a browser interface, CLI, optional Textual TUI and Telegram workflows. Since v0.8.0 it adds local library backup/restore and recovery checks, Research venue search and evidence worksheets, annotation/graph/usability refinements and optional, off-by-default local semantic exploration. Existing LitRadar module names and data paths remain compatible. Install from the two-file setup ZIP with Python 3.12; dependency installation and explicit scholarly/provider requests need network access. The browser binds to localhost and is not intended for public/LAN hosting. Back up before upgrading; an installed wheel does not automatically move a source-checkout library. See [setup](PACKAGE-SETUP.md), [backup/upgrade](USER-GUIDE.md#consistent-local-backup-and-restore-unreleased) and [network use](NETWORK-USE.md).
 
-Release notes must include the final platform test record. As of this draft, a Linux Python 3.12 package smoke and 740 Python / 48 JavaScript local tests passed and the user reported a Windows **source-ZIP** install; the exact 1.0 release ZIP has no native Windows/macOS result. Same-commit GitHub Actions remain blocked before job startup by account billing. No release is published by this document.
+Release notes must include the final platform test record. A reported non-admin Windows source setup failure during optional `bibtexparser` installation requires a successful standard-user retest before publication. As of this draft, a Linux Python 3.12 package smoke and 740 Python / 48 JavaScript local tests passed and the user reported a Windows **source-ZIP** install; the exact 1.0 release ZIP has no native Windows/macOS result. Same-commit GitHub Actions remain blocked before job startup by account billing. No release is published by this document.

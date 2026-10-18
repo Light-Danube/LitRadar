@@ -1,6 +1,6 @@
 # LitBeacon 1.0 — active release checklist
 
-Baseline main `9bf2a261` (merged PR #41). Published version stays **0.8.0**; source `main` contains an unreleased **1.0.0 candidate**. Draft PR #42 records the release preflight and proposed notes; no tag/release authorization is implied.
+Baseline main `b2480889` (merged PR #42). Published version stays **0.8.0**; source `main` contains an unreleased **1.0.0 candidate**. Draft PR #43 narrows the Windows first-install dependency set; no tag/release authorization is implied.
 
 - **Gate 1: closed.** [Archived feature inventory and closure evidence](archive/gate1/release-checklist-2026-10-15.md). Windows daily use and optional Narrator were accepted by the user; automated results remain separate.
 - **Gate 2: complete for this candidate.** Read-only SQLite backup, new-destination restore, elected artifacts/checksums and legacy upgrade are tested. Actual [Ubuntu/Windows extracted setup-wheel recovery checks](https://github.com/Light-Danube/LitRadar/actions/runs/38744388702) passed at implementation head `a9c64fb2`; no personal data or services were used.
@@ -11,11 +11,17 @@ Baseline main `9bf2a261` (merged PR #41). Published version stays **0.8.0**; sou
 
 - **Gate 6: in progress.** [Current 1.0.0 candidate evidence](GATE6-1.0-CANDIDATE.md), [Windows source-ZIP guide](WINDOWS-SOURCE-ZIP.md) and [package guide](PACKAGE-SETUP.md) distinguish source from the two-file release artifact. On 2026-10-18 the user reported Windows source-ZIP setup with Python **3.12.7** created `.venv` and launched the web workspace after manually deleting an old `.venv`/cache and running setup as administrator. That confirms their recovery path, not the new automatic preservation path. Exact 1.0 wheel/setup-ZIP installation on Windows, macOS installation, same-commit required CI and explicit release approval remain open. [ROADMAP](../ROADMAP.md) remains the gate definition.
 
-## Current small Draft PR #42
+## Current small Draft PR #43
+
+- Reproduced report: non-administrator Windows source-ZIP setup stopped while pip installed optional `bibtexparser-1.4.4` with `Errno 13` under LocalAppData; elevated retry worked. The user confirmed the denied suffix was `AppData\Local\pip\Cache\wheels\...`, identifying pip cache access as the failing operation. This is a release blocker until a normal-user path is retested.
+- Default Windows source setup/updater now install `[web,ui]` and avoid pip's cache. PDF/BibTeX parsers stay explicit `[annotations]` extras. Generated release `SETUP.txt` also avoids the Windows pip cache. Linux Python 3.12: **740 Python / 48 JavaScript passed** (one existing warning). Fresh `[web,ui]` source install passed without bibtexparser; a fresh extracted `[web]` wheel passed `pip check`, version and synthetic CLI/static/web edit/restart/recovery smoke. Two-file ZIP identity/exclusion checks passed. These do not prove the Windows repair.
+- The owner authorized the eventual 1.0 release, but the exact release ZIP Windows test and deliverable upload remain open. Hosted Actions cannot start due account billing; same-commit CI is unavailable. Do not mark Gate 6 complete or claim published assets before checking them.
+
+## Previous Draft PR #42
 
 - [x] [Prepublication artifact procedure and proposed 1.0 notes](RELEASE-1.0-PREFLIGHT.md): confirm a clean reviewed commit, two-file ZIP and hashes; install the extracted wheel; document platform limits; attach verified assets to a draft release only after approval. The existing release workflow attaches assets after publication, so it cannot be the prepublication source while Actions are blocked.
 - [x] Linux Python 3.12.14 at preflight commit `851511ff`: built a 63-entry 1.0.0 wheel and ZIP containing only the wheel plus `SETUP.txt`; embedded wheel bytes matched, generated Windows setup used `py -3.12`, excluded-path inventory found none. Fresh extracted-wheel `[web]` install outside the checkout passed `pip check`, CLI version and synthetic installed-package CLI/static/web edit/restart/recovery smoke. Full local suites: **740 Python / 48 JavaScript passed**, zero failures/skips; one existing Starlette warning. Scratch artifacts are not a published release and their hashes are specific to this build.
-- [ ] Exact 1.0 setup ZIP on native Windows, native macOS install and same-commit required CI remain unverified. Native source-ZIP acceptance and older Windows wheel results do not close them. Hosted Actions are deferred because account billing prevents job startup. Final approval, tag and publication remain separate.
+- [ ] Exact 1.0 setup ZIP on native Windows, native macOS install and same-commit required CI remain unverified. Native source-ZIP acceptance and older Windows wheel results do not close them. Hosted Actions are deferred because account billing prevents job startup. At that time, final approval, tag and publication remained separate.
 
 No personal library, credentials, merge, tag or release were used in this preflight.
 
