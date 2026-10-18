@@ -42,6 +42,6 @@ Press Ctrl+C once. During an idle long poll, command-menu setup or retry/rate-li
 
 An already-started remote request is not undone. If embedding the bot in a still-running process, its transport may finish later; it cannot process updates or write application files/logs after the listener stops. Reusing that same instance while its old request is pending is rejected. This is not a promise to instantly cancel an active scan/digest or arbitrary command handler; those operations retain their own bounded waits and cleanup.
 
-`run_telegram_bot.bat` intentionally pauses after Python exits to display the exit status. An open launcher window therefore does not mean the listener is still running. Look for the stopped/exited message, then press a key to close it. A Windows batch console may also ask whether to terminate the batch job after Ctrl+C.
+`run_litbeacon_telegram.bat` intentionally pauses after Python exits to display the exit status. An open launcher window therefore does not mean the listener is still running. Look for the stopped/exited message, then press a key to close it. A Windows batch console may also ask whether to terminate the batch job after Ctrl+C.
 
 Synthetic measurements and actual candidate Windows results belong in the [Gate 3 lifecycle record](GATE3-LIFECYCLE.md); they are not a diagnosis of the user's specific network or Telegram service.

@@ -1,6 +1,6 @@
 # Install LitBeacon from a small setup ZIP
 
-**Release status:** v1.0.0 is a Draft PR candidate, not a published release. v0.8.0 remains the released version. For a future published release, download `LitBeacon-1.0.0-setup.zip` from that release's **Assets**, extract it into a new folder, and use the commands below. Do not select GitHub's automatically generated “Source code” ZIP for this procedure: it contains the developer checkout. Until publication, reviewers can [build the same bundle from the Draft PR](#test-the-unpublished-candidate).
+**Which ZIP do you have?** If you used GitHub's **Code → Download ZIP** and see `cli.py`, `pyproject.toml` and `.bat` files, follow the [fresh Windows source-ZIP guide](WINDOWS-SOURCE-ZIP.md). You do **not** need to build a wheel first. This page is for a different, two-file `LitBeacon-1.0.0-setup.zip` package. That release asset has **not** been published; v0.8.0 remains the released version. Reviewers can [build the package from current source](#test-the-unpublished-candidate).
 
 The setup ZIP contains exactly `litradar-1.0.0-py3-none-any.whl` and `SETUP.txt`. You need Python **3.11 or newer** (3.12 recommended) and internet for pip dependencies. Git, Node, Docker, models, API keys and the source checkout are unnecessary for an **already built** setup ZIP. The commands below set `LITBEACON_HOME` to a new `user-data` folder for a disposable trial, so an existing LitBeacon library is not opened. Keep that folder if you want to retain trial data.
 
@@ -19,7 +19,7 @@ The setup ZIP contains exactly `litradar-1.0.0-py3-none-any.whl` and `SETUP.txt`
    .\.venv\Scripts\python.exe -m cli web
    ```
 
-3. Open <http://127.0.0.1:8765>, confirm the page says `v1.0.0`, then stop with Ctrl+C. Restart with the final command in the same PowerShell window; set `LITBEACON_HOME` again in a new window. If the port is occupied, use `-m cli web --port 8787` and open that port. The wheel has no `run_web.bat`; launchers belong to the source checkout.
+3. Open <http://127.0.0.1:8765>, confirm the page says `v1.0.0`, then stop with Ctrl+C. Restart with the final command in the same PowerShell window; set `LITBEACON_HOME` again in a new window. If the port is occupied, use `-m cli web --port 8787` and open that port. The wheel has no `run_litbeacon_web.bat`; launchers belong to the source checkout.
 
 **This exact 1.0.0 candidate has not yet been installed on Windows.** Prior Windows wheel checks apply to earlier commits. If this fresh install fails, please report the Python version, command and safe error text without sharing a library, `.env`, tokens or private logs.
 
@@ -69,13 +69,13 @@ To upgrade from v0.8.0, **stop all LitBeacon processes and back up first**. Use 
 
 ## Test the unpublished candidate
 
-GitHub Actions cannot currently produce a downloadable PR setup artifact because account billing blocks job startup. A reviewer can obtain the [Draft PR #39 branch](https://github.com/Light-Danube/LitRadar/pull/39) with **Code → Download ZIP** from its head branch or Git, extract it to a temporary **build** folder, and run from its repository root:
+GitHub Actions cannot currently produce a downloadable setup artifact because account billing blocks job startup. A reviewer can obtain [current source](https://github.com/Light-Danube/LitRadar) with **Code → Download ZIP** or Git, extract it to a temporary **build** folder, and run from its repository root. Windows users can instead [launch directly from the source ZIP](WINDOWS-SOURCE-ZIP.md):
 
 ```sh
 python -m pip wheel --no-deps --wheel-dir dist .
 python -m scripts.build_user_bundle dist/litradar-1.0.0-py3-none-any.whl --output-dir dist
 ```
 
-Use `python3` instead of `python` on macOS/Linux if needed, or `py -3.12 -m` in Windows PowerShell. The build may download setuptools. Move **only** `dist/LitBeacon-1.0.0-setup.zip` into a separate fresh install folder, extract it, then follow your OS section. This keeps the installed folder free of unrelated developer files. The Draft PR's Linux verification and platform gaps are in the [active checklist](LOCAL-1.0-RELEASE-CHECKLIST.md). A reviewer-built ZIP is not a published or signed release artifact.
+Use `python3` instead of `python` on macOS/Linux if needed, or `py -3.12 -m` in Windows PowerShell. The build may download setuptools. Move **only** `dist/LitBeacon-1.0.0-setup.zip` into a separate fresh install folder, extract it, then follow your OS section. This keeps the installed folder free of unrelated developer files. Earlier Linux verification and platform gaps are in the [active checklist](LOCAL-1.0-RELEASE-CHECKLIST.md). A reviewer-built ZIP is not a published or signed release artifact.
 
 For maintainers, the builder rejects version mismatch, unsafe/extra wheel paths and overwrites. Its two-file ZIP excludes local databases, `.env`, PDFs, logs, caches and developer Markdown. The release workflow attaches artifacts **only after** an owner publishes a release; it does not approve or create one.

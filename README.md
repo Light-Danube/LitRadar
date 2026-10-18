@@ -8,21 +8,21 @@ The project was formerly **LitRadar**. Existing module names, database paths, `L
 
 **Released: v0.8.0** — local browser workspace, citation map, heuristic literature clusters, editable annotations and scheduled-job controls.
 
-**Draft v1.0.0 candidate:** graph and annotation refinements, optional local semantic exploration, and venue discovery/evidence worksheets in the CLI and Research browser section. The branch is for installation testing; no 1.0 release has been published. See the [changelog](CHANGELOG.md).
+**v1.0.0 candidate in source:** graph and annotation refinements, optional local semantic exploration, and venue discovery/evidence worksheets in the CLI and Research browser section. No 1.0 release asset has been published. See the [changelog](CHANGELOG.md).
 
 Feature development is frozen for local-only 1.0. Gates 1–5 are complete for the bounded candidate; the [release checklist](docs/LOCAL-1.0-RELEASE-CHECKLIST.md) tracks remaining Gate 6 checks. Hosted Actions are deferred by user choice while account billing blocks job startup.
 
 ## Quick start
 
-Use **Python 3.11 or newer** (3.12 recommended). A published `LitBeacon-<version>-setup.zip` needs only its wheel and `SETUP.txt`; extract it into a fresh folder. The [Windows, macOS and Linux installation guide](docs/PACKAGE-SETUP.md) also explains how to build the unpublished 1.0 candidate for testing. Installation downloads dependencies; local library use needs no cloud service.
+Use **Python 3.11 or newer** (3.12 recommended). Downloaded GitHub's **Code → Download ZIP**? Follow the [fresh Windows source-ZIP guide](docs/WINDOWS-SOURCE-ZIP.md): open its extracted folder and run `run_litbeacon_web.bat`. No wheel build is needed. A future two-file release ZIP uses the separate [Windows, macOS and Linux package guide](docs/PACKAGE-SETUP.md). Installation downloads dependencies; local library use needs no cloud service.
 
 The source-checkout commands below are for developers and existing launcher users.
 
 ### Windows launchers
 
-Run `run_web.bat` for the browser workspace, `run_litradar.bat` for the TUI, or `run_cli.bat` for a persistent CLI shell. Launchers create `.venv`, install dependencies and initialize the existing database.
+Run `run_litbeacon_web.bat` for the browser workspace, `run_litbeacon.bat` for the TUI, or `run_litbeacon_cli.bat` for a persistent CLI shell. Launchers create `.venv`, install the normal app dependencies and initialize the selected database. Previous launcher names remain as aliases.
 
-The shared Windows setup installs the full dependency sets, including optional semantic and browser-test packages. For a lighter installation, use the manual setup below. [Launcher and update details](docs/USER-GUIDE.md#start-here).
+The shared Windows setup installs web, TUI and file-import extras; semantic, LLM and development packages are opt-in. [Launcher and update details](docs/USER-GUIDE.md#start-here).
 
 ### Manual setup
 
@@ -104,6 +104,7 @@ Discovery indexes, preprints, venue metadata and citations do not certify peer r
 ## Documentation
 
 - [Setup and updates](docs/PACKAGE-SETUP.md) · [user guide and backup/restore](docs/USER-GUIDE.md) · [environment template](.env.example)
+- [Fresh Windows source-ZIP setup](docs/WINDOWS-SOURCE-ZIP.md)
 - [Research browser](docs/research/web-workspace.md) · [venue discovery and evidence](docs/research/venue-discovery.md) · [CLI scenario (RU)](docs/research/cli-workflow-ru.md)
 - [Annotations and recovery](docs/V08-ANNOTATION-WORKFLOWS.md) · [semantic exploration limits](docs/SEMANTIC-WORKSPACE.md)
 - [Network use](docs/NETWORK-USE.md) · [Telegram troubleshooting](docs/TELEGRAM-TROUBLESHOOTING.md) · [local logs](docs/LOGGING.md) · [optional Docker deployment](DOCKER.md)
