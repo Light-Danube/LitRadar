@@ -1,6 +1,6 @@
 # Install LitBeacon from a small setup ZIP
 
-**Which ZIP do you have?** If you used GitHub's **Code → Download ZIP** and see `cli.py`, `pyproject.toml` and `.bat` files, follow the [Windows source-ZIP guide](WINDOWS-SOURCE-ZIP.md). This page is for the two-file `LitBeacon-1.0.0-setup.zip` package. That 1.0 release asset is **not published yet**; v0.8.0 remains the released version. Maintainers can [build the candidate package](RELEASE-1.0-PREFLIGHT.md).
+**Which ZIP do you have?** If you used GitHub's **Code → Download ZIP** and see `cli.py`, `pyproject.toml` and `.bat` files, follow the [Windows source-ZIP guide](WINDOWS-SOURCE-ZIP.md). This page is for `LitBeacon-1.0.0-setup.zip` on the [v1.0.0 GitHub Release](https://github.com/Light-Danube/LitRadar/releases/tag/v1.0.0). The repository is currently private, so the release download requires access. The exact uploaded ZIP has not yet been independently checked; see the [release checklist](LOCAL-1.0-RELEASE-CHECKLIST.md).
 
 The setup ZIP contains exactly `litradar-1.0.0-py3-none-any.whl` and `SETUP.txt`. You need Python **3.11 or newer** (3.12 recommended) and internet for pip dependencies. Git, Node, Docker, models, API keys and the source checkout are unnecessary for an **already built** setup ZIP. The commands below set `LITBEACON_HOME` to a new `user-data` folder for a disposable trial, so an existing LitBeacon library is not opened. Keep that folder if you want to retain trial data.
 

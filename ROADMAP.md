@@ -1,6 +1,6 @@
 # LitBeacon — Local-Only v1.0 Release Roadmap
 
-**Goal:** ship a dependable, maintainable, local-first **LitBeacon 1.0** for one researcher on their own computer. This is a **scope-freeze and release plan**, not a request to add another subsystem. The published release remains **0.8.0**; the **1.0.0 candidate** is merged into source `main` but is not a published release.
+**Goal:** ship a dependable, maintainable, local-first **LitBeacon 1.0** for one researcher on their own computer. This is a **scope-freeze and release plan**, not a request to add another subsystem. A **v1.0.0 GitHub Release** exists in the private repository with one setup ZIP; Gate 6 and public distribution remain open pending the checks below.
 
 **Product boundary:** Python/SQLite is the source of truth. Web UI is bound to localhost; CLI, Textual TUI and the optional Telegram bot are existing interfaces. Existing paper libraries, research evidence, notes, tags, IDs, histories, offline PDFs and scheduler configuration must survive updates. Literature-provider searches require network access; the saved library and local workflows do not. Optional external LLM inference requires explicit opt-in. No account, hosted backend, public API or mandatory cloud component is in scope.
 
@@ -65,15 +65,19 @@ Gate 5 is complete for this bounded local candidate. Gather further usability fe
 
 ## Gate 6 — Versioning, documentation and release artifact (P0)
 
-- [x] Verify VERSION, pyproject.toml, CLI/TUI/Telegram/Web visible version strings and package metadata against the `v1.0.0` tag at `da4486ab`. The candidate version surfaces and tag agree; the GitHub Release and assets remain pending.
-- [ ] Build and install the distribution in a clean environment; run a smoke test against packaged static assets. Verify release ZIP/wheel contain no .env, local SQLite, PDFs, credentials, logs or source caches. The [1.0.0 candidate](docs/archive/release-1.0/evidence/GATE6-1.0-CANDIDATE.md) passed a fresh Linux package install and inventory. The user reported a successful Windows source-ZIP install with Python 3.12.7 and, separately, a normal-user PR #43 source-ZIP retest. They also built the two-file 1.0 setup ZIP from PR #43, installed it in a fresh Windows folder without administrator rights, and reported that the web workspace opened showing v1.0.0. The [package guide](docs/PACKAGE-SETUP.md) records that user-reported package result; macOS, same-commit required CI and release approval remain pending.
+- [x] Verify VERSION, pyproject.toml, CLI/TUI/Telegram/Web visible version strings and package metadata against the `v1.0.0` tag at `da4486ab`. The candidate version surfaces and tag agree.
+- [ ] Build and install the distribution in a clean environment; run a smoke test against packaged static assets. Verify release ZIP/wheel contain no .env, local SQLite, PDFs, credentials, logs or source caches. The [1.0.0 candidate](docs/archive/release-1.0/evidence/GATE6-1.0-CANDIDATE.md) passed a fresh Linux package install and inventory. The user reported a successful Windows source-ZIP install with Python 3.12.7 and, separately, a normal-user PR #43 source-ZIP retest. They also built the two-file 1.0 setup ZIP from PR #43, installed it in a fresh Windows folder without administrator rights, and reported that the web workspace opened showing v1.0.0. The [package guide](docs/PACKAGE-SETUP.md) records that user-reported package result; the exact uploaded asset, native macOS and same-commit required CI remain pending.
 - [x] Keep README concise and provide the source-ZIP quick start, Windows/macOS/Linux package guide, user guide, backup/restore and v0.8.0 upgrade instructions, optional components, known limits and [draft release notes/preflight](docs/RELEASE-1.0-PREFLIGHT.md). These are candidate documents; platform checks and publication remain separate.
 - [x] Create a **1.0 release-candidate checklist** with check names, executed results, platform and known limitations. [Historical 0.8.0 rehearsal](docs/archive/release-1.0/evidence/GATE6-RELEASE-CANDIDATE.md) and [current 1.0.0 candidate](docs/archive/release-1.0/evidence/GATE6-1.0-CANDIDATE.md).
 - [x] Merge the reviewed 1.0 candidate fixes through PR #43; the user completed that merge at `86f20a68`.
 - [x] Push the requested `v1.0.0` tag to the merged and locally verified commit.
-- [ ] Attach the exact verified wheel and setup ZIP to a draft GitHub Release and publish only after checking both downloads; hosted asset attachment remains blocked by account billing.
+- [x] Publish a GitHub Release for `v1.0.0` with a setup ZIP. The published release is still in a private repository; this records publication, not artifact or public-access verification.
+- [ ] Download and inspect the exact published setup ZIP, verify its wheel and hashes, and rerun a disposable installation smoke from that download. The uploaded ZIP's SHA-256 differs from the earlier locally tested ZIP; no standalone wheel is attached although the preflight called for both. [Live status and hashes](docs/LOCAL-1.0-RELEASE-CHECKLIST.md).
+- [ ] Before changing visibility, review Git history for public-safe content, resolve the historic committed `venv/` tree, and confirm release notes and downloads are accessible to an unauthenticated user. Keep exact platform and CI limits explicit.
 
-**Done when:** the same candidate commit passes required CI and Windows smoke, its built artifact installs, and release notes describe exactly what has and has not been verified.
+**Done when:** the exact published artifact is inspected and installs, public-facing history/downloads pass review, and release notes describe exactly what has and has not been verified. Required same-commit CI is blocked before job startup by account billing; record an explicit owner decision on this exception rather than claiming a pass. Native macOS installation remains unverified.
+
+A planning-only [post-1.0 roadmap draft](docs/ROADMAP-post-1.0-draft.md) is available. Keep this release roadmap active until Gate 6 is evidenced and closed; then archive it.
 
 ## Recommended sequence (small draft PRs)
 

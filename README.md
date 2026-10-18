@@ -2,7 +2,7 @@
 
 LitBeacon is a local research workspace for finding, reading and comparing academic papers. Your library, notes and research history live in SQLite on your computer. It includes a browser interface, CLI, optional Textual TUI and Telegram workflows. LitRadar module names and existing data/configuration paths remain compatible.
 
-**Release status:** v0.8.0 is published. The [v1.0.0 source tag](https://github.com/Light-Danube/LitRadar/tree/v1.0.0) is available, but the two-file 1.0 setup ZIP is not yet a published download. [Release status and remaining checks](docs/LOCAL-1.0-RELEASE-CHECKLIST.md).
+**Release status:** [v1.0.0](https://github.com/Light-Danube/LitRadar/releases/tag/v1.0.0) has a setup ZIP attached, but this repository and its release are still private. Public distribution remains under review. [Release checks](docs/LOCAL-1.0-RELEASE-CHECKLIST.md).
 
 ## Start on Windows from GitHub's source ZIP
 
@@ -10,7 +10,7 @@ LitBeacon is a local research workspace for finding, reading and comparing acade
 2. Choose **Code → Download ZIP**, extract it into a writable folder, then open the folder containing `run_litbeacon_web.bat`.
 3. Run `run_litbeacon_web.bat` and open <http://127.0.0.1:8765>. Setup creates `.venv` and installs normal web/TUI dependencies; the first launch needs internet access.
 
-For an isolated trial library, error help and updates, follow the [Windows source-ZIP guide](docs/WINDOWS-SOURCE-ZIP.md). A future release package instead contains a wheel and `SETUP.txt`; see [Windows, macOS and Linux package setup](docs/PACKAGE-SETUP.md). The source ZIP and release package use different launch commands.
+For an isolated trial library, error help and updates, follow the [Windows source-ZIP guide](docs/WINDOWS-SOURCE-ZIP.md). The release setup ZIP is intended to contain a wheel and `SETUP.txt`; see [Windows, macOS and Linux package setup](docs/PACKAGE-SETUP.md). The source ZIP and release package use different launch commands.
 
 ## Use LitBeacon
 

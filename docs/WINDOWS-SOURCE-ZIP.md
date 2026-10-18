@@ -1,6 +1,6 @@
 # Fresh Windows install from GitHub's source ZIP
 
-Use this page if you chose GitHub's **Code → Download ZIP**. Download `main` and extract it. The ZIP contains `cli.py`, `pyproject.toml` and `run_litbeacon_web.bat`, plus developer files. It is different from the future two-file `LitBeacon-1.0.0-setup.zip` release asset. **No 1.0 release asset has been published yet.** You do not have to build a wheel to try the source ZIP.
+Use this page if you chose GitHub's **Code → Download ZIP**. Download `main` and extract it. The ZIP contains `cli.py`, `pyproject.toml` and `run_litbeacon_web.bat`, plus developer files. It differs from `LitBeacon-1.0.0-setup.zip` attached to the [private v1.0.0 release](https://github.com/Light-Danube/LitRadar/releases/tag/v1.0.0). You do not have to build a wheel to try the source ZIP.
 
 ## First launch
 

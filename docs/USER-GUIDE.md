@@ -2,7 +2,7 @@
 
 [Back to the project overview](../README.md). This guide holds detailed setup, configuration, workflow and maintenance instructions.
 
-The published version is **0.8.0**. Source `main` contains an unreleased **1.0.0 candidate**; see the [release checklist](LOCAL-1.0-RELEASE-CHECKLIST.md) and [changelog](../CHANGELOG.md).
+Version **1.0.0** has a [GitHub Release](https://github.com/Light-Danube/LitRadar/releases/tag/v1.0.0) in a private repository; public distribution is still under review. See the [release checklist](LOCAL-1.0-RELEASE-CHECKLIST.md) and [changelog](../CHANGELOG.md).
 
 ## Find a workflow
 
@@ -529,7 +529,7 @@ LitBeacon also supports a local-only Docker Compose deployment for the browser w
 
 ## Wheel installation
 
-For releases providing a lightweight setup ZIP, extract it and follow its standalone `SETUP.txt`. It contains only the runtime wheel and guide, without the development checkout or legacy docs. [Windows, macOS and Linux package setup](PACKAGE-SETUP.md). The 1.0 candidate is currently source only; [Windows source-ZIP users can launch without building a wheel](WINDOWS-SOURCE-ZIP.md). Hosted Actions are deferred by account billing; no current CI artifact or published 1.0 release is implied.
+For a lightweight setup ZIP, extract it and follow its standalone `SETUP.txt`. The intended bundle contains only the runtime wheel and guide, without the development checkout or legacy docs. [Windows, macOS and Linux package setup](PACKAGE-SETUP.md). The v1.0.0 release ZIP is attached to a private GitHub Release; its exact uploaded bytes remain unverified. [Windows source-ZIP users can launch without building a wheel](WINDOWS-SOURCE-ZIP.md). Hosted Actions remain blocked by account billing; no current CI pass is implied.
 
 Install a built wheel with `python -m pip install "path/to/litradar-<version>-py3-none-any.whl[web]"` (replace `<version>` with the actual wheel version), then run `python -m cli init` and `python -m cli web`. Commands work outside a source checkout. Static browser assets and canonical default JSON/version files are bundled; no real library, `.env`, PDFs or model weights are shipped.
 
