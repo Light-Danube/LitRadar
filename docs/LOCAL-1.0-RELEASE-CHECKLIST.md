@@ -15,7 +15,7 @@ Baseline main `6d47d808` (merged PR #39). Published version stays **0.8.0**; sou
 
 1. Make GitHub's **source ZIP** a direct, documented first-launch path: Python 3.12, extract to a new folder, set a disposable data home, run `run_litbeacon_web.bat`. The unpublished two-file release ZIP remains a separate package path; no wheel build is needed for the source ZIP.
 2. Replace the broad Windows launcher install with `[web,ui,annotations]`, prefer Python 3.12/3.11, detect an old `.venv` and keep errors visible. Provide LitBeacon-named batch/PowerShell/shell launchers while retaining old names as aliases; preserve scheduler task identity and data paths.
-3. Fresh Linux source install of those extras plus `pip check`, disposable init/list and version **passed**. Local source suites: **740 Python / 48 JavaScript passed**, zero failures/skips, one existing Starlette warning. Native Windows launcher execution is pending.
+3. Extracted a tracked source ZIP into a new Linux folder, installed those extras in a new venv, then ran `pip check`, disposable init/list and version: **passed**. Local source suites: **740 Python / 48 JavaScript passed**, zero failures/skips, one existing Starlette warning. Native Windows launcher execution is pending.
 
 Hosted Actions remain deferred by user instruction because account billing blocks job startup. Gate 6 remains open for native candidate installation, same-commit required CI, review and explicit merge/tag/release approval. No new subsystem, personal database access, automatic merge or publication.
 
