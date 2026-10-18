@@ -73,11 +73,12 @@ def setup_text(wheel_name: str, version: str) -> str:
 
 Requirements: Python 3.11+; Python 3.12 is recommended and tested.
 Python 3.12.7 is suitable. Internet access is needed for pip dependencies.
-Extract both files together into a writable folder. No Git, Node, Docker,
+Save this file and the wheel together in a writable folder. If you downloaded
+a setup ZIP, extract both files first. No Git, Node, Docker,
 development checkout, legacy documentation or credentials are needed.
 Local-only describes library use; provider searches and dependency installation use the network.
 
-WINDOWS - open PowerShell in this extracted folder:
+WINDOWS - open PowerShell in this folder:
   py -3.12 --version
   py -3.12 -m venv .venv
   .\\.venv\\Scripts\\python.exe -m pip install --no-cache-dir ".\\{wheel_name}[web]"
@@ -86,10 +87,10 @@ WINDOWS - open PowerShell in this extracted folder:
   .\\.venv\\Scripts\\python.exe -m cli init
   .\\.venv\\Scripts\\python.exe -m cli web
 
-LINUX / MACOS - open a terminal in this extracted folder:
+LINUX / MACOS - open a terminal in this folder:
   python3 --version
   python3 -m venv .venv
-  ./.venv/bin/python -m pip install "./{wheel_name}[web]"
+  ./.venv/bin/python -m pip install --no-cache-dir "./{wheel_name}[web]"
   ./.venv/bin/python -m pip check
   ./.venv/bin/python -m cli --version
   ./.venv/bin/python -m cli init
@@ -123,7 +124,7 @@ see library-backup --help. Keep profile/digest settings and credentials separate
 If the old release lacks library-backup, install the new wheel in a separate venv,
 then use its interpreter with -m cli --db OLD_DATABASE library-backup NEW_DIRECTORY
 BEFORE init or web. The backup opens the selected source read-only, without migrations.
-Extract a later setup ZIP into a new folder and repeat setup. The same per-user
+Save a later release's wheel and guide in a new folder and repeat setup. The same per-user
 library remains in place; init applies additive migrations, so back up first.
 Uninstalling/removing the environment does not remove your separate library.
 Built-in Windows Task Scheduler setup still requires the source checkout;
@@ -133,6 +134,7 @@ Windows/macOS/Linux guide and known limits:
 https://github.com/Light-Danube/LitRadar/blob/main/docs/PACKAGE-SETUP.md
 This package has not been verified on every operating system or Python version.
 Installing this package does not approve a new release or certify venue/index metadata.
+\n{(ROOT / 'LICENSE').read_text(encoding='utf-8').rstrip()}
 '''
 
 

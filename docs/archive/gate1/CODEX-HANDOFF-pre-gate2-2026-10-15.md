@@ -1,4 +1,4 @@
-> Historical development handoff archived on 2026-10-15. Pending tasks below describe their original commits; use the [active roadmap](../../../ROADMAP.md) and [current handoff](../release-1.0/CODEX-HANDOFF-final.md).
+> Historical development handoff archived on 2026-10-15. Pending tasks below describe their original commits; use the [active roadmap](../release-1.0/ROADMAP-1.0.md) and [current handoff](../release-1.0/CODEX-HANDOFF-final.md).
 
 # Codex development handoff — LitBeacon Research Workspace
 
@@ -7,7 +7,7 @@
 - Branch `codex/gate1-package-setup`, main baseline `1d1a2ca6`; #22/#23/#24 are merged and no prior open PR backlog remains. Current code includes venue preservation checks, fixed wheel/data paths and bounded backup/restore. Older “pending” statements below describe their historical increments.
 - `scripts/build_user_bundle.py` validates an already-built wheel and emits only wheel + standalone SETUP.txt; metadata/root/bundled versions must agree and release tag must match when supplied. CI installs the extracted wheel on Ubuntu/Windows and uploads a review artifact. Future release attachment replaces the full explicit source ZIP; GitHub automatic source archives remain. No version bump/tag/publication/merge here.
 - User confirmed Windows daily use and Narrator work okay on 2026-10-15; record as accepted user-reported evidence, without unprovided versions/task observations or certification. Narrator is optional; broader detailed audit remains optional. Live venue access is still blocked by cloud proxy 403, not a known universal provider defect.
-- Gate 1 is complete for this feature-stability candidate once its actual required CI is green; final release approval/versioning, scheduler-specific verification and remaining focused safety checks stay separate. See [current checklist](../../LOCAL-1.0-RELEASE-CHECKLIST.md) and [package setup](../../PACKAGE-SETUP.md).
+- Gate 1 is complete for this feature-stability candidate once its actual required CI is green; final release approval/versioning, scheduler-specific verification and remaining focused safety checks stay separate. See [current checklist](../release-1.0/RELEASE-CHECKLIST-1.0.md) and [package setup](../../PACKAGE-SETUP.md).
 - Executed local full suite: **518 Python / 38 JS passed, 0 failed, 0 skipped**, one Starlette warning. Clean Linux venv installed the extracted setup ZIP's actual wheel with declared web dependencies (plus smoke-only httpx) and passed CLI/assets/web edit/restart/custom DB/default preservation smoke. Syntax/link/whitespace checks passed. Final-head CI must be observed; do not infer Windows setup-ZIP success from these Linux results.
 - Actual [Ubuntu/Windows extracted setup ZIP checks](https://github.com/Light-Danube/LitRadar/actions/runs/38657414211) succeeded at code head `3cb012b1`, and both review artifacts uploaded. [Draft PR #25](https://github.com/Light-Danube/LitRadar/pull/25) contains this focused change; use its final head checks to close Gate 1. The later evidence-recording commit changes documentation only.
 
@@ -23,7 +23,7 @@
 
 ## Current — local-only 1.0 freeze, Gate 1 audit
 
-- Branch `codex/local-v1-gate1-audit`, baseline main `b8b42ff4`. Read [release checklist](../../LOCAL-1.0-RELEASE-CHECKLIST.md) and current ROADMAP before following historical suggestions below. No major features or version bump; 0.8.0 remains current. Real-model quality evaluation and Docker production optimization are not frozen 1.0 blockers.
+- Branch `codex/local-v1-gate1-audit`, baseline main `b8b42ff4`. Read [release checklist](../release-1.0/RELEASE-CHECKLIST-1.0.md) and current ROADMAP before following historical suggestions below. No major features or version bump; 0.8.0 remains current. Real-model quality evaluation and Docker production optimization are not frozen 1.0 blockers.
 - PRs #18/#19/#20 are merged; no open PR backlog existed before this audit PR. Historical entries calling #19 open/draft or Windows unverified describe older commits.
 - Executed on tracked-source export with synthetic fixtures: Linux Python 3.12.14 **430 passed / 0 failed / 0 skipped**, one Starlette warning; Node 24.19.0 **38 passed / 0 failed / 0 skipped**. Baseline main CI is green, including Windows targeted 129/0/1, Node 38/0/0 and four sandboxed Chrome scenarios. Final Draft PR head checks must be observed separately.
 - Built and installed the 0.8.0 wheel into scratch space. CLI import outside source fails with `ModuleNotFoundError: config`; module list omits `config.py`, and wheel inventory lacks `VERSION`/default JSON assets. Fix packaging in a focused defect PR; clean Windows built-artifact and TUI/Narrator checks remain open.

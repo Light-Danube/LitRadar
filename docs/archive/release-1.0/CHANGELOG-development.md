@@ -7,7 +7,7 @@
 - Add a [release preflight and proposed notes](RELEASE-1.0-PREFLIGHT.md) for the exact two-file 1.0 download, including manual asset verification while hosted Actions cannot start. A fresh Linux Python 3.12 extracted-wheel smoke passed; native Windows package, macOS and same-commit CI remain open. No release was published.
 
 - Preserve an incompatible/broken Windows source `.venv` as `.venv-before-python312` and create a fresh one with Python 3.12/3.11; Git updater and PowerShell launcher use the same setup path. No library deletion or in-place virtual-environment upgrade.
-- Recommend Python 3.12 explicitly in the generated release setup guide so `py -3` cannot select a different installed interpreter. The user reported a successful Windows source-ZIP install and web launch with Python 3.12.7; the 1.0 wheel/setup ZIP still needs a Windows install check. Condense README and clarify the manual asset path while hosted Actions cannot start. [Release checklist](../../LOCAL-1.0-RELEASE-CHECKLIST.md).
+- Recommend Python 3.12 explicitly in the generated release setup guide so `py -3` cannot select a different installed interpreter. The user reported a successful Windows source-ZIP install and web launch with Python 3.12.7; the 1.0 wheel/setup ZIP still needs a Windows install check. Condense README and clarify the manual asset path while hosted Actions cannot start. [Release checklist](RELEASE-CHECKLIST-1.0.md).
 
 - Clarify a GitHub source-ZIP first launch on Windows after a user-reported `dataclass(slots=...)` failure consistent with Python older than the supported 3.11 floor. Prefer Python 3.12/3.11, stop visibly on an old `.venv`, and install only normal web/TUI/file-import extras from source. Add LitBeacon-named launchers with prior filenames as compatibility aliases. [Windows source-ZIP steps and limits](../../WINDOWS-SOURCE-ZIP.md). The user subsequently reported a successful native source-ZIP setup with Python 3.12.7.
 - Align package/runtime, CLI, FastAPI, web label, provider User-Agent and source-launcher dependency markers for a reviewable local-only 1.0.0 candidate. Existing legacy package/module/config identifiers remain compatible; this is no tag or published release.
@@ -98,7 +98,7 @@
 
 ## Unreleased — local-only 1.0 Gate 1 audit
 
-- Freeze major feature development and add an [evidence-based release checklist](../../LOCAL-1.0-RELEASE-CHECKLIST.md) covering existing workflows, merged PRs, CI profile skips and remaining gates.
+- Freeze major feature development and add an [evidence-based release checklist](RELEASE-CHECKLIST-1.0.md) covering existing workflows, merged PRs, CI profile skips and remaining gates.
 - Execute combined synthetic Linux checks: **430 Python / 38 JS passed, 0 failed, 0 skipped** (one Starlette deprecation warning). Observe actual green baseline CI, including Windows API/DOM and four native Chrome scenarios; these do not establish clean Windows artifact installation or Narrator validation.
 - Reproduce a built-wheel CLI import failure (`config.py` omitted); inventory missing `VERSION` and default JSON assets. Record recovery/upgrade gaps and the smallest next local backup/new-destination restore PR. Documentation only; no feature changes, personal data access, merge or release-version bump. Final candidate CI remains a separate check.
 

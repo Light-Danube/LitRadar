@@ -1,6 +1,6 @@
 # Archived roadmap (before local-only v1.0 scope freeze)
 
-Historical v0.8.x changes, existing feature notes and abandoned/future ideas. For the active release gates, see [ROADMAP.md](../../ROADMAP.md).
+Historical v0.8.x changes, existing feature notes and abandoned/future ideas. For the active release gates, see [ROADMAP.md](release-1.0/ROADMAP-1.0.md).
 
 ---
 

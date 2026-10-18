@@ -1,8 +1,8 @@
 # LitBeacon 1.0 release preflight (archived)
 
-This preserves the former setup-ZIP procedure. The live release now distributes a wheel and `SETUP.txt` separately; use the [current checklist](../../LOCAL-1.0-RELEASE-CHECKLIST.md) and [package guide](../../PACKAGE-SETUP.md) for current status.
+This preserves the former setup-ZIP procedure. The live release now distributes a wheel and `SETUP.txt` separately; use the [current checklist](RELEASE-CHECKLIST-1.0.md) and [package guide](../../PACKAGE-SETUP.md) for current status.
 
-This is the maintainer's check for the **published but private v1.0.0 release**. PRs #43 and #44 are merged, and the tag points to `da4486ab`. The user reported a successful standard-user install of a separately built two-file Windows setup ZIP. The GitHub Release now has a setup ZIP, but its exact uploaded bytes and public accessibility remain unverified. [The active checklist](../../LOCAL-1.0-RELEASE-CHECKLIST.md) records hashes, results and limits. The GitHub source ZIP is a separate install path.
+This is the maintainer's check for the **published but private v1.0.0 release**. PRs #43 and #44 are merged, and the tag points to `da4486ab`. The user reported a successful standard-user install of a separately built two-file Windows setup ZIP. The GitHub Release now has a setup ZIP, but its exact uploaded bytes and public accessibility remain unverified. [The active checklist](RELEASE-CHECKLIST-1.0.md) records hashes, results and limits. The GitHub source ZIP is a separate install path.
 
 ## Prepare the exact artifacts
 

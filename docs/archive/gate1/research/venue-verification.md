@@ -25,7 +25,7 @@ The 17 additional tests in `tests/test_venue_verification.py` replace only `urll
 - A provider page from a different source is rejected before any mutation.
 - The probe requires `--live` and an explicit source choice for search; it never loads personal configuration or opens a library, and does not echo provider exception strings.
 
-Existing EN/UK jsdom Research scenarios additionally verify no provider POST on page load/preset selection, draft retention through navigation/language/theme changes, conflicts, worksheets/exports and failure messages. They do not establish a live browser-provider request. Actual baseline Windows API/DOM/native Chrome results are linked in the [release checklist](../../../LOCAL-1.0-RELEASE-CHECKLIST.md); clean built-artifact/TUI/Narrator release checks remain separate.
+Existing EN/UK jsdom Research scenarios additionally verify no provider POST on page load/preset selection, draft retention through navigation/language/theme changes, conflicts, worksheets/exports and failure messages. They do not establish a live browser-provider request. Actual baseline Windows API/DOM/native Chrome results are linked in the [release checklist](../../release-1.0/RELEASE-CHECKLIST-1.0.md); clean built-artifact/TUI/Narrator release checks remain separate.
 
 ## Repeat a public live probe on an allowed network
 

@@ -1,6 +1,6 @@
 # LitBeacon 1.0 development archive
 
-This directory preserves pre-release patch notes, handoff history and Gate validation records. They describe the evidence and pending limits at the time they were written; use the [current release checklist](../../LOCAL-1.0-RELEASE-CHECKLIST.md) for the latest status and the [user guide](../../USER-GUIDE.md) for current instructions.
+This directory preserves pre-release patch notes, handoff history and Gate validation records. They describe the evidence and pending limits at the time they were written; use the [completed release checklist](RELEASE-CHECKLIST-1.0.md) for the 1.0 results and the [user guide](../../USER-GUIDE.md) for current instructions.
 
 - [Development patch notes and prior version history](CHANGELOG-development.md)
 - [Development handoff](CODEX-HANDOFF-development.md)
@@ -9,7 +9,8 @@ This directory preserves pre-release patch notes, handoff history and Gate valid
 - [Annotation design and validation](V08-ANNOTATION-WORKFLOWS.md) and [quick venue design sources](quick-venues.md)
 - [Semantic evaluation record](SEMANTIC-EVALUATION.md)
 - [Detailed release-candidate checklist and PR history](RELEASE-CHECKLIST-development.md)
-- [Historical release preflight](RELEASE-1.0-PREFLIGHT.md) and [post-1.0 planning draft](ROADMAP-post-1.0-draft.md)
+- [Completed 1.0 release roadmap](ROADMAP-1.0.md) and [release checklist](RELEASE-CHECKLIST-1.0.md)
+- [Historical release preflight](RELEASE-1.0-PREFLIGHT.md) and [superseded post-1.0 planning draft](ROADMAP-post-1.0-draft.md)
 - [Proposed public release notes](RELEASE-NOTES-proposed.md)
 - [Gate 3–6 validation records](evidence/)
 - [Gate 1 feature and audit archive](../gate1/README.md)
