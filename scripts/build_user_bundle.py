@@ -80,7 +80,7 @@ Local-only describes library use; provider searches and dependency installation 
 WINDOWS - open PowerShell in this extracted folder:
   py -3.12 --version
   py -3.12 -m venv .venv
-  .\\.venv\\Scripts\\python.exe -m pip install ".\\{wheel_name}[web]"
+  .\\.venv\\Scripts\\python.exe -m pip install --no-cache-dir ".\\{wheel_name}[web]"
   .\\.venv\\Scripts\\python.exe -m pip check
   .\\.venv\\Scripts\\python.exe -m cli --version
   .\\.venv\\Scripts\\python.exe -m cli init

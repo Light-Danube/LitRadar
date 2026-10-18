@@ -29,6 +29,7 @@ def test_bundle_contains_only_identical_wheel_and_standalone_setup(wheel, tmp_pa
         assert 'library-backup' in text and '3.11+' in text
         assert 'py -3.12 -m venv .venv' in text
         assert 'py -3 -m venv .venv' not in text
+        assert 'python.exe -m pip install --no-cache-dir' in text
     original = artifact.read_bytes()
     with pytest.raises(FileExistsError):
         bundle.build_bundle(wheel, artifact.parent)

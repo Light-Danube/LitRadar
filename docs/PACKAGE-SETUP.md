@@ -12,7 +12,7 @@ The setup ZIP contains exactly `litradar-1.0.0-py3-none-any.whl` and `SETUP.txt`
    ```powershell
    py -3.12 -m venv .venv
    $env:LITBEACON_HOME = (Join-Path (Get-Location) 'user-data')
-   .\.venv\Scripts\python.exe -m pip install ".\litradar-1.0.0-py3-none-any.whl[web]"
+   .\.venv\Scripts\python.exe -m pip install --no-cache-dir ".\litradar-1.0.0-py3-none-any.whl[web]"
    .\.venv\Scripts\python.exe -m pip check
    .\.venv\Scripts\python.exe -m cli --version
    .\.venv\Scripts\python.exe -m cli init
@@ -21,7 +21,7 @@ The setup ZIP contains exactly `litradar-1.0.0-py3-none-any.whl` and `SETUP.txt`
 
 3. Open <http://127.0.0.1:8765>, confirm the page says `v1.0.0`, then stop with Ctrl+C. Restart with the final command in the same PowerShell window; set `LITBEACON_HOME` again in a new window. If the port is occupied, use `-m cli web --port 8787` and open that port. The wheel has no `run_litbeacon_web.bat`; launchers belong to the source checkout.
 
-**This exact 1.0.0 setup ZIP has not yet been installed on Windows.** The user successfully installed the current source ZIP with Python 3.12.7; prior Windows wheel checks apply to older commits. If `py -3.12` fails, confirm the launcher was installed with Python and run `py --list`. If this fresh package install fails, report the Python version, command and safe error text without sharing a library, `.env`, tokens or private logs.
+On 2026-10-18 the user built this two-file 1.0.0 setup ZIP from PR #43, extracted it into a fresh Windows folder, followed these steps without administrator rights, and reported that the web workspace started showing v1.0.0. This is a user-reported install result; edit/restart persistence and same-commit hosted CI were not confirmed by that report. If `py -3.12` fails, confirm the launcher was installed with Python and run `py --list`. The Windows pip command disables the pip cache; if a permission error remains, identify whether its safe suffix is under `Temp`, `pip\Cache` or `LitBeacon` and use a fresh writable extraction folder. If this fresh package install fails, report the Python version, command and safe error text without sharing a library, `.env`, tokens or private logs.
 
 ## macOS — Terminal
 
@@ -74,7 +74,7 @@ To upgrade from v0.8.0, **stop all LitBeacon processes and back up first**. Use 
 GitHub Actions cannot currently produce a downloadable setup artifact because account billing blocks job startup. A reviewer can obtain [current source](https://github.com/Light-Danube/LitRadar) with **Code → Download ZIP** or Git, extract it to a temporary **build** folder, and run from its repository root. Windows users can instead [launch directly from the source ZIP](WINDOWS-SOURCE-ZIP.md):
 
 ```sh
-python -m pip wheel --no-deps --wheel-dir dist .
+python -m pip wheel --no-cache-dir --no-deps --wheel-dir dist .
 python -m scripts.build_user_bundle dist/litradar-1.0.0-py3-none-any.whl --output-dir dist
 ```
 

@@ -10,7 +10,7 @@
 
 1. Install **Python 3.12** from [python.org](https://www.python.org/downloads/windows/) with the Windows `py` launcher. Python 3.12.7 works; check `py -3.12 --version` in PowerShell.
 2. Use **Code → Download ZIP**, extract it into a new writable folder, and open the folder containing `run_litbeacon_web.bat`.
-3. Run `run_litbeacon_web.bat`; it creates `.venv`, installs the normal app dependencies and starts the local web workspace. Open <http://127.0.0.1:8765>.
+3. Run `run_litbeacon_web.bat`; it creates `.venv`, installs web and TUI dependencies and starts the local web workspace. Open <http://127.0.0.1:8765>.
 
 If an old `.venv` uses a different Python, the launcher keeps it as `.venv-before-python312` and creates a fresh one; your library remains separate. The [step-by-step Windows source-ZIP guide](docs/WINDOWS-SOURCE-ZIP.md) covers a separate trial data folder and errors. The **future release download** is a smaller, two-file setup ZIP with a wheel and `SETUP.txt`; follow the [Windows, macOS and Linux package guide](docs/PACKAGE-SETUP.md) for that route. Dependency installation needs internet access; saved-library work is local.
 
