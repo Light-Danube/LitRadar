@@ -2,7 +2,7 @@
 
 LitBeacon is a local research workspace for finding, reading and comparing academic papers. Your library, notes and research history live in SQLite on your computer. It includes a browser interface, CLI, optional Textual TUI and Telegram workflows. LitRadar module names and existing data/configuration paths remain compatible.
 
-**Release status:** [v1.0.0](https://github.com/Light-Danube/LitRadar/releases/tag/v1.0.0) has a wheel and `SETUP.txt` attached. [Release checks](docs/LOCAL-1.0-RELEASE-CHECKLIST.md) track artifact and public-download verification.
+**Release status:** [v1.0.0](https://github.com/Light-Danube/LitRadar/releases/tag/v1.0.0) provides a wheel and `SETUP.txt`. [Release checks](docs/archive/release-1.0/RELEASE-CHECKLIST-1.0.md) track artifact and public-download verification.
 
 ## Start on Windows from GitHub's source ZIP
 

@@ -34,7 +34,7 @@ A rejected command-menu setup is a warning; commands can still work. A failure w
 
 This increment covers `telegram-run` diagnostics and the fixed replies/persisted failure records for caught listener exceptions. Existing provider scan summaries and scheduler subprocess result messages retain their separate behavior. It does not introduce global debug logging, capture HTTP wire traffic, or replace the independent scheduled-digest/`telegram-chats` transports. In particular, their existing diagnostics are not covered by this listener-only privacy guarantee. Do not run chat discovery while polling. A remote 409 response stops contention; it is not a cross-machine lock that prevents two processes from starting simultaneously.
 
-Gate 3 scheduler disable/remove and full provider-failure/local-workspace checks remain separate. See the [release checklist](LOCAL-1.0-RELEASE-CHECKLIST.md) and [increment validation](archive/release-1.0/evidence/GATE3-TELEGRAM-DIAGNOSTICS.md).
+Gate 3 scheduler disable/remove and full provider-failure/local-workspace checks remain separate. See the [release checklist](archive/release-1.0/RELEASE-CHECKLIST-1.0.md) and [increment validation](archive/release-1.0/evidence/GATE3-TELEGRAM-DIAGNOSTICS.md).
 
 ## Stopping the listener
 

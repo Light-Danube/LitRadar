@@ -1,6 +1,6 @@
 # Gate 1 documentation archive — 2026-10-15
 
-Gate 1 feature stabilization is complete at merged PR #25. This archive preserves the feature planning, design, implementation contracts, supporting public research and executed validation history behind that candidate. Historical pending wording and proposals describe their original dates; moving a record does not implement a proposal, run a test or certify a provider, model or accessibility claim. Consult the [active release checklist](../../LOCAL-1.0-RELEASE-CHECKLIST.md) and [roadmap](../../../ROADMAP.md) for current work.
+Gate 1 feature stabilization is complete at merged PR #25. This archive preserves the feature planning, design, implementation contracts, supporting public research and executed validation history behind that candidate. Historical pending wording and proposals describe their original dates; moving a record does not implement a proposal, run a test or certify a provider, model or accessibility claim. Consult the [active release checklist](../release-1.0/RELEASE-CHECKLIST-1.0.md) and [roadmap](../release-1.0/ROADMAP-1.0.md) for current work.
 
 ## Records
 

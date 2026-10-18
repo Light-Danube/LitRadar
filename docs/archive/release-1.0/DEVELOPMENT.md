@@ -48,7 +48,7 @@ GitHub Actions contains core, Textual UI, and browser-workspace test jobs. The w
 
 The archived [UI/UX research](../gate1/ux-research/README.md) includes a standalone concept, the 48-item feature-preservation checklist, and an incremental plan. [Phase 1](../gate1/ux-research/phase-1.md) implements the theme and responsive shell foundation. [The public-source competitor review](../gate1/ux-research/live-review-2026-10-13.md) now uses accessible official pages; its original hands-on competitor, browser and participant limitations remain recorded separately from later user acceptance and CI evidence.
 
-Release status and remaining work are maintained in [`ROADMAP.md`](../../../ROADMAP.md) and the [active checklist](../../LOCAL-1.0-RELEASE-CHECKLIST.md). The [Gate 1 archive](../gate1/README.md) holds completed feature history and design proposals. Optional semantic exploration remains experimental; historical real-model evaluation limits do not introduce a new release blocker.
+Release status and remaining work are maintained in [`ROADMAP.md`](ROADMAP-1.0.md) and the [active checklist](RELEASE-CHECKLIST-1.0.md). The [Gate 1 archive](../gate1/README.md) holds completed feature history and design proposals. Optional semantic exploration remains experimental; historical real-model evaluation limits do not introduce a new release blocker.
 
 ## Changelog
 

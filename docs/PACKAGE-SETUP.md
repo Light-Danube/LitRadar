@@ -1,6 +1,6 @@
 # Install LitBeacon from the release wheel
 
-Download both `litradar-1.0.0-py3-none-any.whl` and `SETUP.txt` from the [v1.0.0 GitHub Release](https://github.com/Light-Danube/LitRadar/releases/tag/v1.0.0), saving them in the **same new writable folder**. If you chose GitHub's **Code → Download ZIP** instead and see `cli.py`, `pyproject.toml` and `.bat` files, follow the [Windows source-ZIP guide](WINDOWS-SOURCE-ZIP.md). The exact uploaded wheel passed a fresh Linux installed-package smoke; [release checks](LOCAL-1.0-RELEASE-CHECKLIST.md) record the platform limits. Until the release `SETUP.txt` is replaced, use the commands on this page, especially `--no-cache-dir` on Windows.
+Download both `litradar-1.0.0-py3-none-any.whl` and `SETUP.txt` from the [v1.0.0 GitHub Release](https://github.com/Light-Danube/LitRadar/releases/tag/v1.0.0), saving them in the **same new writable folder**. If you chose GitHub's **Code → Download ZIP** instead and see `cli.py`, `pyproject.toml` and `.bat` files, follow the [Windows source-ZIP guide](WINDOWS-SOURCE-ZIP.md). The exact uploaded wheel passed a fresh Linux installed-package smoke; [release checks](archive/release-1.0/RELEASE-CHECKLIST-1.0.md) record the platform limits.
 
 You need Python **3.11 or newer** (3.12 recommended) and internet for pip dependencies. Git, Node, Docker, models, API keys and the source checkout are unnecessary for the already built wheel. The commands below set `LITBEACON_HOME` to a new `user-data` folder for a disposable trial, so an existing LitBeacon library is not opened. Keep that folder if you want to retain trial data.
 
@@ -21,7 +21,7 @@ You need Python **3.11 or newer** (3.12 recommended) and internet for pip depend
 
 3. Open <http://127.0.0.1:8765>, confirm the page says `v1.0.0`, then stop with Ctrl+C. Restart with the final command in the same PowerShell window; set `LITBEACON_HOME` again in a new window. If the port is occupied, use `-m cli web --port 8787` and open that port. The wheel has no `run_litbeacon_web.bat`; launchers belong to the source checkout.
 
-If `py -3.12` fails, confirm the launcher was installed with Python and run `py --list`. The Windows pip command disables the pip cache. If a permission error remains, use a fresh writable download folder and report the command, Python version and first safe error line without sharing private paths, a library, `.env`, tokens or logs. [Platform validation status](LOCAL-1.0-RELEASE-CHECKLIST.md).
+If `py -3.12` fails, confirm the launcher was installed with Python and run `py --list`. The Windows pip command disables the pip cache. If a permission error remains, use a fresh writable download folder and report the command, Python version and first safe error line without sharing private paths, a library, `.env`, tokens or logs. [Platform validation status](archive/release-1.0/RELEASE-CHECKLIST-1.0.md).
 
 ## macOS — Terminal
 
@@ -69,4 +69,4 @@ A virtual environment is tied to its original Python installation: installing Py
 
 To upgrade from v0.8.0, **stop all LitBeacon processes and back up first**. Use the old environment's `-m cli library-backup NEW_BACKUP_DIRECTORY` if available; elect Research/offline files explicitly with writers stopped, and save profile/digest settings and credentials separately. If the old release lacks that command, install the new wheel in a **separate venv** and run `-m cli --db OLD_DATABASE library-backup NEW_BACKUP_DIRECTORY` *before* `init` or `web`; this opens the old database read-only. Keep the backup outside the setup folder. Then install into a new folder and use the same per-user data location if you intend to upgrade that library. `init` applies additive migrations; source-checkout libraries are not moved automatically. Never delete an old data directory to repair an install. [Recovery details](USER-GUIDE.md#consistent-local-backup-and-restore).
 
-A source checkout does not include the published wheel. [Release verification status](LOCAL-1.0-RELEASE-CHECKLIST.md).
+A source checkout does not include the published wheel. [Release verification status](archive/release-1.0/RELEASE-CHECKLIST-1.0.md).

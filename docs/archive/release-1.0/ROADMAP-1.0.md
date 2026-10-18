@@ -1,0 +1,104 @@
+# LitBeacon — Local-Only v1.0 Release Roadmap
+
+**Goal:** ship a dependable, maintainable, local-first **LitBeacon 1.0** for one researcher on their own computer. This scope-freeze and release plan is complete. The repository and **v1.0.0 GitHub Release** are public; the exact wheel passed the bounded Linux checks below.
+
+**Product boundary:** Python/SQLite is the source of truth. Web UI is bound to localhost; CLI, Textual TUI and the optional Telegram bot are existing interfaces. Existing paper libraries, research evidence, notes, tags, IDs, histories, offline PDFs and scheduler configuration must survive updates. Literature-provider searches require network access; the saved library and local workflows do not. Optional external LLM inference requires explicit opt-in. No account, hosted backend, public API or mandatory cloud component is in scope.
+
+**Current baseline:** existing web/CLI/TUI/Telegram workflows, citation graph, annotations and recovery, venue-scoped search, evidence worksheets and local Research workspace are already implemented or documented in main. The user's 2026-10-14 web visual acceptance is not a substitute for packaging or Windows release tests. Existing v0.8.x implementation and historical test notes were moved to [the archived roadmap](../ROADMAP-pre-v1-scope-freeze-2026-10-15.md). Consult CHANGELOG.md and the [archived handoff](CODEX-HANDOFF-final.md) for detailed delivery history.
+
+## Rules for the finish line
+
+- **No major new feature work before 1.0.** Fix defects, data loss risks, packaging, local usability, installation, recovery and documentation.
+- **No version bump just because a checkbox is checked.** Build, verify, and explicitly approve the release candidate first.
+- **Keep all existing user data and compatibility paths.** Database schema changes must be additive/migrated and tested with disposable legacy fixtures; never erase or migrate the real local library for a test.
+- **Network-dependent extras must fail gracefully.** Offline library access must work without provider, Telegram, embeddings or LLM services.
+- **Use explicit evidence.** Mark each gate complete only with exact test command/results or an identified manual smoke-test record. Do not infer a Windows/browser/CI pass from Linux/jsdom tests.
+
+## Gate 1 — Stabilize the current feature set (P0): complete
+
+- [x] Feature inventory, regression checks and reproduced blockers closed through merged PRs #21–25. [Archived audit and closure evidence](../gate1/release-checklist-2026-10-15.md), including actual Ubuntu/Windows setup ZIP checks, remain available.
+- [x] Windows daily use and optional Narrator accepted by the user on 2026-10-15; no formal accessibility certification or unprovided platform observations are inferred.
+
+Reopen for a reproduced workflow/data-loss defect. Live venue access remains cloud-environment-limited (proxy 403); user-reported CLI success is separate evidence. Active setup, recovery and operational guides remain current; completed planning and validation records are indexed in the [Gate 1 archive](../gate1/README.md). Feature stability does not authorize a release/version bump.
+
+## Gate 2 — Local data integrity and recovery (P0): complete for this candidate
+
+- [x] Provide a documented **consistent SQLite backup** using SQLite's backup API and a read-only source without source migrations; committed active-WAL snapshot tested.
+- [x] Implement bounded `library-backup`/`library-restore`, explicitly elected Research/offline roots, manifest/SHA-256 and exclusions. Artifact inclusion requires an explicit stopped-writers acknowledgment. [Instructions and limits](../../USER-GUIDE.md#consistent-local-backup-and-restore).
+- [x] Demonstrate restore into a **new, disposable destination**, retaining all table data: notes/tags/status/IDs, citations/feedback, annotation/evidence histories/tombstones, preset tombstones and elected files. Corruption/missing/duplicate/path/schema/failure-cleanup checks execute on synthetic fixtures.
+- [x] Restore an additive older LitRadar schema and upgrade twice, retaining existing fields, identities, metadata and histories. Compatibility identifiers remain unchanged.
+
+**Done when:** automated tests verify backup, restore and upgrade without contacting services or touching personal data; USER-GUIDE documents restore steps and exclusions.
+
+Source recovery and additive legacy upgrade are implemented and covered by synthetic tests. Actual [Ubuntu/Windows extracted setup-wheel recovery checks](https://github.com/Light-Danube/LitRadar/actions/runs/38744388702) succeeded at implementation head `a9c64fb2`, closing the package evidence gap through `scripts/built_wheel_smoke.py`. [Current candidate evidence](RELEASE-CHECKLIST-1.0.md) records executed results and pending CI separately. No personal data or live services are used.
+
+## Gate 3 — Windows-first install, launch and normal use (P0): complete for this candidate
+
+- [x] Clean Windows Python 3.12 installed-wheel smoke verifies CLI, bundled assets and local edit/restart persistence; the setup ZIP follows the same CI path. [Actual runs and limits](evidence/WINDOWS-WORKSPACE-SMOKE.md).
+- [x] Windows daily use accepted by the user on 2026-10-15; detailed task/platform versions were not supplied. Synthetic API/DOM/native Chrome checks remain the separate automated evidence; this is not an invented per-task manual smoke transcript.
+- [x] Stable scheduler task names/IgnoreNew, repeated install/status/per-job and all removal, explicit disabled guards/failures and selected paths verified by Windows fake/native unique-task checks. Optional Telegram duplicate-polling conflicts stop on 409; prompt idle/menu/retry Ctrl+C and normal offline use require no live Telegram credentials. [Lifecycle evidence and limits](evidence/GATE3-LIFECYCLE.md). No cross-machine ownership lock or timed live delivery is claimed.
+
+- [x] Synthetic 403/404/429/503/timeout/offline provider failures preserve stored library/evidence state and partial success; subsequent local workspace read/edit/export/reopen works. Actual Windows targeted checks succeeded at `3dfe583e`. [Evidence and limits](evidence/GATE3-PROVIDER-FAILURES.md); no live provider availability claim.
+
+Gate 3 is complete for the bounded candidate: actual Windows 37-test lifecycle/interface evidence at `845a6255` and native/fault-injection PowerShell checks at `6ed0fc8d`, with unchanged runtime code between them. [Closure record](evidence/GATE3-LIFECYCLE.md) separates synthetic/native registration from user-reported daily use and live/timed behavior. Final documentation-head checks are tracked in PR #29; reopen for a reproduced normal-use/data-loss defect. Release/version approval remains Gate 6.
+
+## Gate 4 — Safe local operating boundary (P0): complete for the bounded candidate
+
+- [x] Verify web binds only to 127.0.0.1 by default and is not represented as suitable for public/LAN exposure; no authentication/server deployment is introduced for 1.0. [Local launch checks and limits](evidence/GATE4-LOCAL-BOUNDARY.md); Linux verification only, hosted Actions deferred because of the account billing blocker by user instruction.
+- [x] Verify path traversal, symlink, file-upload and export safeguards with synthetic fixtures; imports and restores must never follow arbitrary untrusted paths. [Research result/download checks](evidence/GATE4-RESEARCH-PATHS.md) and [upload/restore acceptance](evidence/GATE4-IMPORT-RESTORE-PATHS.md) provide bounded local evidence, including outside-fixture preservation and failure cleanup. Hosted Actions/native Windows remain deferred; these checks do not claim race-proofing against another local process or a complete security audit.
+- [x] Verify SQLite changes, retryable failures, bad metadata and duplicate external identifiers do not discard manual notes/status/tags or overwrite research evidence. [Disposable integrity checks and canonical-identity fixes](evidence/GATE4-INTEGRITY-CLOSURE.md) include reopen, rollback and real SQLite lock/retry evidence.
+- [x] Document clearly which operations use the network: OpenAlex, Semantic Scholar, arXiv, optional Unpaywall, Telegram and explicitly invoked cloud LLMs. [Network-use reference](../../NETWORK-USE.md); legacy model loading now uses local/cached weights only, with keyword fallback. No mandatory telemetry sender was found in the scoped application review.
+
+**Done when:** existing targeted security/regression tests pass and limitations are described accurately (not labeled as a complete security audit).
+
+[Gate 4 closure](evidence/GATE4-INTEGRITY-CLOSURE.md) records bounded Linux evidence and limits. Hosted Actions/native Windows re-verification remain deferred by user instruction; this does not approve a release/version bump or certify hostile-local-process/parser security. Proceed vertically to Gate 5.
+
+## Gate 5 — Local usability and accessibility evidence (P1; complete for this candidate)
+
+- [x] Review core keyboard workflows in the existing web UI and Textual TUI in both English and Ukrainian: navigation, focus, close/cancel, scrolling, error messages, and keeping unsaved drafts. [Annotation editor focus](evidence/GATE5-KEYBOARD-FOCUS.md), [TUI modal/error checks](evidence/GATE5-TUI-KEYBOARD.md) and the [Research DOM journey](evidence/GATE5-RESEARCH-KEYBOARD.md) are bounded slices with stated platform limits.
+- [x] User-reported Windows/Narrator acceptance recorded on 2026-10-15; Narrator is optional for this release. The [detailed audit procedure](evidence/TUI-ACCESSIBILITY-AUDIT.md) remains available for optional broader testing; no WCAG/screen-reader certification is claimed.
+- [x] Ordinary-user Research use accepted by the user on 2026-10-18, including the venue/evidence/export path covered by EN/UK synthetic DOM checks. This is user-reported acceptance, without an independently observed task transcript or native-browser test.
+
+**Done when:** keyboard/smoke evidence and unresolved limitations are documented. A full accessibility certification, new UI design, new localization languages and TUI menu overhaul are **not** release gates.
+
+Gate 5 is complete for this bounded local candidate. Gather further usability feedback after the initial release as separate, specific follow-ups. This does not approve a version bump or release.
+
+## Gate 6 — Versioning, documentation and release artifact (P0): complete
+
+- [x] Verify VERSION, pyproject.toml, CLI/TUI/Telegram/Web visible version strings and package metadata against the `v1.0.0` tag at `da4486ab`. The candidate version surfaces and tag agree.
+- [x] Download and install the exact public wheel in a clean Linux Python 3.12 environment; verify 63 wheel entries, no excluded local-data filenames, `pip check`, packaged static assets, synthetic web edit/restart and backup/restore integrity. The user previously reported a successful standard-user Windows source-ZIP and separately built setup-ZIP install. Native Windows testing of this exact uploaded wheel and native macOS installation remain unverified. [Executed results and hashes](RELEASE-CHECKLIST-1.0.md).
+- [x] Keep README concise and provide the source-ZIP quick start, Windows/macOS/Linux package guide, user guide, backup/restore and v0.8.0 upgrade instructions, optional components, known limits and [archived release preflight](RELEASE-1.0-PREFLIGHT.md). Platform checks and publication remain separate.
+- [x] Create a **1.0 release-candidate checklist** with check names, executed results, platform and known limitations. [Historical 0.8.0 rehearsal](evidence/GATE6-RELEASE-CANDIDATE.md) and [current 1.0.0 candidate](evidence/GATE6-1.0-CANDIDATE.md).
+- [x] Merge the reviewed 1.0 candidate fixes through PR #43; the user completed that merge at `86f20a68`.
+- [x] Push the requested `v1.0.0` tag to the merged and locally verified commit.
+- [x] Publish a public GitHub Release for `v1.0.0` with a wheel and setup text. The exact wheel and replacement `SETUP.txt` downloaded without authentication and matched their recorded SHA-256 digests.
+- [x] Owner reviewed Git history and reported no personal data; MIT is on public `main`. This is owner-reported history review, not an independent audit of old file contents.
+- [x] Publish the [corrected setup text](../../SETUP-1.0.txt) with direct wheel commands, `--no-cache-dir` on Windows and the MIT notice. The replacement public asset `SETUP.txt` matched the prepared file byte-for-byte. The owner replaced the one-line Release description with substantive notes and corrected the asset name.
+
+**Closure:** the corrected setup file and accurate release notes are public. The owner previously chose to defer hosted Actions while account billing blocks job startup; no CI pass is claimed. Native macOS installation and exact uploaded-wheel Windows testing remain unverified.
+
+Future work is tracked in the [new roadmap](../../../ROADMAP.md); this release roadmap is archived with its validation record. The earlier [planning draft](ROADMAP-post-1.0-draft.md) remains as history.
+
+## Recommended sequence (small draft PRs)
+
+| Step | Scope | Expected output |
+| --- | --- | --- |
+| 1 | Freeze inventory + failures (Gate 1) | A minimal release checklist; reproducible defect list |
+| 2 | Backup, restore, legacy upgrade (Gate 2) | Tested recovery commands and documentation |
+| 3 | Windows/packaging fixes (Gates 3 and 6) | Clean-install smoke and consistent bundled assets |
+| 4 | Safety + practical accessibility (Gates 4 and 5) | Focused regression fixes and honest limitations |
+| 5 | Release candidate (Gate 6) | Verified RC, then explicit approval to tag 1.0.0 |
+
+A PR should cover one step or a clearly bounded defect, not all gates at once. No date commitment is implied.
+
+## Not required for v1.0 (remove from active roadmap)
+
+- Named multi-project workspaces, advanced reading queues, citation-gap prediction, collaborative features, accounts and server synchronization.
+- More provider integrations solely to increase source count; use existing OpenAlex venue IDs/ISSN and clear provenance first.
+- New semantic clustering/model evaluation as a release blocker. The existing optional semantic feature remains explicitly experimental/off by default.
+- Zotero or other reference-manager sync; automated novelty/scientific-quality scoring; unverified journal-indexing certification.
+- Public web/VPS hosting, server authentication stack, remote scheduler, cloud database or mobile clients.
+- Docker production/VPS optimization or a Codex-agent devcontainer. Existing Compose/test runner may remain available, but Docker is **optional** for a standard local Windows 1.0 install.
+- New graph framework, large UI redesign, additional translations or a broad architecture rewrite.
+
+After 1.0, capture **specific user-validated requests** as separate issues with acceptance criteria. Do not re-add a generic “later” bucket to the release roadmap.

@@ -1,6 +1,6 @@
 # Archived Gate 1 closure record
 
-Gate 1 closed at merged PR #25, candidate `9e5fe8f5`, with actual green CI. This dated record preserves its evidence and historical pending wording; current gates are in [the active checklist](../../LOCAL-1.0-RELEASE-CHECKLIST.md).
+Gate 1 closed at merged PR #25, candidate `9e5fe8f5`, with actual green CI. This dated record preserves its evidence and historical pending wording; current gates are in [the active checklist](../release-1.0/RELEASE-CHECKLIST-1.0.md).
 
 # Local-only LitBeacon 1.0 — release checklist
 
