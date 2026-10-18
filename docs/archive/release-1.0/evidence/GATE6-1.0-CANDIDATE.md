@@ -1,6 +1,6 @@
 # Gate 6 — Draft 1.0.0 installation candidate
 
-Draft PR #39 starts from merged main `d3bb5513` (PR #38). **1.0.0 is candidate source/package metadata, not a published release.** Published v0.8.0 remains available. The candidate is for [fresh-folder Windows/macOS/Linux installation testing](PACKAGE-SETUP.md); it does not authorize merge, tag or publication.
+Draft PR #39 starts from merged main `d3bb5513` (PR #38). **1.0.0 is candidate source/package metadata, not a published release.** Published v0.8.0 remains available. The candidate is for [fresh-folder Windows/macOS/Linux installation testing](../../../PACKAGE-SETUP.md); it does not authorize merge, tag or publication.
 
 ## Executed Linux checks
 
@@ -26,4 +26,4 @@ Linux Python 3.12.14: **740 Python tests passed** (one existing Starlette warnin
 - **Required CI:** hosted GitHub Actions are deferred by user instruction because account billing blocks job startup. Do not retry/monitor jobs, change billing/workflows or claim same-commit CI. The final candidate needs required checks on the same reviewed commit when available.
 - **Release decision:** the user explicitly chose to keep PR #43 and the release pending after the Windows package test. Do not merge, tag, upload or publish. If the owner later reopens the release decision, check version/artifact on the final commit and obtain explicit approval. Publishing a release would trigger the existing artifact-attachment workflow, but billing currently prevents job startup; both artifacts would need verification and attachment before publication.
 
-Known product limits for the release note: web binds to localhost and has no authentication for LAN/public hosting; provider searches, dependency installation, optional Telegram and explicitly selected cloud LLMs can use the network; venue metadata is not indexing/peer-review/novelty proof; optional local semantic work is off by default. Source-checkout and wheel data locations differ. See [network use](NETWORK-USE.md), [user guide](USER-GUIDE.md) and [recovery](USER-GUIDE.md#consistent-local-backup-and-restore-unreleased).
+Known product limits for the release note: web binds to localhost and has no authentication for LAN/public hosting; provider searches, dependency installation, optional Telegram and explicitly selected cloud LLMs can use the network; venue metadata is not indexing/peer-review/novelty proof; optional local semantic work is off by default. Source-checkout and wheel data locations differ. See [network use](../../../NETWORK-USE.md), [user guide](../../../USER-GUIDE.md) and [recovery](../../../USER-GUIDE.md#consistent-local-backup-and-restore-unreleased).

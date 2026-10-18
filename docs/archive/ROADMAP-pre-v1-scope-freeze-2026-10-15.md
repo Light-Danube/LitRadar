@@ -11,7 +11,7 @@ Historical v0.8.x changes, existing feature notes and abandoned/future ideas. Fo
 - [x] Extend English/Ukrainian localization to the existing Textual TUI, with runtime language selection, translated app controls/help/details/activity and preserved technical identifiers and paper content.
 - [x] Fix jobs worker UI dispatch, busy/error/close handling and immediate filtering by newly saved tags; run synthetic keyboard/worker regressions.
 - [x] Prepare an [existing-feature-only menu optimization draft](gate1/TUI-MENU-DRAFT.md), plus targeted keyboard scrolling/focus and compact-toolbar fixes.
-- [ ] Complete the full accessibility audit with assistive technology: user-selected **Windows Terminal + Narrator** remains pending. [Executed audit, limits and safe fixture procedure](../TUI-ACCESSIBILITY-AUDIT.md).
+- [ ] Complete the full accessibility audit with assistive technology: user-selected **Windows Terminal + Narrator** remains pending. [Executed audit, limits and safe fixture procedure](release-1.0/evidence/TUI-ACCESSIBILITY-AUDIT.md).
 
 Validation: **430 Python passed / 0 failed / 0 skipped; 6 Node test files passed / 0 failed / 0 skipped**. The TUI subset passed 29 tests; ANSI PTY and disposable audit-fixture smoke checks passed separately. Textual 1.0.0 tested; UI dependency minimum is now 1.0. Remote CI and real Narrator output are unverified. Release version remains 0.8.0; no CLI/web feature expansion or README changes in this patch.
 
@@ -69,11 +69,11 @@ This roadmap separates implemented behavior from research ideas that still need 
 - [ ] Complete real neural-model quality evaluation on the [shareable corpus](../SEMANTIC-WORKSPACE.md); lexical controls have run, model/metadata access remains blocked.
 - [x] Test graph direction, mixed OpenAlex/Semantic Scholar aliases, duplicates/self-edges, antiparallel citations, cycles, refresh and merged provenance with synthetic fixtures.
 - [x] Add synthetic API and EN/UK DOM workflow smoke tests for inbox editing, clusters and graph navigation.
-- [ ] Confirm the [Windows workflow](../WINDOWS-WORKSPACE-SMOKE.md) result on Windows; the same commands passed locally on Linux.
+- [ ] Confirm the [Windows workflow](release-1.0/evidence/WINDOWS-WORKSPACE-SMOKE.md) result on Windows; the same commands passed locally on Linux.
 - [x] Add bounded node/label collision settling, fix native single-click selection and group exports in a keyboard-accessible menu. Keep zoom buttons for keyboard users.
 - [x] Refine Web UI onboarding, semantic paper buttons/labels, skip link, Alt+1–5 / search / save shortcuts, empty/loading/error/retry states, visible focus and contrast (unreleased; no claim of a complete accessibility audit).
 - [x] Add Ukrainian Web UI localization with externalized English/Ukrainian strings, a persisted language selector, localized statuses/help/actions, and Unicode workflow checks; preserve CLI/config identifiers (unreleased).
-- [ ] Extend Ukrainian localization to Textual TUI and perform a full accessibility audit with assistive technology (localization and automated TUI checks complete; Windows Terminal + Narrator audit pending — see [audit evidence](../TUI-ACCESSIBILITY-AUDIT.md)).
+- [ ] Extend Ukrainian localization to Textual TUI and perform a full accessibility audit with assistive technology (localization and automated TUI checks complete; Windows Terminal + Narrator audit pending — see [audit evidence](release-1.0/evidence/TUI-ACCESSIBILITY-AUDIT.md)).
 
 ## v0.9 — Research projects and reading workflow
 

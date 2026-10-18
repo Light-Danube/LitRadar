@@ -8,7 +8,7 @@ The source baseline is `ui.py` / `ui.tcss`, inspected before the current localiz
 
 The current toolbar reserves approximately 94 columns for status, sort, tag, counts, spacing and padding before giving any width to the local-search input. This cannot fit an 80-column terminal. The main pane permanently divides the remaining space 2:1 between table and details. The idle progress panel consumes five rows. The footer exposes 19 bindings at once, while most selected-paper actions have no visible button/menu entry. Help omits the existing `K` tag-filter and `I` DOI bindings. Jobs uses long installation labels and four horizontal removal/close buttons. These are source observations; they are not results from a native-terminal study.
 
-The accompanying bugfix patch addresses the initial help omissions, keyboard scrolling, stacked Jobs buttons, flexible online input and a two-row toolbar below 110 columns. The complete menu proposal below remains a draft: no grouped paper-action menu or compact pane switch is implemented. The primary user-selected reader for follow-up is Windows Terminal + Narrator; see [the executed audit and its fixture](../../TUI-ACCESSIBILITY-AUDIT.md).
+The accompanying bugfix patch addresses the initial help omissions, keyboard scrolling, stacked Jobs buttons, flexible online input and a two-row toolbar below 110 columns. The complete menu proposal below remains a draft: no grouped paper-action menu or compact pane switch is implemented. The primary user-selected reader for follow-up is Windows Terminal + Narrator; see [the executed audit and its fixture](../release-1.0/evidence/TUI-ACCESSIBILITY-AUDIT.md).
 
 ## Proposed arrangement
 

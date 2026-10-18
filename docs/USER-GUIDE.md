@@ -2,7 +2,7 @@
 
 [Back to the project overview](../README.md). This guide holds detailed setup, configuration, workflow and maintenance instructions.
 
-The released version is **0.8.0**. Changes on the development branch remain **unreleased** until the documented gates and an approved release are complete. See the [active release checklist](LOCAL-1.0-RELEASE-CHECKLIST.md), [release history](../CHANGELOG.md) and [archived Gate 1 evidence](archive/gate1/README.md).
+The published version is **0.8.0**. Source `main` contains an unreleased **1.0.0 candidate**; see the [release checklist](LOCAL-1.0-RELEASE-CHECKLIST.md) and [changelog](../CHANGELOG.md).
 
 ## Find a workflow
 
@@ -13,19 +13,15 @@ The released version is **0.8.0**. Changes on the development branch remain **un
 - [Browser startup](#browser-startup-and-runtime) and [annotation recovery](V08-ANNOTATION-WORKFLOWS.md)
 - [Scheduled digest and Telegram](#scheduled-research-digest)
 - [Research browser workspace and saved bundles](research/web-workspace.md) · [venue CLI and evidence worksheets](research/venue-discovery.md)
-- [Local data](#database-and-local-data), [updates](#upgrading-and-releasing-with-github-desktop) and [development](#development-and-ci)
-- [Docker deployment](../DOCKER.md) and [isolated development](ISOLATED-DEV.md)
+- [Local data](#database-and-local-data) and [source-checkout updates](#update-a-source-checkout)
+- [Optional Docker deployment](../DOCKER.md)
 
 ## Browser workflows and optional features
 
-The graph now settles overlapping nodes/labels, supports ordinary mouse-click selection and groups exports in a keyboard-accessible menu. Optional local semantic edges/clusters are **off by default**: install `requirements-semantic.txt`, configure `LITBEACON_SEMANTIC_WORKSPACE=1` and an existing local model directory via `LITBEACON_EMBEDDING_MODEL_PATH`, then explicitly select the mode in the graph/groups UI. No model is downloaded automatically. [Semantic limits/evaluation](SEMANTIC-WORKSPACE.md).
-
-[Historical patch progress](archive/gate1/V08-PATCH-PROGRESS.md) preserves the original development checks and pending wording. Current release gates are in the [active checklist](LOCAL-1.0-RELEASE-CHECKLIST.md); no release-version change is implied.
+The graph settles overlapping nodes/labels, supports ordinary mouse-click selection and groups exports in a keyboard-accessible menu. Optional local semantic edges/clusters are **off by default**: install `requirements-semantic.txt`, configure `LITBEACON_SEMANTIC_WORKSPACE=1` and an existing local model directory via `LITBEACON_EMBEDDING_MODEL_PATH`, then explicitly select the mode in the graph/groups UI. No model is downloaded automatically. [Semantic limits/evaluation](SEMANTIC-WORKSPACE.md).
 
 
-The [Beacon Blue refinement](archive/gate1/ux-research/brand-beacon.md) adds a reader-robot/beacon mark and aligns the palettes with the Telegram identity: navy, blue, cyan and restrained gold.
-
-Quiet Research Phase 1 adds a shared light/dark palette, responsive shell, clearer typography and keyboard focus. **Appearance** offers System, Light and Dark; the preference is stored locally and theme changes preserve open editors and graph state. English and Ukrainian remain available. See [implementation and verification notes](archive/gate1/ux-research/phase-1.md). The user accepted the current WebUI on 2026-10-14; automated browser and accessibility audits remain separate gates.
+**Appearance** offers System, Light and Dark; the preference is stored locally and theme changes preserve open editors and graph state. English and Ukrainian are available. The browser theme and language choices do not alter saved paper content.
 
 The citation map now supports pan by dragging the background, bounded zoom controls, relation/provider filters, and depth 1–2. Select a node with a click, Enter, or Space to inspect references, incoming citations, related works, and each edge's provider/timestamp. Open its paper or explicitly explore its neighborhood from the selection panel. Citation arrows point from citing paper to cited paper; related links are dashed and undirected. Multiple provider observations share one displayed edge without losing provenance.
 
@@ -41,7 +37,7 @@ In the citation map, use the mouse wheel to zoom at the cursor, drag nodes to ar
 
 Research notes continue to use `papers.notes`, preserving CLI/TUI commands, search, Markdown exports, and offline bundles. Each changed note records a revision atomically; saving unchanged text adds none. Existing nonempty notes backfill once as legacy material with unknown authorship/original time; their timestamp records migration. Expand **Research note history** to browse revisions, including cleared notes, with pagination. Restoring a historical note appends a new revision and requires the latest-note guard. Supplemental entries stay outside legacy personal-note search/exports.
 
-Select **English / Українська** in the Web UI header; the preference is stored in the browser, and notes/form drafts survive switching languages. Only interface text changes: paper content, statuses stored in SQLite, CLI commands and configuration keys keep their original identifiers. Textual TUI translation remains planned. Keyboard shortcuts: `Alt+1`–`Alt+5` retain the original sections; `Alt+6` opens Research, `/` focuses inbox search outside inputs, and `Ctrl+Enter` saves research notes. A skip link, visible focus rings, readable muted text, localized loading/empty states and retry actions improve keyboard access; a full accessibility audit remains future work.
+Select **English / Українська** in the Web UI header; the preference is stored in the browser, and notes/form drafts survive switching languages. Only interface text changes: paper content, statuses stored in SQLite, CLI commands and configuration keys keep their original identifiers. The Textual TUI also has English/Ukrainian labels; the [keyboard checks](archive/release-1.0/evidence/GATE5-TUI-KEYBOARD.md) describe their tested scope. Keyboard shortcuts: `Alt+1`–`Alt+5` retain the original sections; `Alt+6` opens Research, `/` focuses inbox search outside inputs, and `Ctrl+Enter` saves research notes. A skip link, visible focus rings, readable muted text, localized loading/empty states and retry actions improve keyboard access; a full accessibility audit remains future work.
 
 The browser workspace is served locally by FastAPI/Uvicorn and builds on the existing research-digest workflow. It keeps the existing Textual TUI and SQLite database. The SQLite schema remains additive; no database reset is required.
 
@@ -59,7 +55,7 @@ The browser workspace is served locally by FastAPI/Uvicorn and builds on the exi
 - **Search:** SQLite FTS5 indexes title, abstract, venue, and personal notes when supported; a `LIKE` fallback remains available.
 - **Citation intelligence:** persists references, cited-by edges, and related-work links; explores a bounded citation neighborhood from the CLI or TUI; reconciles DOI, arXiv, OpenAlex, Semantic Scholar, PMID/PMCID, and corpus identifiers where available. The original reference/citation counts remain available as metadata.
 - **Telegram bot:** `telegram-run` / `run_litbeacon_telegram.bat` listens for `/digest`, `/scan`, `/schedule`, `/settings`, `/topic`, `/search`, `/recent`, `/queue`, `/limit`, `/overlap`, and `/stats`; the bot also registers a command menu and inline action buttons. Schedule, digest-size, reading-queue, overlap, and search-topic settings persist in `digest_config.json` with bounded values. Only `LITRADAR_TELEGRAM_CHAT_ID` is allowed to issue commands.
-- **Windows convenience:** `run_litbeacon_cli.bat` opens a persistent activated CLI shell; `setup_litbeacon.bat` is shared by launchers and installs core, web, TUI and annotation dependencies. Development, LLM, semantic and browser-test packages are opt-in. Older launcher filenames remain aliases.
+- **Windows convenience:** `run_litbeacon_cli.bat` opens a persistent activated CLI shell; `setup_litbeacon.bat` is shared by launchers and installs core, web and TUI dependencies. PDF/BibTeX annotation parsers, development, LLM, semantic and browser-test packages are opt-in. Older launcher filenames remain aliases.
 
 The LLM assessment remains experimental/advisory; it does not override the primary ranking or establish scientific novelty.
 
@@ -419,70 +415,13 @@ python cli.py --db ../litbeacon-restored/litradar.sqlite3 list
 
 Restore never overwrites or merges, even with an empty existing directory, and does not switch your configured database. It creates `litradar.sqlite3` plus elected artifact roots under the new destination, validates the copied snapshot before reporting success, and leaves the original library/bundle intact. `init` applies additive migrations **only to the selected restored copy**. Inspect IDs, notes, tags, histories and artifact availability there before choosing it for normal use. `--db` selects SQLite and its sibling Research root; **it does not change the existing default offline root** in CLI/TUI/browser helpers. Open restored PDFs directly from the destination's `offline/` directory for the recovery check; for future explicit downloads select `--output-dir ../litbeacon-restored/offline`. Default UI offline availability remains tied to the installation's configured/default offline directory. Keep the original and backup until satisfied. On ordinary errors the reserved destination is removed; an interrupted process/power failure may leave an incomplete directory—inspect it and choose another new destination for the retry.
 
-Automated evidence uses synthetic/disposable libraries: active-WAL committed state, user fields/IDs, citations/feedback, annotation/evidence histories and tombstones, elected artifacts, damage/path/schema rejection, failure cleanup and repeated additive legacy upgrades. Clean Windows built-artifact recovery and final candidate CI remain release checks; no personal library was accessed for this evidence.
-
-## Upgrading and releasing with GitHub Desktop
+## Update a source checkout
 
 For a local Git checkout, the easiest Windows update path is `update_litbeacon.bat`; on Linux/macOS use `./update_litbeacon.sh`. These scripts refuse to pull over local changes, run a fast-forward-only pull, update normal runtime dependencies and initialize the library. Run development tests separately if desired. A source ZIP has no Git update path.
-
-For an approved release after the documented validation gates: make `VERSION`, package metadata, visible labels and release notes agree, verify the same candidate commit and its installed artifacts, then create a matching tag and GitHub Release only with explicit approval. The `.github/workflows/release.yml` workflow builds and attaches a runtime wheel plus the lightweight two-file setup ZIP **after** the release is published; GitHub's automatic source archives are separate. The workflow does not create the tag or release. Git checkout users can continue updating their checkout without replacing a ZIP manually.
 
 The local database, offline files, provider/OA caches, and `.env` remain outside source control.
 
 Do not commit API keys, the SQLite database, or your offline corpus.
-
-## Development and CI
-
-[Network-use reference](NETWORK-USE.md) lists which searches, scheduled jobs, Telegram actions, downloads and optional inference contact services and what they send. Local library storage does not make every optional workflow offline. Legacy CLI/TUI semantic ranking loads only a pre-provisioned local/cached model; set the profile's `embedding_model` to a trusted local model directory or use `--no-semantic` for CLI keyword scoring. Missing models fall back to keywords without downloading weights. The optional web semantic workspace has its separate, stricter local-path/safetensors setup.
-
-Run:
-
-```bash
-python -m pytest -q
-```
-
-GitHub Actions contains core, Textual UI, and browser-workspace test jobs. The web job installs `requirements-web.txt` and checks the JavaScript bundle syntax with Node. DOM regression tests use a locked, test-only jsdom installation: `npm ci --prefix tests/web --ignore-scripts` then `npm test --prefix tests/web`. This does not add a production Node runtime or build step. Dependency-free graph/localization/palette tests can also run with `node --test tests/test_web_frontend.cjs`. The tests are configured through `pyproject.toml` so imports do not depend on the directory from which pytest was started.
-
-## Architecture
-
-```text
-                    source registry
-              ┌─────────┼─────────┐
-              ↓         ↓         ↓
-          OpenAlex   Semantic    arXiv
-                       Scholar
-              └─────────┼─────────┘
-                        ↓
-                 retry + cache
-                        ↓
-                normalized Papers
-                        ↓
-             keyword + semantic rank
-                        ↓
-                    SQLite
-                        ↓
-          ┌─────────────┼──────────────┐
-          ↓             ↓              ↓
-        CLI            TUI           offline
-          └─────────────┼──────────────┘
-                        ↓
-              explicit user feedback
-                        ↓
-               personal ranking
-                        ↓
-                optional LLM triage
-```
-
-## Roadmap
-
-The archived [UI/UX research](archive/gate1/ux-research/README.md) includes a standalone concept, the 48-item feature-preservation checklist, and an incremental plan. [Phase 1](archive/gate1/ux-research/phase-1.md) implements the theme and responsive shell foundation. [The public-source competitor review](archive/gate1/ux-research/live-review-2026-10-13.md) now uses accessible official pages; its original hands-on competitor, browser and participant limitations remain recorded separately from later user acceptance and CI evidence.
-
-Release status and remaining work are maintained in [`ROADMAP.md`](../ROADMAP.md) and the [active checklist](LOCAL-1.0-RELEASE-CHECKLIST.md). The [Gate 1 archive](archive/gate1/README.md) holds completed feature history and design proposals. Optional semantic exploration remains experimental; historical real-model evaluation limits do not introduce a new release blocker.
-
-## Changelog
-
-See [`CHANGELOG.md`](../CHANGELOG.md) for the release history.
-
 
 ## Scheduled research digest
 
@@ -576,9 +515,9 @@ Keep the project `.env` readable by the user running the scheduled job.
 
 Run `run_litbeacon_web.bat` on Windows or `python cli.py web` from the prepared virtual environment, then open `http://127.0.0.1:8765`. Use `--port 8787` if the default port is occupied. The server binds only to localhost; do not expose it to your LAN or the public internet because this first release has no account/auth layer. The shipped UI uses HTML/CSS, vanilla JavaScript and native SVG; API routes use FastAPI and Uvicorn and read/write through the existing `PaperStore` layer. No Node/npm, CDN, React, or new database is required at runtime.
 
-The CLI defaults to numeric `127.0.0.1`; its only accepted `--host` values are `127.0.0.1` and `localhost`. Docker uses a separate container-internal listener and relies on the shipped Compose host-loopback port mapping. Direct Uvicorn invocation, edited port mappings, reverse proxies and tunnels can bypass this launch boundary and are outside the supported local-only setup. Loopback binding provides no authentication, browser Origin/Host validation or protection from other local programs. [Verification scope and results](GATE4-LOCAL-BOUNDARY.md).
+The CLI defaults to numeric `127.0.0.1`; its only accepted `--host` values are `127.0.0.1` and `localhost`. Docker uses a separate container-internal listener and relies on the shipped Compose host-loopback port mapping. Direct Uvicorn invocation, edited port mappings, reverse proxies and tunnels can bypass this launch boundary and are outside the supported local-only setup. Loopback binding provides no authentication, browser Origin/Host validation or protection from other local programs. [Verification scope and results](archive/release-1.0/evidence/GATE4-LOCAL-BOUNDARY.md).
 
-Install only the web dependencies manually with `python -m pip install ".[web]"` if needed. The shared Windows setup helper installs web, TUI and annotation extras, without development, LLM, semantic or browser-test packages. The UI can edit status, notes and tags; it can visualise citation/related edges already stored locally. If a map is empty, run Citation Discovery using the CLI/TUI first. Cluster labels are heuristic, not evidence of research novelty.
+Install only the web dependencies manually with `python -m pip install ".[web]"` if needed. The shared Windows setup helper installs web and TUI extras; PDF/BibTeX annotation parsers require a separate explicit install. The UI can edit status, notes and tags; it can visualise citation/related edges already stored locally. If a map is empty, run Citation Discovery using the CLI/TUI first. Cluster labels are heuristic, not evidence of research novelty.
 
 ### Brand name note
 
@@ -587,12 +526,6 @@ The user-facing product name is now LitBeacon Research Workspace. Internal paths
 ## Docker (local browser workspace)
 
 LitBeacon also supports a local-only Docker Compose deployment for the browser workspace, with persistent host data and optional Telegram bot. Copy `.env.example` to `.env` once, then run `docker compose up --build -d web` and visit `http://127.0.0.1:8765`. For the Telegram listener use `docker compose --profile bot up -d telegram` **only after stopping the Windows listener**. The container maintains its own editable digest configuration in `data/digest_config.json`. See [DOCKER.md](../DOCKER.md) for data migration, CLI, backups, security constraints, and scheduling limitations.
-
-## Isolated development with Codex
-
-For security-conscious development, the repo includes an opt-in **offline Docker test runner**: `docker compose -f compose.isolated-dev.yaml run --build --rm dev`. It runs without network, bind mounts, host secrets, or privileged access. This protects the **test process**; it does not sandbox Codex itself or the Docker daemon. Run Codex CLI inside a dedicated Linux VM without Windows shared folders, or use Codex Cloud with narrowly scoped GitHub access. See [docs/ISOLATED-DEV.md](ISOLATED-DEV.md) for the threat model, safeguards and limitations.
-
-The dev image uses lightweight core/web CI dependencies, disposable CLI fixtures, and a writable pytest cache under `/tmp`. Optional Textual/Node checks remain covered by the regular CI jobs. The `Isolated Docker tests` workflow builds and runs the restricted image on PRs. See [the Docker audit](archive/gate1/DOCKER-AUDIT.md) for executed checks and outstanding production-image/remote-CI gates.
 
 ## Wheel installation
 
@@ -610,4 +543,4 @@ Scheduler install/status/remove use the selected `--config`, database and profil
 
 `python cli.py schedule remove --job scan|digest|all` first atomically persists the selected disabled flags. If Windows removal fails, the CLI reports failure but that application-level guard remains; repair permissions/service access and retry cleanup. Missing or malformed configuration cannot silently confirm disablement. `scheduled-run` fails closed on unreadable/invalid settings, and disabled runs exit before provider/Telegram work.
 
-New scheduled-run output is under workspace `log/scheduled-scan.log` or `log/scheduled-digest.log`; old `logs/` files are retained, not moved or deleted. Docker Compose mounts both directories. Captured scheduled-command output retains its existing behavior; review logs before sharing. See [lifecycle evidence and limits](GATE3-LIFECYCLE.md).
+New scheduled-run output is under workspace `log/scheduled-scan.log` or `log/scheduled-digest.log`; old `logs/` files are retained, not moved or deleted. Docker Compose mounts both directories. Captured scheduled-command output retains its existing behavior; review logs before sharing. See [lifecycle evidence and limits](archive/release-1.0/evidence/GATE3-LIFECYCLE.md).

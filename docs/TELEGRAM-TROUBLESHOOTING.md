@@ -34,7 +34,7 @@ A rejected command-menu setup is a warning; commands can still work. A failure w
 
 This increment covers `telegram-run` diagnostics and the fixed replies/persisted failure records for caught listener exceptions. Existing provider scan summaries and scheduler subprocess result messages retain their separate behavior. It does not introduce global debug logging, capture HTTP wire traffic, or replace the independent scheduled-digest/`telegram-chats` transports. In particular, their existing diagnostics are not covered by this listener-only privacy guarantee. Do not run chat discovery while polling. A remote 409 response stops contention; it is not a cross-machine lock that prevents two processes from starting simultaneously.
 
-Gate 3 scheduler disable/remove and full provider-failure/local-workspace checks remain separate. See the [release checklist](LOCAL-1.0-RELEASE-CHECKLIST.md) and [increment validation](GATE3-TELEGRAM-DIAGNOSTICS.md).
+Gate 3 scheduler disable/remove and full provider-failure/local-workspace checks remain separate. See the [release checklist](LOCAL-1.0-RELEASE-CHECKLIST.md) and [increment validation](archive/release-1.0/evidence/GATE3-TELEGRAM-DIAGNOSTICS.md).
 
 ## Stopping the listener
 
@@ -44,4 +44,4 @@ An already-started remote request is not undone. If embedding the bot in a still
 
 `run_litbeacon_telegram.bat` intentionally pauses after Python exits to display the exit status. An open launcher window therefore does not mean the listener is still running. Look for the stopped/exited message, then press a key to close it. A Windows batch console may also ask whether to terminate the batch job after Ctrl+C.
 
-Synthetic measurements and actual candidate Windows results belong in the [Gate 3 lifecycle record](GATE3-LIFECYCLE.md); they are not a diagnosis of the user's specific network or Telegram service.
+Synthetic measurements and actual candidate Windows results belong in the [Gate 3 lifecycle record](archive/release-1.0/evidence/GATE3-LIFECYCLE.md); they are not a diagnosis of the user's specific network or Telegram service.

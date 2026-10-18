@@ -19,6 +19,6 @@ Baseline main `4e2486d3` (merged #27 plus owner `.gitignore` update). [Draft PR 
 
 ## Boundaries
 
-[Shared logging policy and locations](LOGGING.md) apply to all further logging development; this increment does not enable a global file logger. Existing stored query/configuration context, provider results, offline-download reports, independent digest/chat-discovery transports and scheduler subprocess output retain their separate behavior. No claim that every application output is sanitized.
+[Shared logging policy and locations](../../../LOGGING.md) apply to all further logging development; this increment does not enable a global file logger. Existing stored query/configuration context, provider results, offline-download reports, independent digest/chat-discovery transports and scheduler subprocess output retain their separate behavior. No claim that every application output is sanitized.
 
 The bounded Gate 3 provider-failure item is verified for this candidate using actual Windows synthetic checks; live provider availability is not claimed. Scheduler disable/remove remains separate. No personal databases, credentials, external provider requests, model loads, major feature, merge, bump or release.
