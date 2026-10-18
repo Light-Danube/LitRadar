@@ -1,6 +1,13 @@
 # Codex handoff — local-only LitBeacon 1.0
 
-## Current increment — Gate 6 Windows source-ZIP setup repair
+## Current increment — Gate 6 release preparation
+
+- Baseline main `5e7fff51` (merged #40), branch `codex/gate6-release-prep`, Draft PR #41. On 2026-10-18 the user reported that a Windows source ZIP with Python 3.12.7 created `.venv` and launched the web workspace after they manually removed an old `.venv`/cache and ran setup as administrator. Normal setup should not require admin; the new automatic preservation path lacks native Windows execution. This is user-reported source installation, not 1.0 wheel/setup-ZIP verification.
+- Windows source batch setup now preserves a mismatched/broken `.venv` as `.venv-before-python312` and creates a fresh one; Git updater and PowerShell launcher call the same setup. The generated release `SETUP.txt` now specifies `py -3.12` with a 3.11 fallback instead of `py -3`, which could select a different installed interpreter. README and setup guides identify the two download paths and pending platform checks; the published release remains 0.8.0.
+- Executed Linux Python 3.12 local checks: 740 Python passed, one existing warning; after npm ci, 8 Node test files passed. Built a 63-entry 1.0.0 wheel and exact two-file ZIP; byte identity, version instructions and excluded-file inventory passed. A fresh Linux `[web]` wheel install, pip check, CLI version/init and installed CLI/assets/web/edit/restart/recovery smoke passed with disposable data. Native Windows batch behavior and exact 1.0 wheel setup remain pending.
+- GitHub Actions still cannot start due account billing; do not retry/monitor them. The release workflow runs only after publication, so both artifacts need manual build, verification and attachment to a draft release before publication while Actions are blocked. No tag/release or merge authorized.
+
+## Previous increment — Gate 6 Windows source-ZIP setup repair
 
 - Baseline main `6d47d808` (merged #39), branch `codex/gate6-windows-source-setup`, Draft PR #40. User downloaded GitHub's **source ZIP**, ran `setup_litradar.bat` and saw `TypeError: dataclass() got an unexpected keyword argument 'slots'`, but the batch window closed too quickly to capture the pip error. This is consistent with an interpreter older than Python 3.10; the project requires 3.11+, with 3.12 recommended. Do not claim the exact interpreter version without the user's version output.
 - Normal source setup now chooses Python 3.12 or 3.11 through `py`, detects an old existing `.venv`, displays an actionable message and pauses on direct failure. It installs `[web,ui,annotations]` instead of development, semantic, browser-test and LLM requirements. New LitBeacon-named launchers are primary; old filenames remain forwarding aliases and stable Task Scheduler identities stay unchanged. [Clear source-ZIP Windows steps](docs/WINDOWS-SOURCE-ZIP.md) distinguish it from the unpublished two-file package ZIP.

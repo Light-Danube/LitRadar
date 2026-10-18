@@ -41,10 +41,11 @@ def test_normal_launchers_install_only_application_extras_and_keep_legacy_aliase
     root = Path(__file__).resolve().parents[1]
     for name in ("setup_litbeacon.bat", "run_litbeacon.ps1", "update_litbeacon.ps1", "run_litbeacon.sh", "update_litbeacon.sh"):
         text = (root / name).read_text(encoding="utf-8")
-        assert ".[web,ui,annotations]" in text
+        assert ".[web,ui,annotations]" in text or "setup_litbeacon.bat" in text
         assert "requirements-dev.txt" not in text and "requirements-semantic.txt" not in text
     setup = (root / "setup_litbeacon.bat").read_text(encoding="utf-8")
-    assert "py -3.12" in setup and "old_python" in setup and "pause >nul" in setup
+    assert "py -3.12" in setup and ".venv-before-python312" in setup and "pause >nul" in setup
+    assert 'move "%VENV%" "%BACKUP%"' in setup
     for old, new in (("setup_litradar.bat", "setup_litbeacon.bat"), ("run_web.bat", "run_litbeacon_web.bat"), ("run_litradar.bat", "run_litbeacon.bat")):
         assert new in (root / old).read_text(encoding="utf-8")
     cli = (root / "run_litbeacon_cli.bat").read_text(encoding="utf-8")
