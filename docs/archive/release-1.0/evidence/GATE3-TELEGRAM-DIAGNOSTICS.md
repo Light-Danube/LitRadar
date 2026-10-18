@@ -20,6 +20,6 @@ Baseline main `044358b8` (merged #26). Gates 1–2 are complete; [Draft PR #27](
 
 ## Boundaries and next increments
 
-[Operator troubleshooting](TELEGRAM-TROUBLESHOOTING.md) records retry/exit behavior and logging limits. This is remote conflict handling, not a cross-machine ownership lock or guaranteed command replay. Existing provider scan summaries, scheduler subprocess results, independent digest delivery and `telegram-chats` transports retain separate diagnostics. No blanket application-wide sanitization or debug logging claim is made.
+[Operator troubleshooting](../../../TELEGRAM-TROUBLESHOOTING.md) records retry/exit behavior and logging limits. This is remote conflict handling, not a cross-machine ownership lock or guaranteed command replay. Existing provider scan summaries, scheduler subprocess results, independent digest delivery and `telegram-chats` transports retain separate diagnostics. No blanket application-wide sanitization or debug logging claim is made.
 
 Gate 3 remains open for scheduler disable/remove verification and source timeout/429/offline preservation through continued local workspace read/edit/export. A next small diagnostics PR can improve safe provider HTTP messages alongside that failure-preservation evidence. No live credentials, personal databases, major features, version bump, merge or release.

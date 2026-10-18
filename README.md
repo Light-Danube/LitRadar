@@ -1,31 +1,25 @@
-# LitBeacon Research Workspace
+# LitBeacon
 
-**LitBeacon** is a local-first workspace for discovering, reading and comparing academic papers. It keeps your library, notes and research history in SQLite, with a browser interface, CLI, Textual TUI and optional Telegram workflows. The project was formerly LitRadar; existing module names, data paths and `LITRADAR_*` settings remain compatible.
+LitBeacon is a local research workspace for finding, reading and comparing academic papers. Your library, notes and research history live in SQLite on your computer. It includes a browser interface, CLI, optional Textual TUI and Telegram workflows. LitRadar module names and existing data/configuration paths remain compatible.
 
-## Release status
-
-**Published release: v0.8.0.** Source `main` contains an **unreleased v1.0.0 candidate**; no 1.0 setup ZIP has been published. Feature development is frozen. Gates 1–5 are complete for this bounded candidate; [Gate 6 checks and limits](docs/LOCAL-1.0-RELEASE-CHECKLIST.md) remain open. Hosted Actions are deferred because account billing prevents jobs from starting.
+**Release status:** v0.8.0 is published; source `main` contains an unreleased v1.0.0 candidate. The two-file 1.0 setup ZIP is not yet a published download. [Release status and remaining checks](docs/LOCAL-1.0-RELEASE-CHECKLIST.md).
 
 ## Start on Windows from GitHub's source ZIP
 
-1. Install **Python 3.12** from [python.org](https://www.python.org/downloads/windows/) with the Windows `py` launcher. Python 3.12.7 works; check `py -3.12 --version` in PowerShell.
-2. Use **Code → Download ZIP**, extract it into a new writable folder, and open the folder containing `run_litbeacon_web.bat`.
-3. Run `run_litbeacon_web.bat`; it creates `.venv`, installs web and TUI dependencies and starts the local web workspace. Open <http://127.0.0.1:8765>.
+1. Install Python **3.12** from [python.org](https://www.python.org/downloads/windows/) with the `py` launcher. In PowerShell, check `py -3.12 --version`.
+2. Choose **Code → Download ZIP**, extract it into a writable folder, then open the folder containing `run_litbeacon_web.bat`.
+3. Run `run_litbeacon_web.bat` and open <http://127.0.0.1:8765>. Setup creates `.venv` and installs normal web/TUI dependencies; the first launch needs internet access.
 
-If an old `.venv` uses a different Python, the launcher keeps it as `.venv-before-python312` and creates a fresh one; your library remains separate. The [step-by-step Windows source-ZIP guide](docs/WINDOWS-SOURCE-ZIP.md) covers a separate trial data folder and errors. The **future release download** is a smaller, two-file setup ZIP with a wheel and `SETUP.txt`; follow the [Windows, macOS and Linux package guide](docs/PACKAGE-SETUP.md) for that route. Dependency installation needs internet access; saved-library work is local.
+For an isolated trial library, error help and updates, follow the [Windows source-ZIP guide](docs/WINDOWS-SOURCE-ZIP.md). A future release package instead contains a wheel and `SETUP.txt`; see [Windows, macOS and Linux package setup](docs/PACKAGE-SETUP.md). The source ZIP and release package use different launch commands.
 
-## Use the workspace
+## Use LitBeacon
 
-The browser, CLI and TUI support discovery, notes and tags, citation maps, annotations, Research venue search and evidence worksheets, local exports and recovery. Provider searches use the network; optional LLM and local semantic exploration require explicit setup. The web server binds to localhost and has no authentication for public/LAN hosting.
+The workspace supports paper discovery, notes and tags, citation maps, annotations, venue search, evidence worksheets, local exports and backup/restore. Provider searches need network access; saved-library work is local. Optional LLM and semantic features require deliberate setup. The web server listens on localhost and has no login for public or LAN hosting.
 
-For a source checkout, run `run_litbeacon_cli.bat` or `run_litbeacon.bat` on Windows for the CLI/TUI. On macOS/Linux, follow the [package guide](docs/PACKAGE-SETUP.md) or the [source setup and command reference](docs/USER-GUIDE.md). Previous `litradar` launcher names remain aliases.
+[User guide](docs/USER-GUIDE.md) · [backup and restore](docs/USER-GUIDE.md#consistent-local-backup-and-restore-unreleased) · [network use](docs/NETWORK-USE.md) · [logging](docs/LOGGING.md) · [Telegram help](docs/TELEGRAM-TROUBLESHOOTING.md)
 
-Installed wheels keep data in a writable per-user LitBeacon directory; source checkouts use `data/litradar.sqlite3` unless configured otherwise. An install never moves an old library automatically. [Back up and upgrade safely](docs/USER-GUIDE.md#consistent-local-backup-and-restore-unreleased).
+**Українською:** [встановлення з пакета для Windows, macOS і Linux](docs/PACKAGE-SETUP.uk.md) · [встановлення з вихідного ZIP на Windows](docs/WINDOWS-SOURCE-ZIP.uk.md). The detailed reference guide remains in English; the browser interface offers Ukrainian.
 
-## Guides
+[Changelog](CHANGELOG.md) · [Development roadmap](ROADMAP.md) · [Archived release evidence](docs/archive/release-1.0/README.md)
 
-- [Installation and updates](docs/PACKAGE-SETUP.md) · [Windows source ZIP](docs/WINDOWS-SOURCE-ZIP.md) · [user guide](docs/USER-GUIDE.md)
-- [Research workflow](docs/research/web-workspace.md) · [venue/evidence details](docs/research/venue-discovery.md) · [network use](docs/NETWORK-USE.md)
-- [Changelog](CHANGELOG.md) · [roadmap](ROADMAP.md) · [release checklist](docs/LOCAL-1.0-RELEASE-CHECKLIST.md)
-
-Provider metadata and citation links do not prove peer review, indexing or novelty. See the guides for evidence limits and optional components.
+Provider metadata and citation links do not prove peer review, indexing or scientific novelty.

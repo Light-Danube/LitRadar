@@ -32,7 +32,7 @@
 
 ## Unreleased — Ukrainian TUI, job crash fix and accessibility evidence
 
-- Branch `codex/tui-uk-accessibility`, based on fetched main `ad4e2a4d`. Read [TUI audit](../../TUI-ACCESSIBILITY-AUDIT.md) and [menu draft](TUI-MENU-DRAFT.md). Scope is current TUI functionality only; README is intentionally unchanged per user instruction.
+- Branch `codex/tui-uk-accessibility`, based on fetched main `ad4e2a4d`. Read [TUI audit](../release-1.0/evidence/TUI-ACCESSIBILITY-AUDIT.md) and [menu draft](TUI-MENU-DRAFT.md). Scope is current TUI functionality only; README is intentionally unchanged per user instruction.
 - `ui_locales.py` owns EN/UK app strings; `ui.py` selects language at runtime or from `LITBEACON_TUI_LANGUAGE` / legacy alias. Paper data, technical identifiers and provider/CLI diagnostic output stay literal. Framework-owned palette/theme dialogs may retain English. Switching retains filters, query input and selected paper.
 - Jobs crashed because Screen lacks `call_from_thread`; scheduler results now dispatch through App with busy/cancellation/mount guards. New tags refresh filter options on modal close. App background callbacks address the main screen while a modal is open.
 - Offline-storage exceptions now produce a persistent localized error instead of an unhandled worker failure. Tests intercept all offline/browser operations; no real downloads or external destinations were used.
@@ -71,7 +71,7 @@ This file records development progress and a safe starting point for continuing 
 
 ## Semantic exploration and graph/workflow refinement (unreleased)
 
-- Branch `codex/v08-semantic-graph-workflows`, base main `54f48330`. Read [patch progress/release gates](V08-PATCH-PROGRESS.md), [semantic evaluation](../../SEMANTIC-WORKSPACE.md) and [Windows smoke](../../WINDOWS-WORKSPACE-SMOKE.md).
+- Branch `codex/v08-semantic-graph-workflows`, base main `54f48330`. Read [patch progress/release gates](V08-PATCH-PROGRESS.md), [semantic evaluation](../../SEMANTIC-WORKSPACE.md) and [Windows smoke](../release-1.0/evidence/WINDOWS-WORKSPACE-SMOKE.md).
 - Semantic exploration is OFF by default and local-only; UI opt-in graph edges are ephemeral related links participating in bounded traversal, never citations. Complete-link clusters are distinct from heuristic grouping. No model download or silent semantic fallback.
 - Graphs settle label/node collisions on drag/keyboard changes; native stationary pointer capture is assigned to the node. Export is a details menu; retain keyboard controls and model-provenance labels.
 - New mixed-provider/API/EN/UK workflow tests and Windows CI/native Chrome script use synthetic data; screenshots are uploaded only from the unique run directory. No Windows result is claimed here.

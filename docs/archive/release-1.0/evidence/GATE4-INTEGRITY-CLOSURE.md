@@ -18,7 +18,7 @@ Final bounded Gate 4 slice after merged PR #32, baseline main `402a9fd6`. Versio
 
 ## Network-use review
 
-[Network-use reference](NETWORK-USE.md) identifies destinations, payloads, explicit and previously enabled scheduled triggers, cache behavior, Telegram delivery, cloud/local LLM differences, downloads/browser links and installation/model provisioning. The shipped web assets require no external CDN; no mandatory telemetry sender was found in the reviewed application paths. This is a scoped source review, not a claim about third-party SDKs, installers, browser extensions or arbitrary model servers.
+[Network-use reference](../../../NETWORK-USE.md) identifies destinations, payloads, explicit and previously enabled scheduled triggers, cache behavior, Telegram delivery, cloud/local LLM differences, downloads/browser links and installation/model provisioning. The shipped web assets require no external CDN; no mandatory telemetry sender was found in the reviewed application paths. This is a scoped source review, not a claim about third-party SDKs, installers, browser extensions or arbitrary model servers.
 
 ## Closure limits
 

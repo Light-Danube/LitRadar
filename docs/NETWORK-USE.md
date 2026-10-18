@@ -1,6 +1,6 @@
 # Network use and the local-only boundary
 
-LitBeacon keeps its authoritative library in local SQLite. “Local-only” describes storage and the supported localhost web launch; it does not mean every optional workflow works without internet. Reading/editing saved papers, notes, evidence, histories, graphs and local exports does not require a provider account. See [installation and configuration](USER-GUIDE.md#installation), [logging](LOGGING.md) and [the loopback boundary](GATE4-LOCAL-BOUNDARY.md).
+LitBeacon keeps its authoritative library in local SQLite. “Local-only” describes storage and the supported localhost web launch; it does not mean every optional workflow works without internet. Reading/editing saved papers, notes, evidence, histories, graphs and local exports does not require a provider account. See [installation and configuration](USER-GUIDE.md#installation), [logging](LOGGING.md) and [the loopback boundary](archive/release-1.0/evidence/GATE4-LOCAL-BOUNDARY.md).
 
 | Operation and trigger | Destination and information sent | Boundary and source evidence |
 | --- | --- | --- |
