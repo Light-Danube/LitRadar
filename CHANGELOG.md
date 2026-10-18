@@ -2,7 +2,7 @@
 
 ## 1.0.0 candidate — unreleased
 
-- Keep optional PDF/BibTeX parsers out of the default Windows source web/TUI install and disable pip caching for Windows setup/update and the release ZIP guide. The user identified the failed path as `AppData\Local\pip\Cache\wheels\...` during an optional `bibtexparser` install; a standard-user native retest remains open. File imports remain an explicit `[annotations]` extra.
+- Keep optional PDF/BibTeX parsers out of the default Windows source web/TUI install and disable pip caching for Windows setup/update and the release ZIP guide. The user identified the failed path as `AppData\Local\pip\Cache\wheels\...` during an optional `bibtexparser` install; the user subsequently reported a successful normal-user source-ZIP setup and web launch. The release wheel remains a separate test. File imports remain an explicit `[annotations]` extra.
 
 - Add a [release preflight and proposed notes](docs/RELEASE-1.0-PREFLIGHT.md) for the exact two-file 1.0 download, including manual asset verification while hosted Actions cannot start. A fresh Linux Python 3.12 extracted-wheel smoke passed; native Windows package, macOS and same-commit CI remain open. No release was published.
 
