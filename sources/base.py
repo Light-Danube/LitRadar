@@ -25,6 +25,8 @@ class Paper:
     raw: dict[str, Any] = field(default_factory=dict)
     source_tags: list[str] = field(default_factory=list)
     identifiers: dict[str, str] = field(default_factory=dict)
+    metadata_language: str | None = None
+    language_basis: str | None = None
 
     @property
     def title_normalized(self) -> str:

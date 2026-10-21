@@ -18,6 +18,8 @@ The workspace supports paper discovery, notes and tags, citation maps, annotatio
 
 [User guide](docs/USER-GUIDE.md) · [backup and restore](docs/USER-GUIDE.md#consistent-local-backup-and-restore) · [network use](docs/NETWORK-USE.md) · [logging](docs/LOGGING.md) · [Telegram help](docs/TELEGRAM-TROUBLESHOOTING.md)
 
+Post-1.0 draft: [OpenAlex metadata-language search / пошук за мовою метаданих](docs/research/metadata-language-search.md), with coverage limits and an optional UK/EN keyword profile.
+
 **Українською:** [встановлення з пакета для Windows, macOS і Linux](docs/PACKAGE-SETUP.uk.md) · [встановлення з вихідного ZIP на Windows](docs/WINDOWS-SOURCE-ZIP.uk.md). The detailed reference guide remains in English; the browser interface offers Ukrainian.
 
 [All guides](docs/README.md) · [Changelog](CHANGELOG.md) · [License](LICENSE)

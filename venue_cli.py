@@ -32,7 +32,9 @@ def cmd_venue(args) -> int:
                 operation = "discovery"
                 payload = search_and_store(store, args.query, args.source_id,
                                            year_from=args.year_from, year_to=args.year_to,
-                                           limit=args.limit, page=args.page, force=args.refresh, config=config)
+                                           limit=args.limit, page=args.page, force=args.refresh, config=config,
+                                           **({"metadata_language": args.metadata_language}
+                                              if getattr(args, 'metadata_language', 'any') != 'any' else {}))
                 saved_in_database = True
                 operation = "storage"
                 payload["artifact"] = reservation.save("search", {"search.json": payload},
@@ -122,6 +124,8 @@ def register_commands(sub):
     search.add_argument("--year-to", type=int)
     search.add_argument("--limit", type=int, default=20)
     search.add_argument("--page", type=int, default=1)
+    search.add_argument("--metadata-language", choices=["any", "uk", "en"], default="any",
+                        help="OpenAlex detected title/abstract language, not verified full-text language")
     search.add_argument("--refresh", action="store_true", help="bypass the local venue cache")
     search.add_argument("--identifier", help="optional unique result-bundle name (letters/digits/_/-); otherwise generated")
     search.set_defaults(func=cmd_venue)

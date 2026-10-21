@@ -18,6 +18,7 @@ import urllib.parse
 
 from . import openalex
 from .base import Paper
+from .filters import normalize_metadata_language
 
 SOURCES_URL = "https://api.openalex.org/sources"
 MAX_LIMIT = 100
@@ -231,11 +232,14 @@ def validate_search(query: str, source_id: str, *, year_from: int | None = None,
 def search_venue(query: str, source_id: str, *, year_from: int | None = None,
                  year_to: int | None = None, limit: int = 20, page: int = 1,
                  timeout: float = 20, retries: int = 2, backoff: float = 1,
-                 api_key: str | None = None) -> VenueSearchResult:
+                 api_key: str | None = None, metadata_language: str = "any") -> VenueSearchResult:
+    metadata_language = normalize_metadata_language(metadata_language)
     query, source_id = validate_search(query, source_id, year_from=year_from,
                                        year_to=year_to, limit=limit, page=page)
     venue = get_venue(source_id, timeout=timeout, retries=retries, backoff=backoff, api_key=api_key)
     filters = [f"primary_location.source.id:{source_id}"]
+    if metadata_language != "any":
+        filters.append(f"language:{metadata_language}")
     if year_from is not None or year_to is not None:
         filters.append(f"publication_year:{year_from or 1}-{year_to or 9999}")
     params = {"search": query, "filter": ",".join(filters), "per-page": limit, "page": page}
@@ -248,9 +252,16 @@ def search_venue(query: str, source_id: str, *, year_from: int | None = None,
     if count < (page - 1) * limit + len(items) and items:
         raise VenueMetadataError("OpenAlex result count contradicts returned page")
     papers = [_validated_work(item, source_id, year_from, year_to) for item in items]
+    try:
+        openalex.validate_language_results(papers, metadata_language)
+    except ValueError as exc:
+        raise VenueMetadataError("OpenAlex response contradicts the metadata-language filter") from exc
     provenance = {"provider": "openalex", "source_id": source_id,
                   "record_url": f"{openalex.BASE_URL}?{urllib.parse.urlencode(params)}",
                   "retrieved_at": _utc_now(), "query": query, "year_from": year_from,
                   "year_to": year_to, "filter": params["filter"], "verification_status": "provider_metadata",
                   "peer_review_status": "unverified", "scopus_status": "unverified", "wos_status": "unverified"}
+    if metadata_language != "any":
+        provenance.update(metadata_language=metadata_language,
+                          language_basis="openalex_detected_title_abstract")
     return VenueSearchResult(venue, papers, count, count > (page - 1) * limit + len(papers), page, limit, provenance)

@@ -6,6 +6,7 @@ import urllib.parse
 
 from .base import Paper, parse_iso_date
 from .http import fetch_bytes
+from .filters import normalize_metadata_language, metadata_language_value
 
 BASE_URL = "https://api.openalex.org/works"
 
@@ -18,12 +19,26 @@ def search(
     retries: int = 3,
     backoff: float = 1.0,
     api_key: str | None = None,
+    metadata_language: str = "any",
 ) -> list[Paper]:
+    metadata_language = normalize_metadata_language(metadata_language)
     params = {"search": query, "per-page": min(max(int(per_page), 1), 100)}
+    if metadata_language != "any":
+        params["filter"] = f"language:{metadata_language}"
     if api_key:
         params["api_key"] = api_key
     payload = _get_json(BASE_URL, params, timeout=timeout, retries=retries, backoff=backoff)
-    return [_work_to_paper(item) for item in payload.get("results", []) if isinstance(item, dict)]
+    if metadata_language != "any":
+        if not isinstance(payload.get("results"), list) or any(not isinstance(item, dict) for item in payload["results"]):
+            raise ValueError("OpenAlex returned malformed metadata-language results")
+    papers = [_work_to_paper(item) for item in payload.get("results", []) if isinstance(item, dict)]
+    validate_language_results(papers, metadata_language)
+    return papers
+
+
+def validate_language_results(papers: list[Paper], metadata_language: str) -> None:
+    if metadata_language != "any" and any(p.metadata_language != metadata_language for p in papers):
+        raise ValueError("OpenAlex response contradicts the metadata-language filter or has unknown language")
 
 
 def fetch_neighbors(
@@ -185,6 +200,8 @@ def _work_to_paper(item: dict) -> Paper:
         raw=item,
         source_tags=sorted(set(source_tags), key=str.casefold),
         identifiers=identifiers,
+        metadata_language=metadata_language_value(item.get("language")),
+        language_basis="openalex_detected_title_abstract",
     )
 
 def _reconstruct_abstract(inverted: dict[str, list[int]] | None) -> str:

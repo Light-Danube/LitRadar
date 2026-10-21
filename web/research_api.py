@@ -106,7 +106,10 @@ def register_research_routes(app, db_path, results_root=None):
     @app.post('/api/research/search')
     def search(payload=Depends(_body)):
         with _errors():
-            _keys(payload, {'source_id','query','year_from','year_to','limit','page','refresh','identifier'}, {'source_id','query'})
+            _keys(payload, {'source_id','query','year_from','year_to','limit','page','refresh','identifier','metadata_language'}, {'source_id','query'})
+            from sources.filters import normalize_metadata_language
+            language = normalize_metadata_language(payload.get('metadata_language', 'any'))
+            filter_options = {'metadata_language': language} if language != 'any' else {}
             if not isinstance(payload['source_id'], str) or len(payload['source_id']) > 100:
                 raise ValueError('Source ID must contain at most 100 characters')
             query, source_id = venues.validate_search(payload['query'], payload['source_id'],
@@ -126,7 +129,7 @@ def register_research_routes(app, db_path, results_root=None):
                         result = venue_discovery.search_and_store(store, query, source_id,
                         year_from=payload.get('year_from'), year_to=payload.get('year_to'),
                         limit=payload.get('limit',20), page=payload.get('page',1),
-                            force=payload.get('refresh',False), config=RadarConfig.load())
+                            force=payload.get('refresh',False), config=RadarConfig.load(), **filter_options)
                     except (OSError, json.JSONDecodeError, UnicodeError) as exc:
                         status = 'malformed_metadata' if isinstance(exc, (json.JSONDecodeError, UnicodeError)) else venue_discovery.error_status(exc)
                         raise HTTPException(502, {'status':status, 'message':format_provider_error(exc)}) from exc

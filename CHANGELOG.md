@@ -1,5 +1,9 @@
 # Changelog
 
+## Post-1.0 — proposed Draft PR
+
+Add opt-in OpenAlex metadata-language filtering (`any`/`uk`/`en`) in broad CLI and venue CLI/Research search, with explicit unsupported-provider errors, separate filtered caches and retained language provenance. Defaults remain unfiltered. Add an optional UK/EN keyword profile, canonical Unicode keyword normalization and EN/UK explanations that metadata language does not guarantee full-text language. No new provider, bibliography importer, schema/version or release change. See the [guide](docs/research/metadata-language-search.md).
+
 ## 1.0.0 — GitHub Release
 
 LitBeacon 1.0 brings the browser, CLI and optional Textual/Telegram workflows together in a local research workspace. Since v0.8.0, the candidate adds venue search and evidence worksheets, citation-map and annotation improvements, consistent library backup and new-destination restore, keyboard and error-handling fixes. Optional local semantic exploration stays off by default. Existing LitRadar module, data and configuration identifiers remain compatible.

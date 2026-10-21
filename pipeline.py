@@ -10,7 +10,7 @@ from ranking.keywords import KeywordProfile
 from ranking.scoring import Score, rank_papers, score_papers_semantic
 from sources.base import Paper
 from sources.http import format_provider_error
-from sources.registry import search_all_sources
+from sources.registry import search_all_sources, validate_metadata_language_sources
 from storage.sqlite import PaperStore
 
 
@@ -23,6 +23,7 @@ class SearchSummary:
     source_results: dict[str, int]
     source_errors: dict[str, str]
     scoring_version: str
+    metadata_language: str = "any"
 
 
 def _rank(
@@ -56,6 +57,7 @@ def search_and_ingest(
     per_source: int = 20,
     config: RadarConfig | None = None,
     progress: Callable[[str, str, str], None] | None = None,
+    metadata_language: str = "any",
 ) -> tuple[SearchSummary, list[tuple[Paper, Score]]]:
     """Search configured providers and persist their ranked results.
 
@@ -65,6 +67,8 @@ def search_and_ingest(
     config = config or RadarConfig.load()
     profile = KeywordProfile.from_json(profile_path)
     requested_sources = tuple(sources) if sources else config.enabled_sources
+    metadata_language = validate_metadata_language_sources(requested_sources, metadata_language)
+    filter_options = {"metadata_language": metadata_language} if metadata_language != "any" else {}
     store = PaperStore(db_path)
     try:
         before = store.total_count()
@@ -76,6 +80,7 @@ def search_and_ingest(
             per_source=per_source,
             config=config,
             progress=progress,
+            **filter_options,
         )
         papers: list[Paper] = []
         counts: dict[str, int] = {}
@@ -130,6 +135,7 @@ def search_and_ingest(
             source_results=counts,
             source_errors={name: format_provider_error(error) for name, error in source_errors.items()},
             scoring_version=ranked[0][1].scoring_version if ranked else ("keyword-v0.1" if not semantic else "semantic-or-keyword"),
+            metadata_language=metadata_language,
         )
         if progress is not None:
             progress(

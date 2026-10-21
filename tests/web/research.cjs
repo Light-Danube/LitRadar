@@ -29,7 +29,7 @@ function setup(t,locale){
     else if(parsed.pathname==='/api/research/venues/lookup')data={status:'ambiguous_venue',venues:[{source_id:'S1',display_name:'Synthetic journal',venue_type:'journal',issn_l:null,publisher:'Test Publisher'},{source_id:'S2',display_name:'Synthetic journal',venue_type:'conference/proceedings'}]};
     else if(parsed.pathname==='/api/research/search'){
       if(mode.providerError)return {ok:false,status:502,json:async()=>({detail:{status:'rate_limited',message:'Provider rate limited'}})};
-      const saved=artifact(body.identifier||'search-test',['manifest.json','search.json']);bundles.unshift(saved);data={status:'ok',count:2,truncated:true,paper_ids:[2],papers:[papers[1]],artifact:saved};
+      const saved=artifact(body.identifier||'search-test',['manifest.json','search.json']);bundles.unshift(saved);data={status:'ok',count:2,truncated:true,paper_ids:[2],papers:[{...papers[1],metadata_language:mode.unknownLanguage?null:'uk',language_basis:'openalex_detected_title_abstract'}],provenance:{metadata_language:body.metadata_language||'any'},artifact:saved};
     }
     else if(parsed.pathname.endsWith('/evidence')&&method==='GET')data=structuredClone(worksheet);
     else if(parsed.pathname.endsWith('/evidence')&&method==='PATCH'){
@@ -54,7 +54,8 @@ for(const locale of ['en','uk'])test(`research desk explicit retrieval, escaped 
   assert.ok(!requests.some(r=>r.method==='POST'));assert.equal($('#rw-presets script'),null);
   $('[data-preset-apply="1"]').click();await settle();assert.equal($('#rw-query').value,'context emotion');assert.equal($('#rw-sourceId').value,'');assert.ok(!requests.some(r=>r.method==='POST'));
   submit('#rw-lookup-form');await settle();assert.equal(w.document.querySelectorAll('[data-choose-venue]').length,2);$('[data-choose-venue="S2"]').click();assert.equal($('#rw-sourceId').value,'S2');
-  input('#rw-searchIdentifier','custom-search');submit('#rw-search-form');await settle();const search=requests.find(r=>r.url==='/api/research/search');assert.equal(search.body.source_id,'S2');assert.equal(search.body.year_from,2023);assert.equal(search.body.limit,20);assert.equal(search.body.identifier,'custom-search');assert.ok($('#rw-result-body').textContent.includes('<img'));assert.equal($('#rw-result-body img'),null);
+  assert.equal($('#rw-metadataLanguage').value,'any');input('#rw-metadataLanguage','uk');assert.ok($('#rw-language-help').textContent.includes('OpenAlex'));
+  input('#rw-searchIdentifier','custom-search');submit('#rw-search-form');await settle();const search=requests.find(r=>r.url==='/api/research/search');assert.equal(search.body.source_id,'S2');assert.equal(search.body.metadata_language,'uk');assert.equal(search.body.year_from,2023);assert.equal(search.body.limit,20);assert.equal(search.body.identifier,'custom-search');assert.ok($('#rw-result-body').textContent.includes('<img'));assert.equal($('#rw-result-body img'),null);
   assert.ok($('#rw-artifacts a[href="/api/research/artifacts/custom-search/search.json"]'));
   $('#rw-status').value='new';$('#rw-status').dispatchEvent(new w.Event('change'));await settle();assert.ok($('#rw-library [data-select-paper="2"]'));
   const checked=$('#rw-library [data-select-paper="2"]');checked.checked=true;checked.dispatchEvent(new w.Event('change'));assert.equal($('#rw-export').disabled,false);
@@ -66,8 +67,8 @@ for(const locale of ['en','uk'])test(`research desk explicit retrieval, escaped 
 });
 for(const locale of ['en','uk'])test(`research drafts survive locale/theme/navigation and conflict; topic CRUD (${locale})`,async t=>{
   const {w,$,requests,input,submit,mode,remoteChange}=setup(t,locale);await settle();$('[data-page=research]').click();await settle();
-  input('#rw-query','Unsubmitted search');input('#rw-hypothesis','Unsubmitted hypothesis');$('[data-evidence-paper="1"]').click();await settle();input('#rw-e-method','Keep my method');input('#rw-e-method-location','Page 3');
-  $('#language').value=locale==='en'?'uk':'en';$('#language').dispatchEvent(new w.Event('change'));await settle();assert.equal($('#rw-query').value,'Unsubmitted search');assert.equal($('#rw-e-method').value,'Keep my method');assert.equal($('#rw-e-method-location').value,'Page 3');
+  input('#rw-query','Unsubmitted search');input('#rw-metadataLanguage','en');input('#rw-hypothesis','Unsubmitted hypothesis');$('[data-evidence-paper="1"]').click();await settle();input('#rw-e-method','Keep my method');input('#rw-e-method-location','Page 3');
+  $('#language').value=locale==='en'?'uk':'en';$('#language').dispatchEvent(new w.Event('change'));await settle();assert.equal($('#rw-query').value,'Unsubmitted search');assert.equal($('#rw-metadataLanguage').value,'en');assert.equal($('#rw-e-method').value,'Keep my method');assert.equal($('#rw-e-method-location').value,'Page 3');
   $('#theme').value='dark';$('#theme').dispatchEvent(new w.Event('change'));assert.equal($('#rw-e-method').value,'Keep my method');
   $('[data-page=overview]').click();await settle();$('[data-page=research]').click();await settle();assert.equal($('#rw-hypothesis').value,'Unsubmitted hypothesis');assert.equal($('#rw-e-method').value,'Keep my method');
   mode.conflict=true;submit('#rw-evidence-form');await settle();assert.ok($('#rw-message').textContent.includes('reload'));assert.equal($('#rw-e-method').value,'Keep my method');assert.equal($('#rw-evidence-save').disabled,false);
@@ -108,4 +109,13 @@ test('typing during revision reload survives together with newer untouched remot
   w.fetch=(url,options)=>url==='/api/papers/1/evidence'&&(!options?.method||options.method==='GET')?new Promise(resolve=>{release=()=>baseFetch(url,options).then(resolve);}):baseFetch(url,options);
   input('#rw-e-method','Draft before reload');$('#rw-evidence-reload').click();await settle();input('#rw-e-method','Typed during reload');input('#rw-e-author_limitations','New local limitation');remoteChange();release();await settle();
   assert.equal($('#rw-e-method').value,'Typed during reload');assert.equal($('#rw-e-author_limitations').value,'New local limitation');assert.equal($('#rw-e-user_questions').value,'REMOTE question retained');submit('#rw-evidence-form');await settle();const patch=requests.find(r=>r.method==='PATCH');assert.deepEqual(Object.keys(patch.body.fields).sort(),['author_limitations','method']);assert.equal(patch.body.expected_revision,1);
+});
+
+for(const locale of ['en','uk'])test(`unfiltered metadata language stays explicit and unknown is visible (${locale})`,async t=>{
+  const {w,$,requests,input,submit,mode}=setup(t,locale);await settle();$('[data-page=research]').click();await settle();
+  mode.unknownLanguage=true;input('#rw-sourceId','S1');input('#rw-query','Український запит');
+  assert.equal($('#rw-metadataLanguage').value,'any');assert.ok(!requests.some(r=>r.method==='POST'));
+  submit('#rw-search-form');await settle();
+  assert.equal(requests.find(r=>r.url==='/api/research/search').body.metadata_language,undefined);
+  assert.ok($('#rw-result-papers').textContent.includes(locale==='uk'?'Невідомо':'Unknown'));
 });

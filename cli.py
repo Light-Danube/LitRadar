@@ -93,6 +93,15 @@ def cmd_search(args: argparse.Namespace) -> int:
     config = RadarConfig.load()
     query = args.query or "adaptive context emotion sarcasm online conversation"
     requested_sources = tuple(args.sources) if args.sources else config.enabled_sources
+    from sources.registry import validate_metadata_language_sources
+    try:
+        language = validate_metadata_language_sources(requested_sources, getattr(args, 'metadata_language', 'any'))
+    except ValueError as exc:
+        print(str(exc), file=sys.stderr)
+        return 2
+    filter_options = {"metadata_language": language} if language != 'any' else {}
+    if filter_options:
+        print(f"OpenAlex metadata language: {language}; detected title/abstract language, not verified full-text language.", file=sys.stderr)
     print(
         f"Searching {len(requested_sources)} source(s) for: {query!r} "
         f"(up to {args.per_source} papers per source)",
@@ -118,6 +127,7 @@ def cmd_search(args: argparse.Namespace) -> int:
         per_source=args.per_source,
         config=config,
         progress=report,
+        **filter_options,
     )
     print(
         "Search complete: "
@@ -1138,6 +1148,8 @@ Most commands have their own help page, e.g.:
     p_search.add_argument("query", nargs="?", help="search query")
     p_search.add_argument("--profile", default=str(DEFAULT_PROFILE), help="research profile JSON")
     p_search.add_argument("--sources", nargs="+", help="registered providers; defaults to LITRADAR_SOURCES")
+    p_search.add_argument("--metadata-language", choices=["any", "uk", "en"], default="any",
+                          help="OpenAlex detected title/abstract language; full-text language may differ; select --sources openalex")
     p_search.add_argument("--per-source", type=int, default=20, help="papers requested from each source")
     p_search.add_argument("--limit", type=int, default=15, help="number of fetched papers to print")
     p_search.add_argument("--semantic", action=argparse.BooleanOptionalAction, default=True, help="use sentence-transformer semantic scoring")

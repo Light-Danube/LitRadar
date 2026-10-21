@@ -1,0 +1,11 @@
+{
+  "name": "Ukrainian-English context and affect example (opt-in)",
+  "description": "Optional keywords: context, emotion, sarcasm and online discussions. No translation or evaluated Ukrainian semantic ranking is claimed. Use --no-semantic.",
+  "ranking": {"keyword_weight": 1.0, "semantic_weight": 0.0, "embedding_model": "all-MiniLM-L6-v2"},
+  "groups": [
+    {"name": "context", "weight": 5, "terms": ["вибір контексту", "адаптивний контекст", "context selection", "adaptive context"]},
+    {"name": "emotion", "weight": 4, "terms": ["розпізнавання емоцій", "аналіз емоцій", "emotion recognition", "emotion analysis"]},
+    {"name": "sarcasm", "weight": 4, "terms": ["виявлення сарказму", "розпізнавання іронії", "sarcasm detection", "irony detection"]},
+    {"name": "conversation", "weight": 2, "terms": ["онлайн дискусії", "соціальні мережі", "online conversation", "social media"]}
+  ]
+}
