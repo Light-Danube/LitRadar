@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import re
+import unicodedata
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -76,7 +77,7 @@ class KeywordProfile:
 
 
 def _normalize(text: str) -> str:
-    return re.sub(r"\s+", " ", text.casefold()).strip()
+    return re.sub(r"\s+", " ", unicodedata.normalize("NFC", text).casefold()).strip()
 
 
 def _term_present(text: str, term: str) -> bool:

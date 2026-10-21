@@ -10,6 +10,7 @@ import urllib.error
 from config import RadarConfig
 from sources.base import Paper
 from sources import venues
+from sources.filters import normalize_metadata_language, paper_from_cache
 from storage.sqlite import PaperStore
 
 
@@ -36,9 +37,11 @@ def lookup(store: PaperStore, query: str, *, limit=10, config: RadarConfig | Non
 
 def search_and_store(store: PaperStore, query: str, source_id: str, *, year_from=None,
                      year_to=None, limit=20, page=1, config: RadarConfig | None = None,
-                     force=False) -> dict:
+                     force=False, metadata_language: str = "any") -> dict:
     """One page only; cached pages retain their original observation timestamps."""
     config = config or RadarConfig()
+    metadata_language = normalize_metadata_language(metadata_language)
+    filter_options = {"metadata_language": metadata_language} if metadata_language != "any" else {}
     source_id = venues.normalize_source_id(source_id)
     if not isinstance(query, str) or not query.strip() or len(query) > 500:
         raise ValueError("Query must contain 1–500 characters")
@@ -50,6 +53,8 @@ def search_and_store(store: PaperStore, query: str, source_id: str, *, year_from
     if year_from is not None and year_to is not None and year_from > year_to:
         raise ValueError("Year bounds must be ordered")
     key_data = ["openalex", source_id, query.strip(), year_from, year_to, limit, page]
+    if filter_options:
+        key_data.append({"metadata_language": metadata_language})
     key = hashlib.sha256(json.dumps(key_data).encode()).hexdigest()
     cached = store.conn.execute("SELECT * FROM venue_search_cache WHERE cache_key=?", (key,)).fetchone()
     payload = None
@@ -60,10 +65,11 @@ def search_and_store(store: PaperStore, query: str, source_id: str, *, year_from
     cache_hit = payload is not None
     if payload is None:
         result = venues.search_venue(query.strip(), source_id, year_from=year_from, year_to=year_to,
-                                     limit=limit, page=page, **_http(config))
+                                     limit=limit, page=page, **_http(config), **filter_options)
         payload = result.to_dict()
     venue = venues.Venue(**payload["venue"])
-    papers = [Paper(**item) for item in payload["papers"]]
+    papers = [paper_from_cache(item) for item in payload["papers"]]
+    payload["papers"] = [asdict(paper) for paper in papers]
     ids = []
     before = store.total_count()
     with store.conn:

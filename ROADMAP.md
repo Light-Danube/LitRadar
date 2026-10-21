@@ -7,3 +7,5 @@ LitBeacon 1.0 is public. The [completed 1.0 release roadmap](docs/archive/releas
 3. **Restore hosted checks when available.** GitHub Actions jobs currently cannot start because of account billing. Re-run relevant checks once that account constraint is resolved; do not infer a pass from pending or canceled runs.
 
 The web workspace remains local-only. Major new features, public hosting and additional provider or model integrations need separate scope decisions and should not be treated as 1.0 defects.
+
+Post-1.0 Draft PR: [explicit OpenAlex metadata-language filtering](docs/research/metadata-language-search.md), accepted with its full-text-language limitation. Local bibliography import remains a separate design; a Ukrainian provider pilot requires verified endpoint/rights evidence and separate approval. This does not set a release date or version.

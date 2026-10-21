@@ -394,6 +394,10 @@ class PaperStore:
             "pdf_url": paper.pdf_url,
         }
         refs.update(paper.identifiers)
+        if paper.language_basis:
+            refs.update(metadata_language=paper.metadata_language,
+                        metadata_language_raw=paper.raw.get("language"),
+                        language_basis=paper.language_basis)
         return {paper.source: refs}
 
     @staticmethod
