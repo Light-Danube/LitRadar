@@ -68,10 +68,12 @@ async function renderOverview(root){
 function selectOptions(values,current){return values.map(([value,label])=>`<option value="${esc(value)}" ${String(current)===String(value)?'selected':''}>${t(label)}</option>`).join('');}
 async function renderInbox(root){
   root.innerHTML=`<div class="toolbar">${field('paper-search','searchLabel',`<input class="field search" id="paper-search" placeholder="${t('search')}" value="${esc(state.query)}">`)}${field('status-filter','status',`<select class="field" id="status-filter">${selectOptions(['all','new','to-read','read','archived','dismissed'].map(v=>[v,v==='all'?'allStatuses':'status-'+v]),state.status)}</select>`)}${field('sort-filter','sort',`<select class="field" id="sort-filter">${selectOptions([['relevance_score','relevance'],['recent','newest'],['newest_added','added'],['citations','mostCited'],['title','alphabetical']],state.sort)}</select>`)}<span id="paper-count" class="badge"></span></div><div class="inbox-layout"><section class="panel table-list"><h2>${t('library')}</h2><div id="inbox-list"></div></section><section class="panel" id="detail-panel"><p class="empty">${t('choosePaper')}</p></section></div>`;
+  root.insertAdjacentHTML('afterbegin','<section id="local-import-panel" class="panel"></section>');
   let request=0;
   async function load(){const serial=++request,list=$('#inbox-list',root);list.innerHTML=`<p>${t('loading')}</p>`;try{const data=await api('/api/papers?'+new URLSearchParams({q:state.query,status:state.status,sort:state.sort,limit:'200'}));if(serial!==request)return;list.innerHTML=data.items.map(paperRow).join('')||`<p class="empty">${t('noMatches')}</p>`;$('#paper-count',root).textContent=t('count',{count:data.count});bindPapers(list);}catch(e){list.innerHTML=`<p class="error">${esc(e.message)}</p>`;}}
   $('#paper-search',root).oninput=event=>{state.query=event.target.value;clearTimeout(renderInbox.timer);renderInbox.timer=setTimeout(load,200);};
   for(const [id,key] of [['status-filter','status'],['sort-filter','sort']])$('#'+id,root).onchange=event=>{state[key]=event.target.value;load();};
+  if(globalThis.LocalBibliographyImport)LocalBibliographyImport.render($('#local-import-panel',root),{api,t,esc,state,onImported:load});
   await load();if(state.selected)renderDetail(state.selected,$('#detail-panel',root));
 }
 function safePaperURL(p){try{const value=p.doi?`https://doi.org/${p.doi.replace(/^https?:\/\/(dx\.)?doi\.org\//i,'')}`:p.url;const url=new URL(value);return ['https:','http:'].includes(url.protocol)?url.href:null;}catch(_){return null;}}
