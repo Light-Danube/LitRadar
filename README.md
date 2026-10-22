@@ -20,6 +20,8 @@ The workspace supports paper discovery, notes and tags, citation maps, annotatio
 
 Post-1.0 draft: [OpenAlex metadata-language search / пошук за мовою метаданих](docs/research/metadata-language-search.md), with coverage limits and an optional UK/EN keyword profile.
 
+Post-1.0 local bibliography: [import selected RIS, BibTeX and PDF metadata / імпорт локальних джерел](docs/research/local-bibliography-import.md), with preview, explicit confirmation and preserved provenance.
+
 **Українською:** [встановлення з пакета для Windows, macOS і Linux](docs/PACKAGE-SETUP.uk.md) · [встановлення з вихідного ZIP на Windows](docs/WINDOWS-SOURCE-ZIP.uk.md). The detailed reference guide remains in English; the browser interface offers Ukrainian.
 
 [All guides](docs/README.md) · [Changelog](CHANGELOG.md) · [License](LICENSE)

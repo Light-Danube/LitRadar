@@ -51,6 +51,26 @@ CREATE TABLE IF NOT EXISTS papers (
     archived_at TEXT,
     dismissed_at TEXT
 );
+CREATE TABLE IF NOT EXISTS local_import_batches (
+    batch_id TEXT PRIMARY KEY,
+    created_at TEXT NOT NULL,
+    preview_token TEXT NOT NULL,
+    selected_count INTEGER NOT NULL,
+    added_count INTEGER NOT NULL,
+    duplicate_count INTEGER NOT NULL
+);
+CREATE TABLE IF NOT EXISTS local_import_observations (
+    observation_key TEXT PRIMARY KEY,
+    paper_id INTEGER NOT NULL REFERENCES papers(id) ON DELETE CASCADE,
+    batch_id TEXT NOT NULL REFERENCES local_import_batches(batch_id),
+    filename TEXT NOT NULL,
+    format TEXT NOT NULL,
+    file_sha256 TEXT NOT NULL,
+    record_key TEXT NOT NULL,
+    metadata_json TEXT NOT NULL,
+    created_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS local_import_observations_paper ON local_import_observations(paper_id);
 CREATE TABLE IF NOT EXISTS feedback_events (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     paper_id INTEGER NOT NULL REFERENCES papers(id) ON DELETE CASCADE,

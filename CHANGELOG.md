@@ -2,7 +2,9 @@
 
 ## Post-1.0 — proposed Draft PR
 
-Add opt-in OpenAlex metadata-language filtering (`any`/`uk`/`en`) in broad CLI and venue CLI/Research search, with explicit unsupported-provider errors, separate filtered caches and retained language provenance. Defaults remain unfiltered. Add an optional UK/EN keyword profile, canonical Unicode keyword normalization and EN/UK explanations that metadata language does not guarantee full-text language. No new provider, bibliography importer, schema/version or release change. See the [guide](docs/research/metadata-language-search.md).
+Add a separate opt-in local bibliography workflow in CLI and EN/UK Inbox UI. Preview selected RIS/BibTeX/PDF Info metadata before confirming new paper records or duplicate provenance observations. Preserve existing metadata and user data, reject unsafe CLI input paths, keep import offline, and include additive batch/observation tables in existing SQLite backups. PDF is metadata-only; no OCR, original-file copy, automatic undo or provider adapter. See the [EN/UK guide](docs/research/local-bibliography-import.md). No version, tag or release change.
+
+Previously merged: add opt-in OpenAlex metadata-language filtering (`any`/`uk`/`en`) in broad CLI and venue CLI/Research search, with explicit unsupported-provider errors, separate filtered caches and retained language provenance. Defaults remain unfiltered. Add an optional UK/EN keyword profile, canonical Unicode keyword normalization and EN/UK explanations that metadata language does not guarantee full-text language. That increment introduced no provider or bibliography importer. See the [guide](docs/research/metadata-language-search.md).
 
 ## 1.0.0 — GitHub Release
 

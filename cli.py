@@ -1083,6 +1083,8 @@ Most commands have their own help page, e.g.:
     sub = parser.add_subparsers(dest="command", required=True, metavar="COMMAND")
     from venue_cli import register_commands
     register_commands(sub)
+    from storage.local_import_cli import register_commands as register_local_import
+    register_local_import(sub)
 
     p_init = sub.add_parser("init", help="initialize or migrate the database")
     p_init.set_defaults(func=cmd_init)

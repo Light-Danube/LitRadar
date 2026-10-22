@@ -81,6 +81,8 @@ Retain raw language, normalized recognized value or `unknown`, provider and inte
 
 ### Phase 2 local bibliography design
 
+Implementation follow-up: [local bibliography import (EN/UK)](local-bibliography-import.md) records the shipped-in-branch scope, reduced limits, metadata-only PDF handling and recovery. This first increment uses trusted backup/new-destination restore; automatic deletion/undo remains deferred. The numbered items below preserve the original feasibility proposal.
+
 1. **Selection:** individually chosen BibTeX/RIS files or uploaded bytes first. A later folder mode is explicit and nonrecursive by default. No home scan, link following, resolver/model call or watcher. Uploaded filenames remain labels.
 2. **Proposed bounds:** 20 files, 5 MB/file, 20 MB aggregate, 1,000 records/preview, 30-second batch budget. Optional PDF at most 50 pages and bounded extracted text. These are design proposals, not existing product limits; benchmark before finalizing. Reject archives initially.
 3. **Paths:** reject symlinks/hard links/device files and Windows junction/reparse points in every component. Validate a chosen allowed root and file type; safely open and compare file identity to reduce path-swap races. Parse validated bytes, not reopened parser paths/URLs. Never move/delete/overwrite originals. POSIX checks do not establish Windows behavior.
