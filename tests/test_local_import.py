@@ -238,3 +238,70 @@ def test_parser_result_shape_is_safe_failure(store, monkeypatch):
     plan = importer.preview_import(store, [ris()])
     assert plan['counts']['failed'] == 1
     assert plan['items'][0]['message_code'] == 'invalid_metadata'
+
+
+@pytest.mark.parametrize('persisted', [False, True], ids=['same-batch', 'stored'])
+@pytest.mark.parametrize('changes,expected', [
+    ({'published_at': '2024'}, 'conflict'),
+    ({'authors': ['ДОСЛІДНИК, ОЛЕНА']}, 'duplicate'),
+    ({'authors': ['Інший автор']}, 'conflict'),
+    ({'venue': 'EXAMPLE JOURNAL'}, 'duplicate'),
+    ({'venue': 'Different journal'}, 'conflict'),
+    ({'published_at': None, 'authors': [], 'venue': None}, 'duplicate'),
+], ids=['opposing-years', 'author-case', 'different-authors', 'venue-case', 'different-venues', 'unknown-fields'])
+def test_stored_and_batch_metadata_conflict_policy(store, persisted, changes, expected):
+    baseline = dict(title='Українська наукова праця', doi='10.1234/example',
+                    published_at='2025', authors=['Дослідник, Олена'], venue='Example Journal')
+    incoming = dict(baseline, **changes)
+
+    def file(metadata, filename):
+        fields = [('TI', metadata['title']), ('DO', metadata['doi']),
+                  ('PY', metadata['published_at']), ('JO', metadata['venue'])]
+        fields.extend(('AU', author) for author in metadata['authors'])
+        content = 'TY  - JOUR\n' + ''.join(f'{tag}  - {value}\n' for tag, value in fields if value) + 'ER  - \n'
+        return {'filename': filename, 'format': 'ris', 'content': content.encode()}
+
+    if persisted:
+        paper_id = store.upsert_paper(Paper(source='existing', **baseline), relevance_score=5, matched_groups={})
+        before = dict(store.get(paper_id))
+        files = [file(incoming, 'incoming.ris')]
+        index = 0
+    else:
+        files = [file(baseline, 'baseline.ris'), file(incoming, 'incoming.ris')]
+        index = 1
+    plan = importer.preview_import(store, files)
+    assert plan['items'][index]['status'] == expected
+    if expected == 'conflict':
+        with pytest.raises(importer.ImportValidationError):
+            importer.commit_import(store, files, plan['token'], [index])
+        assert count(store, 'local_import_batches') == count(store, 'local_import_observations') == 0
+        assert count(store, 'papers') == int(persisted)
+    else:
+        # A duplicate can be selected alone: an unselected batch anchor must
+        # neither block import nor silently supply its metadata to the new row.
+        result = importer.commit_import(store, files, plan['token'], [index])
+        assert result['added'] == int(not persisted)
+        assert result['duplicates'] == int(persisted)
+        assert count(store, 'papers') == count(store, 'local_import_observations') == 1
+        if not persisted:
+            row = store.get(result['paper_ids'][0])
+            assert row['published_at'] == incoming['published_at']
+            assert row['venue'] == incoming['venue']
+            assert json.loads(row['authors_json']) == incoming['authors']
+    if persisted:
+        assert dict(store.get(paper_id)) == before
+
+
+def test_unknown_batch_anchor_accepts_known_metadata_without_overwriting_it(store):
+    sparse = ris(filename='sparse.ris')
+    sparse['content'] = sparse['content'].replace('AU  - Дослідник, Олена\nPY  - 2025\n'.encode(), b'')
+    files = [sparse, ris(filename='complete.ris')]
+    plan = importer.preview_import(store, files)
+    assert [item['status'] for item in plan['items']] == ['new', 'duplicate']
+    result = importer.commit_import(store, files, plan['token'], [0, 1])
+    assert result['added'] == result['duplicates'] == 1
+    row = store.get(result['paper_ids'][0])
+    assert row['published_at'] is None and json.loads(row['authors_json']) == []
+    observations = [json.loads(row[0]) for row in store.conn.execute(
+        'SELECT metadata_json FROM local_import_observations ORDER BY record_key, filename')]
+    assert {observation['published_at'] for observation in observations} == {None, '2025'}

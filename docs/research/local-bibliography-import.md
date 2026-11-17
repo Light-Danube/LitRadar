@@ -1,6 +1,6 @@
 # Local bibliography import / Імпорт локальної бібліографії
 
-Post-1.0 implementation for review; no new release. This workflow adds **paper records** to SQLite. Annotation import attaches supplemental material to an existing paper and remains a separate action. Ukrainian publication discovery, Ukrainian institutional providers and your own local files are separate capabilities.
+Post-1.0 implementation merged in PR #51 and available in the current source checkout; it is not included in the published v1.0.0 wheel. No new release. This workflow adds **paper records** to SQLite. Annotation import attaches supplemental material to an existing paper and remains a separate action. Ukrainian publication discovery, Ukrainian institutional providers and your own local files are separate capabilities.
 
 ## English instructions
 
@@ -9,7 +9,7 @@ Post-1.0 implementation for review; no new release. This workflow adds **paper r
 3. Review metadata and new/duplicate/conflict/skipped/failed statuses. Uncheck unwanted rows. Conflicts cannot overwrite existing papers; correct the input or review the existing record separately.
 4. Confirm the selected rows. New papers enter the ordinary library and its metadata search. Duplicate papers retain their existing fields and user data; a separate provenance observation records the import. Changing files or matching library records requires a fresh preview.
 
-RIS works with the standard installation. BibTeX and PDF require the existing optional parsers: from a checkout, run `python -m pip install -r requirements-annotations.txt`; for a wheel install, use `python -m pip install "litradar[annotations]"`. Installing dependencies uses the network; importing does not.
+RIS works with the current source checkout's standard dependencies. BibTeX and PDF require the existing optional parsers: activate the checkout's virtual environment, then run `python -m pip install -r requirements-annotations.txt`. Installations built from this source can use the `annotations` extra. Adding parsers to the published v1.0.0 wheel does not add the new import command. Installing dependencies uses the network; importing does not.
 
 CLI preview (individual paths relative to an explicitly chosen input root):
 
@@ -26,6 +26,8 @@ After reviewing the JSON output, repeat the same command with `--commit --previe
 3. Перевірте метадані та статуси записів. Зніміть позначки з непотрібних рядків і підтвердьте збереження вибраних. Конфлікти не перезаписують наявні праці; виправте вхідний файл або перевірте наявний запис окремо.
 4. Нові праці з'являться у звичайній бібліотеці та пошуку за її метаданими. Для дублікатів зберігається окремий запис походження; наявні нотатки, теги та інші дані не змінюються. Після зміни файлів чи відповідних записів бібліотеки повторіть перегляд.
 
+Функція доступна в актуальних вихідних файлах репозитарію після злиття PR #51; опублікований wheel v1.0.0 її ще не містить. Різні відомі роки публікації означають конфлікт і всередині однієї добірки, і при порівнянні з БД. Відмінність лише в регістрі імен авторів не є конфліктом; відсутні метадані не вигадуються.
+
 Для CLI використовуйте наведену вище команду: `--root` задає каталог, а аргументи — лише окремі відносні назви файлів. Після перевірки JSON повторіть команду з `--commit --preview-token TOKEN`; `--select 0 2` обмежує вибір рядками 0 і 2. Попередній перегляд не створює й не змінює БД. RIS доступний одразу; для BibTeX/PDF потрібні необов'язкові залежності з `requirements-annotations.txt` або extra `annotations`.
 
 ## Scope and limits
@@ -35,7 +37,7 @@ After reviewing the JSON output, repeat the same command with `--commit --previe
 - Metadata search uses the existing SQLite search. Ukrainian Unicode is preserved; FTS behavior is covered by synthetic tests. This makes no claim about Ukrainian semantic ranking, morphology or full-text search quality. New records are unranked; import loads no embedding model.
 - File links/attachments in bibliography fields are not opened or copied. No URL resolution, DOI lookup, provider call, watcher or filesystem scan. Browser uploads send selected bytes only to the local server; filenames are labels. CLI rejects traversal, network roots, symlinks, hard links, reparse points, devices, archives and directories as inputs, with no-follow handle checks where supported. Native platform behavior requires separate validation.
 - The importer stores metadata, safe basenames, SHA-256, parser version, record key, format, timestamp, batch journal and per-paper observations. It does not retain the original RIS/BibTeX/PDF bytes or absolute input paths. Keep originals separately; deleting them does not break stored records. Declared language remains provenance, not verified full-text language.
-- Canonical DOI/title normalization is reused. Ambiguous title/DOI cases and differing existing metadata are conflicts rather than automatic merges. Missing incoming metadata never clears existing metadata. Notes, tags, annotations, citations, evidence, status and rankings stay intact on duplicates.
+- Canonical DOI/title normalization is reused. Ambiguous title/DOI cases and differing existing metadata are conflicts rather than automatic merges. The same comparison applies within a batch and against saved records: different known publication years conflict; author-name case alone does not. Missing incoming metadata never clears existing metadata. Notes, tags, annotations, citations, evidence, status and rankings stay intact on duplicates.
 
 ## Recovery and compatibility
 
@@ -66,3 +68,9 @@ Local Linux Python 3.12.14 / Node 24.19.0 verification:
 - Changed JS syntax checks and `git diff --check` passed. A locally built, unversioned-development wheel installed into an isolated repository-local target passed module/CLI registration, selected-file import and packaged browser-asset checks. It is not a published release artifact.
 - Exact storage code read from the public v1.0.0 tag opened a synthetic imported library, edited notes, and reopened with current storage while retaining tags, annotations and import journal. Existing backup/new-destination restore preserved the new tables. This scoped compatibility check does not certify every old client operation.
 - No live scholarly provider, embedding model or personal research data was used. Native Windows/macOS execution and same-commit hosted CI remain unverified; report actual PR checks separately.
+
+### Completed hosted checks for the merged import increment
+
+On 2026-10-22, PR #51 head `4af0989b` passed the [Python 3.11/3.12 matrix](https://github.com/Light-Danube/LitRadar/actions/runs/39856806012), [Windows workspace](https://github.com/Light-Danube/LitRadar/actions/runs/39856806027), [isolated Docker](https://github.com/Light-Danube/LitRadar/actions/runs/39856805984) and [built-wheel](https://github.com/Light-Danube/LitRadar/actions/runs/39856806008) workflows. These results supersede the pending hosted/Windows status above for that revision only. The native Windows import step reported **62 passed, 2 skipped** (POSIX-only link/FIFO and parent-swap scenarios); the workflow also passed four synthetic native Chrome scenarios. That browser smoke covers its defined EN/UK workspace flows, not every new import interaction. Native macOS and the exact published v1.0.0 wheel's deferred platform checks remain separate.
+
+The auxiliary auto-PR workflow failed because PR #51 already existed during concurrent creation; feature-test workflows succeeded. The conflict follow-up requires its own tests and CI results; prior passes are not a pass for new changes. Parser licensing and offline boundaries above are unchanged. To roll back this follow-up, revert its code/docs commit without changing the database or import journal.
