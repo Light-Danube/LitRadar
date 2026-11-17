@@ -165,15 +165,21 @@ def _paper(record, file):
                  external_id=key, raw=raw)
 
 
-def _metadata_conflict(left: Paper, row) -> bool:
-    if left.title_normalized != row['title_normalized']:
+def _metadata_conflict(left: Paper, right) -> bool:
+    """Apply the same known-metadata policy to stored and same-batch papers."""
+    if isinstance(right, Paper):
+        title, doi, venue = right.title_normalized, right.doi, right.venue
+        published_at, authors = right.published_at, right.authors
+    else:
+        title, doi, venue = right['title_normalized'], right['doi_normalized'], right['venue']
+        published_at, authors = right['published_at'], json.loads(right['authors_json'] or '[]')
+    if left.title_normalized != title:
         return True
-    for incoming, existing in ((left.doi, row['doi_normalized']), (left.venue, row['venue'])):
+    for incoming, existing in ((left.doi, doi), (left.venue, venue)):
         if incoming and existing and incoming.casefold() != existing.casefold():
             return True
-    if left.published_at and row['published_at'] and left.published_at[:4] != row['published_at'][:4]:
+    if left.published_at and published_at and left.published_at[:4] != published_at[:4]:
         return True
-    authors = json.loads(row['authors_json'] or '[]')
     return bool(left.authors and authors and [a.casefold() for a in left.authors] != [a.casefold() for a in authors])
 
 
@@ -199,9 +205,7 @@ def _classify(store, paper, earlier):
         return 'duplicate', existing_id, 'Existing paper preserved; metadata observation only', dict(row), None
     for prior_index, prior in earlier:
         if paper.doi and prior.doi == paper.doi:
-            conflict = (paper.title_normalized != prior.title_normalized or
-                        bool(paper.venue and prior.venue and paper.venue.casefold() != prior.venue.casefold()) or
-                        bool(paper.authors and prior.authors and paper.authors != prior.authors))
+            conflict = _metadata_conflict(paper, prior)
             return ('conflict' if conflict else 'duplicate'), None, (
                 'Conflicting metadata for a DOI in this batch' if conflict else 'Duplicate of an earlier record in this batch'), None, prior_index
         if paper.title_hash == prior.title_hash:
